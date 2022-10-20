@@ -1,0 +1,15 @@
+{
+  "raw_img_path": "/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/4-geoOrtho_Test/Sample/Sample2/IMAGERY.TIF",
+  "metadata_file_path": "/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/4-geoOrtho_Test/Sample/Sample2/METADATA.DIM",
+  "metadata_type": "RSM",
+  "sensor": "Spot15",
+  "workspace_folder": "/home/cosicorr/geoCosiCorr3D_WKDIR/ortho_workflow_WS",
+  "output_ortho_path": "/home/cosicorr/geoCosiCorr3D_WKDIR/ortho_workflow_WS/IMAGERY_ortho_opt.tif",
+  "ortho_gsd": 10,
+  "output_trans_path": "/home/cosicorr/geoCosiCorr3D_WKDIR/ortho_workflow_WS/IMAGERY_trx_opt.tif",
+  "dem_path": "/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/4-geoOrtho_Test/Sample/Sample2/rDEM.TIF",
+  "ref_ortho_path": "/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/4-geoOrtho_Test/Sample/Sample2/rOrtho.TIF",
+  "log_name": "Test_geoOrtho",
+  "correction_model_file": "",
+  "optimize": true
+}

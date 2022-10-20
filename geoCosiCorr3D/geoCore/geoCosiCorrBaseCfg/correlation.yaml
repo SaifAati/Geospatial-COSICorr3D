@@ -1,0 +1,15 @@
+CORRELATION_PLOT:
+  cmap: 'RdYlBu'
+  format: 'png' #'svg
+  dpi: 200
+  cmap_range:
+    min: -2
+    max: 2
+  axs_ground:
+    x_label: 'East/West'
+    y_label: 'North/South'
+    cbar_label: 'disp. [m]'
+  axs_img:
+    x_label: 'dx'
+    y_label: 'dy'
+    cbar_label: 'parallax[px]'

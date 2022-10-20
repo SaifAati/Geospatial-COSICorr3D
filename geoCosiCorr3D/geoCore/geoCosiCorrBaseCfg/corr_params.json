@@ -1,0 +1,16 @@
+{
+    "base_image_path": ["", "Path to base image."],
+    "target_image_path": ["", "Path to target image."],
+    "base_band": [1, "Band used from base image."],
+    "target_band": [1, "Band used from target image."],
+    "output_path": ["", "Path where output image will be saved."],
+    "correlator_name": ["frequency", "Correlation algorithm to use."],
+    "correlator_params": {
+        "window_size": [[64, 64, 64, 64], "Width and Height in pixels of the initial and then final window size. Power of 2."],
+        "step": [[8, 8], "The x and y step."],
+        "grid": [true, "Flag for whether or not the output should contain georeferencing information."],
+        "mask_th": [0.9, "Mask threshold for frequencies. Only allowed for frequency correlator."], 
+        "nb_iters": [3, "Number of times the frequency mask should be adaptively recomputed."],
+        "search_range": [[10, 10], "Maximum x and y distance in pixels where displacements are searched for."]
+    }
+}

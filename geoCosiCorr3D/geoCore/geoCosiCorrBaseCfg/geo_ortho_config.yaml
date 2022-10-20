@@ -1,0 +1,36 @@
+feature_points_params:
+  method: 'ASIFT' # cvTP, geoSIFT
+  kernel:
+  scale_factor:
+  matching_filter: False
+  max_pts':
+
+opt_corr_config:
+  correlator_name: "frequency"
+  correlator_params:
+    window_size: [ 64,64,64,64 ]
+    step: [ 8, 8 ]
+    grid: True
+    mask_th: 0.95
+    nb_iters: 4
+
+sat_model_params:
+  sat_model:
+  metadata:
+  sensor:
+
+opt_params:
+  nb_loops: 5
+  snr_th: 0.9
+  mean_error_th: 1 / 20
+  resampling_method: 'sinc'
+
+ortho_params:
+  method:
+    method_type: "RSM"
+    metadata:
+    sensor:
+    corr_model:
+
+  GSD: 10
+  resampling_method: "sinc"
