@@ -1,0 +1,14 @@
+version: '3.4'
+services:
+  geocosicorr3d:
+    image: geocosicorr3d
+    platform: linux/amd64
+    build:
+      context: .
+    volumes:
+      - type: bind
+        source: ${PWD}
+        target: /usr/src/app/geoCosiCorr3D
+      - type: bind
+        source: /home/cosicorr
+        target: /home/cosicorr
