@@ -1,0 +1,3 @@
+geoCosiCorr3D:
+  default_workspace_folder: None
+  TILE_SIZE_MB: 128
