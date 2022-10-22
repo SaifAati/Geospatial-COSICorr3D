@@ -24,13 +24,14 @@ Questions, comments, and bug reports can be sent to:
 # Installation and dependencies
 --------------
 To install `geoCosiCorr3D` from source:
+### Option 1: 
 
 1- Set and activate `geoCosiCorr3D` environment:
 
     conda env create --file geoCosiCorr3D.yml
     conda activate geoCosiCorr3D
 
-6- Set shared libraries:
+2- Set shared libraries:
 
 For Linux, you have to append the path to the [lib](https://github.com/SaifAati/geoCosiCorr3D/blob/main/geoCosiCorr3D/lib/) directory to LD_LIBRARY_PATH in .bashrc to be able to use geoCosiCorr3D shared libraries,  
 by adding the following line: 
@@ -42,6 +43,14 @@ by adding the following line:
 Third party libraries and packages (optional):
 
 1- Ames Stereo Pipeline ([ASP](https://github.com/NeoGeographyToolkit/StereoPipeline.git)) for WV1 and WV2 CCD correction using [wv_correct] : set the binary path of ASP in the configuration file ('geoConfig.py')
+
+### Option 2: Docker
+1- Build the image:
+
+    docker-compose -f  docker-compose.yml buil geocosicorr3d
+2- Run a container:
+
+    docker-compose -f  docker-compose.yml run geocosicorr3d
 
 
 # geoCosiCorr3D: CLI + GUI
