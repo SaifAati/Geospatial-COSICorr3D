@@ -4,7 +4,7 @@ Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 Free and open source tools & libraries for processing satellite images (push-broom, frame and push-frame), including rigorous sensor model (RSM) refinement, rational function model (RFM) refinement, orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
 
-See the [NEWS](https://github.com/SaifAati/geoCosiCorr3D/blob/main/NEWS.md) for the most recent additions and upgrades.
+See the [NEWS](NEWS.md) for the most recent additions and upgrades.
 
 Contact Information
 -------------------
@@ -29,10 +29,7 @@ To install `geoCosiCorr3D` from source:
 
     conda env create --file geoCosiCorr3D.yml
     conda activate geoCosiCorr3D
-2- Install `geoCosiCorr3D`:
 
-    cd geoCosiCorr3D     
-    pip install -e .
 6- Set shared libraries:
 
 For Linux, you have to append the path to the [lib](https://github.com/SaifAati/geoCosiCorr3D/blob/main/geoCosiCorr3D/lib/) directory to LD_LIBRARY_PATH in .bashrc to be able to use geoCosiCorr3D shared libraries,  
@@ -45,6 +42,11 @@ by adding the following line:
 Third party libraries and packages (optional):
 
 1- Ames Stereo Pipeline ([ASP](https://github.com/NeoGeographyToolkit/StereoPipeline.git)) for WV1 and WV2 CCD correction using [wv_correct] : set the binary path of ASP in the configuration file ('geoConfig.py')
+
+
+# geoCosiCorr3D: CLI + GUI
+[CLI + GUI doc](Doc/GUI_DOC.md)
+
 
 # License
 [License](LICENSE)
