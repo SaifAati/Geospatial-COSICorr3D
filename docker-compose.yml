@@ -9,6 +9,6 @@ services:
       - type: bind
         source: ${PWD}
         target: /usr/src/app/geoCosiCorr3D
-      - type: bind
-        source: /home/cosicorr
-        target: /home/cosicorr
+#      - type: bind
+#        source: /home/cosicorr
+#        target: /home/cosicorr
