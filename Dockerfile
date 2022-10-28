@@ -29,5 +29,5 @@ RUN apt-get install -y libx11-6
 RUN LD_LIBRARY_PATH=/usr/src/app/geoCosiCorr3D/geoCosiCorr3D/libs/:$LD_LIBRARY_PATH
 RUN export LD_LIBRARY_PATH
 RUN cp -r -p /usr/src/app/geoCosiCorr3D/geoCosiCorr3D/lib/* /usr/lib/
-#RUN conda install -c intel numpy ipp
+RUN conda install -c intel numpy ipp
 WORKDIR /usr/src/app/geoCosiCorr3D/geoCosiCorr3D

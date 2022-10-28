@@ -30,6 +30,7 @@ dependencies:
 #    - ttkthemes==3.2.2
     - Pillow==9.2.0
     - seaborn==0.12.0
+    - ipp
     - sklearn
     - -e .
 
