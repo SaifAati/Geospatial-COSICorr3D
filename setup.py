@@ -27,7 +27,7 @@ setup(
               'geoCosiCorr3D.geoTiePoints',
               'geoCosiCorr3D.geoOrthoResampling',
               'geoCosiCorr3D.geoImageCorrelation',
-              'geoCosiCorr3D.geoThreeDD',
+              # 'geoCosiCorr3D.geoThreeDD',
               'geoCosiCorr3D.geoErrorsWarning',
               'geoCosiCorr3D.lib'],
 )
