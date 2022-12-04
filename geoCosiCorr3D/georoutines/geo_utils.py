@@ -9,6 +9,8 @@ import numpy as np
 import warnings
 from typing import Any, List, Optional
 from astropy.time import Time
+from scipy.stats import norm
+from scipy import stats
 import os
 import gdal
 import osr
@@ -416,7 +418,7 @@ def WriteRaster(oRasterPath,
     # dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0,
     #                            options=["TILED=YES", "COMPRESS=PACKBITS"])
     ## Set the projection
-    if epsg != None:
+    if epsg is not None:
         outRasterSRS = osr.SpatialReference()
         outRasterSRS.ImportFromEPSG(epsg)
         outRaster.SetProjection(outRasterSRS.ExportToWkt())
@@ -448,7 +450,7 @@ def WriteRaster(oRasterPath,
             if progress:
                 print("No data=", noData)
             outband.SetNoDataValue(noData)
-        if descriptions != None:
+        if descriptions is not None:
             outband.SetDescription(descriptions[i])
             # outBand.SetRasterCategoryNames(descriptions[i])
         if progress:
@@ -714,3 +716,42 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data=
     cRasterInfo.write_raster(output_raster_path=output_path, array_list=array_list, geo_transform=info.geo_transform,
                              epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data)
     return output_path
+
+class geoStat:
+    def __init__(self, in_array:np.ndarray, display_values:Optional[bool]=True):
+        sample = np.ma.masked_invalid(in_array)
+        mask = np.ma.getmask(sample)
+
+        # Remove mask and array to vector
+        if isinstance(sample, np.ma.MaskedArray):  # check if the sample was masked using the class numpy.ma.MaskedArray
+            sample = sample.compressed()  ## return all the non-masked values as 1-D array
+        else:
+            if sample.ndim > 1:  # if the dimension of the array more than 1 transform it to 1-D array
+                sample = sample.flatten()
+        self.sample = sample
+        # Estimate initial sigma and RMSE
+        (self.mu, self.sigma) = norm.fit(sample)
+        self.sigma_ = '%.3f' % (self.sigma)
+        temp = np.square(sample)
+        temp = np.ma.masked_where(temp <= 0, temp)
+        self.RMSE = '%.3f' % (np.ma.sqrt(np.ma.mean(temp)))
+
+        self.max = '%.3f' % (np.nanmax(sample))
+        self.min = '%.3f' % (np.nanmin(sample))
+        self.std = '%.3f' % (np.nanstd(sample))
+        self.mean = '%.3f' % (np.nanmean(sample))
+        self.median = '%.3f' % (np.nanmedian(sample))
+        self.mad = '%.3f' % (stats.median_absolute_deviation(sample))
+        self.nmad = '%.3f' % (1.4826 * stats.median_absolute_deviation(sample))
+        self.ce68 = stats.norm.interval(0.68, loc=self.mu, scale=self.sigma)
+        self.ce90 = stats.norm.interval(0.9, loc=self.mu, scale=self.sigma)
+        self.ce95 = stats.norm.interval(0.95, loc=self.mu, scale=self.sigma)
+        self.ce99 = stats.norm.interval(0.99, loc=self.mu, scale=self.sigma)
+
+        if display_values:
+            print("mu, sigma", self.mu, self.sigma)
+            print("RMSE=", self.RMSE)
+            print("max=", self.max, "min=", self.min, "std=", self.std, "mean=", self.mean, "median", self.median,
+                  "mad=",
+                  self.mad, "nmad=", self.nmad)
+            print("CE68=", self.ce68, "CE90=", self.ce90, "CE95=", self.ce95, "CE99=", self.ce99)
