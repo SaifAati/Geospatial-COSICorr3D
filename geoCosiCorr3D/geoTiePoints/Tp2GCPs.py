@@ -174,6 +174,7 @@ class TPsTOGCPS(RawTP2GCP):
         plt.savefig(f'{self.output_gcp_path}.png')
         src_ref, src_dem = None, None
         plt.clf()
+        plt.close(fig)
         return
 
     @staticmethod
@@ -200,4 +201,5 @@ class TPsTOGCPS(RawTP2GCP):
         plt.savefig(f'{output_gcp_path}.vis.png')
         src_ref, src_dem = None, None
         plt.clf()
+        plt.close(fig2)
         return
