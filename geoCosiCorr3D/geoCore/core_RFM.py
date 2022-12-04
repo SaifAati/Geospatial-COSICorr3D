@@ -87,10 +87,10 @@ class RawRFM(BaseRFM):
         y2 = self.build_RFM(num=self.linNum, den=self.linDen, x=lat + self.__delta, y=lon, z=altN)
         if not np.all((corrModel == 0)):
             # print(x0,y0)
-            x0, y0 = self.__ApplyCorrection(corrModel=corrModel, colN=x0, linN=y0)
+            x0, y0 = self.apply_correction(corrModel=corrModel, colN=x0, linN=y0)
             # print("____>",x0, y0)
-            x1, y1 = self.__ApplyCorrection(corrModel=corrModel, colN=x1, linN=y1)
-            x2, y2 = self.__ApplyCorrection(corrModel=corrModel, colN=x2, linN=y2)
+            x1, y1 = self.apply_correction(corrModel=corrModel, colN=x1, linN=y1)
+            x2, y2 = self.apply_correction(corrModel=corrModel, colN=x2, linN=y2)
         while not np.all((x0 - colN) ** 2 + (y0 - linN) ** 2 < self.__th):
 
             X0 = np.vstack([x0, y0]).T
@@ -122,9 +122,9 @@ class RawRFM(BaseRFM):
             x2 = self.build_RFM(num=self.colNum, den=self.colDen, x=lat + self.__delta, y=lon, z=altN)
             y2 = self.build_RFM(num=self.linNum, den=self.linDen, x=lat + self.__delta, y=lon, z=altN)
             if not np.all((corrModel == 0)):
-                x0, y0 = self.__ApplyCorrection(corrModel=corrModel, colN=x0, linN=y0)
-                x1, y1 = self.__ApplyCorrection(corrModel=corrModel, colN=x1, linN=y1)
-                x2, y2 = self.__ApplyCorrection(corrModel=corrModel, colN=x2, linN=y2)
+                x0, y0 = self.apply_correction(corrModel=corrModel, colN=x0, linN=y0)
+                x1, y1 = self.apply_correction(corrModel=corrModel, colN=x1, linN=y1)
+                x2, y2 = self.apply_correction(corrModel=corrModel, colN=x2, linN=y2)
             nbIter += 1
             if nbIter > self.__nbIterMax:
                 warnings.warn("nbIterMax reached !!!!")
@@ -134,7 +134,7 @@ class RawRFM(BaseRFM):
         else:
             return lon, lat
 
-    def __ApplyCorrection(self, corrModel, colN, linN):
+    def apply_correction(self, corrModel, colN, linN):
         # print("____RFM CORRECTION:\n", corrModel)
         inArray = np.array(
             [colN, linN, len(colN) * [1]]).T
