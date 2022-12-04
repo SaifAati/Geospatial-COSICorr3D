@@ -5,32 +5,15 @@
 """
 import numpy as np
 from scipy.optimize import least_squares
+from typing import Optional, List
 
-def Optimize(xy_obs_with_model, xy_error,method ="lm", iniSol=[0, 0, 0, 0, 0, 0]):
-    """
 
-    Args:
-        xy_obs_with_model:
-        xy_error:
-        iniSol:
-
-    Returns:
-
-    """
+def Optimize(xy_obs_with_model, xy_error, method="lm", ini_sol: Optional[List] = None):
+    if ini_sol is None:
+        ini_sol = [0, 0, 0, 0, 0, 0]
 
     def ModelFunction(xError_, yError_, xPix, yPix, params):
-        """
 
-        Args:
-            xError_:
-            yError_:
-            xPix:
-            yPix:
-            params:
-
-        Returns:
-
-        """
         f_col = params[0] * xPix + params[1] * yPix + params[2]
         f_row = params[3] * xPix + params[4] * yPix + params[5]
         xRes = xError_ - f_col
@@ -38,14 +21,6 @@ def Optimize(xy_obs_with_model, xy_error,method ="lm", iniSol=[0, 0, 0, 0, 0, 0]
         return xRes, yRes
 
     def Fun(params):
-        """
-
-        Args:
-            params:
-
-        Returns:
-
-        """
         V = np.zeros(2 * xy_error.shape[0])
         for i, dx, dy, xPix, yPix in zip(np.arange(0, xy_error.shape[0], 1),
                                          xy_error[:, 0], xy_error[:, 1],
@@ -54,7 +29,7 @@ def Optimize(xy_obs_with_model, xy_error,method ="lm", iniSol=[0, 0, 0, 0, 0, 0]
 
         return V
 
-    X0 = np.array(iniSol)
-    res = least_squares(Fun, X0,method="trf",loss='cauchy')
+    X0 = np.array(ini_sol)
+    res = least_squares(Fun, X0, method="trf", loss='cauchy')
 
     return res
