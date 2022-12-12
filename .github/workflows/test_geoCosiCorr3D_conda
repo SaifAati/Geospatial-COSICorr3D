@@ -24,7 +24,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env create --file geoCosiCorr3D.yml
+        conda env create --file geoCosiCorr3D__.yml
     - name: Lint with flake8
       run: |
         conda install flake8
