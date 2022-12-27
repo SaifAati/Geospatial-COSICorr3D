@@ -8,7 +8,8 @@ from typing import Dict, Optional, Type, List
 import gdal, osr
 import warnings, math
 import numpy as np
-
+import os
+from pathlib import Path
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 from geoCosiCorr3D.geoCore.base.base_orthorectification import BaseInverseOrtho, BaseOrthoGrid, SatModel
 from geoCosiCorr3D.geoCore.constants import SOFTWARE, SATELLITE_MODELS
@@ -71,6 +72,10 @@ class RawInverseOrtho(BaseInverseOrtho):
                 warnings.warn(msg)
                 self.dem_path = geoRT.ReprojectRaster(input_raster_path=self.dem_raster_info.input_raster_path,
                                                       o_prj=self.ortho_grid.gridEPSG,
+                                                      output_raster_path=os.path.join(
+                                                          os.path.dirname(self.output_ortho_path),
+                                                          Path(self.dem_raster_info.input_raster_path).stem + "_" + str(
+                                                              self.ortho_grid.gridEPSG) + ".vrt"),
                                                       vrt=True)
 
                 self.dem_raster_info = geoRT.cRasterInfo(self.dem_path)

@@ -10,7 +10,7 @@ import logging
 from typing import List, Optional, Dict
 from abc import abstractmethod
 from geoCosiCorr3D.geoRSM.Ground2Pixel import RSMG2P
-from geoCosiCorr3D.geoOrthoResampling.geoResampling_v2 import Resampling
+from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoCore.constants import Resampling_Methods, SATELLITE_MODELS
 
 

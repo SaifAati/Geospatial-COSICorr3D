@@ -34,6 +34,7 @@ class BaseRFM(ABC):
 
     def __repr__(self):
         return """
+        {}
     # Offsets and Scales
       linOffset = {}
       colOffset = {}
@@ -50,18 +51,20 @@ class BaseRFM(ABC):
       linNum = {}
       linDen = {}
       colNum = {}
-      colDen = {} """.format(self.linOff,
-                             self.colOff,
-                             self.latOff,
-                             self.lonOff,
-                             self.altOff,
-                             self.linScale,
-                             self.colScale,
-                             self.latScale,
-                             self.lonScale,
-                             self.altScale,
-                             ' '.join(['{: .8f}'.format(x) for x in self.linNum]),
-                             ' '.join(['{: .8f}'.format(x) for x in self.linDen]),
-                             ' '.join(['{: .8f}'.format(x) for x in self.colNum]),
-                             ' '.join(['{: .8f}'.format(x) for x in self.colDen])
-                             )
+      colDen = {} """.format(
+            self.__class__.__name__,
+            self.linOff,
+            self.colOff,
+            self.latOff,
+            self.lonOff,
+            self.altOff,
+            self.linScale,
+            self.colScale,
+            self.latScale,
+            self.lonScale,
+            self.altScale,
+            ' '.join(['{: .8f}'.format(x) for x in self.linNum]),
+            ' '.join(['{: .8f}'.format(x) for x in self.linDen]),
+            ' '.join(['{: .8f}'.format(x) for x in self.colNum]),
+            ' '.join(['{: .8f}'.format(x) for x in self.colDen])
+        )

@@ -6,9 +6,6 @@
 import numpy as np
 
 from geoCosiCorr3D.geoRSM.Ground2Pixel import RSMG2P
-from geoCosiCorr3D.geoConfig import cgeoCfg
-
-geoCfg = cgeoCfg()
 
 
 class cGCPPatchMapGrid:

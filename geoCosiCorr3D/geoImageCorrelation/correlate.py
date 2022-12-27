@@ -26,12 +26,10 @@ class Correlate(RawCorrelation):
     def __init__(self, base_image_path: str,
                  target_image_path: str,
                  corr_config: Optional[Dict] = None,
-                 base_band: Optional[int] = 1,
-                 target_band: Optional[int] = 1,
+                 base_band: int = 1,
+                 target_band: int = 1,
                  output_corr_path: Optional[str] = None,
-                 tile_size_mb: Optional[int] = CORRELATION.TILE_SIZE_MB,
-                 corr_show: Optional[bool] = True,
-                 debug: Optional[bool] = True):
+                 corr_show: Optional[bool] = True):
         self.corr_config = corr_config
         if self.corr_config is None:
             self.corr_config = {}
@@ -47,9 +45,8 @@ class Correlate(RawCorrelation):
         self.run_correlation()
 
         if corr_show:
-            logging.info('Plotting correlation results')
+            logging.info(f'{self.__class__.__name__}: Plotting correlation results')
             self.plt_cfg = self.get_corr_config.get_config['CORRELATION_PLOT']
-            # self.corr_plot()  # TODO deprecate
             self.plot_correlation_map(corr_path=self.output_corr_path, cfg=self.plt_cfg,
                                       ground_space=self.flags.get("groundSpaceCorr"))
         return
@@ -138,7 +135,6 @@ class Correlate(RawCorrelation):
                                                                    self.dims_target_tile[roi][:][3],
                                                                    self.dims_target_tile[roi][:][4],
                                                                    self.target_band_nb)
-
 
             if self.debug:
                 logging.info("baseSubset.size:{} ".format(base_subset.shape))

@@ -4,15 +4,14 @@
 # Copyright (C) 2022
 """
 import logging
-import os.path, psutil
+import os, psutil
 import ctypes, ctypes.util, goto, sys
-from inspect import currentframe
-
 import warnings
 import numpy as np
+from inspect import currentframe
 from goto import with_goto
 from dominate.tags import label
-from typing import Optional
+from typing import Optional, Dict
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
@@ -20,17 +19,16 @@ import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation
 from geoCosiCorr3D.geoRFM.RFM import RFM
-from geoCosiCorr3D.geoOrthoResampling.geoResampling_v2 import Resampling
+from geoCosiCorr3D.geoCore.core_RSM import RSM
+from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 from geoCosiCorr3D.geoCore.geoRawInvOrtho import RawInverseOrtho
-from geoCosiCorr3D.geoCore.core_RSM import RSM
-from geoCosiCorr3D.geoConfig import cgeoCfg
-from geoCosiCorr3D.geoCore.constants import EARTH, GEOCOSICORR3D_SENSORS_LIST, SOFTWARE
+from geoCosiCorr3D.geoCore.constants import *
 
-geoCfg = cgeoCfg()
+
 geoWarns.wrIgnoreNotGeoreferencedWarning()
 process = psutil.Process(os.getpid())
-G2P_LIB_Path = geoCfg.geoCosiCorr3DLib
+G2P_LIB_Path = SOFTWARE.GEO_COSI_CORR3D_LIB
 
 
 # TODO CHANGE RSM class location
@@ -41,10 +39,10 @@ class RSMOrtho(RawInverseOrtho):
     def __init__(self,
                  input_l1a_path: str,
                  output_ortho_path: str,
-                 ortho_params=None,
-                 output_trans_path:str=None,
+                 ortho_params: Optional[Dict] = None,
+                 output_trans_path: Optional[str] = None,
                  dem_path: Optional[str] = None,
-                 debug: Optional[bool] = True):
+                 debug: bool = True):
         self.hMean = None
         if ortho_params is None:
             ortho_params = {}
@@ -84,7 +82,7 @@ class RSMOrtho(RawInverseOrtho):
                 logging.info("... Resampling::{} ...".format(self.resampling_method))
 
             resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
-                                   resampling_params={'method': self.resampling_method})
+                                  resampling_params={'method': self.resampling_method})
             oOrthoTile = resample.resample()
 
             if self.debug:
@@ -216,16 +214,16 @@ class RSMOrtho(RawInverseOrtho):
         northArr = np.tile(tempNorthing, (nbColsOut, 1)).T
         hNew = self.DEM_interpolation(demInfo, demDims, tileCurrent, eastArr, northArr, self.rsm_model)
         outX, outY, nbRowsOut = self.rsm_g2p_minimization(rsmModel=self.rsm_model,
-                                                           rsmCorrectionArray=self.corr_model,
-                                                           nbColsOut=nbColsOut,
-                                                           xPixInit=xPixInit,
-                                                           yPixInit=yPixInit,
-                                                           eastArr=eastArr,
-                                                           northArr=northArr,
-                                                           nbRowsOut=nbRowsOut,
-                                                           hNew=hNew,
-                                                           debug=self.debug,
-                                                           target_epsg=self.ortho_grid.gridEPSG)
+                                                          rsmCorrectionArray=self.corr_model,
+                                                          nbColsOut=nbColsOut,
+                                                          xPixInit=xPixInit,
+                                                          yPixInit=yPixInit,
+                                                          eastArr=eastArr,
+                                                          northArr=northArr,
+                                                          nbRowsOut=nbRowsOut,
+                                                          hNew=hNew,
+                                                          debug=self.debug,
+                                                          target_epsg=self.ortho_grid.gridEPSG)
         if tileCurrent != nbTiles - 1:
             need_loop = 1
 
@@ -260,16 +258,16 @@ class RSMOrtho(RawInverseOrtho):
 
     @staticmethod
     def rsm_g2p_minimization(rsmModel,
-                              rsmCorrectionArray,
-                              nbColsOut,
-                              xPixInit,
-                              yPixInit,
-                              eastArr,
-                              northArr,
-                              nbRowsOut,
-                              hNew,
-                              debug,
-                              target_epsg):
+                             rsmCorrectionArray,
+                             nbColsOut,
+                             xPixInit,
+                             yPixInit,
+                             eastArr,
+                             northArr,
+                             nbRowsOut,
+                             hNew,
+                             debug,
+                             target_epsg):
         ## Define pointers to Fortran subroutines
         if debug:
             logging.info('... ortho optimization ...')
@@ -450,9 +448,8 @@ class RFMOrtho(RawInverseOrtho):
     def __init__(self,
                  input_l1a_path: str,
                  output_ortho_path: str,
-                 ortho_params=None,
-                 output_trans_path=None,
-
+                 ortho_params: Optional[Dict] = None,
+                 output_trans_path: Optional[str] = None,
                  dem_path: Optional[str] = None):
         if ortho_params is None:
             ortho_params = {}
@@ -493,7 +490,7 @@ class RFMOrtho(RawInverseOrtho):
             if self.debug:
                 logging.info("... Resampling::{} ...".format(self.resampling_method))
             resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
-                                   resampling_params={'method': self.resampling_method})
+                                  resampling_params={'method': self.resampling_method})
             oOrthoTile = resample.resample()
             if self.debug:
                 logging.info("---> rss = {} Mb".format(process.memory_info().rss * 1e-6))
@@ -605,7 +602,7 @@ class RFMOrtho(RawInverseOrtho):
         northArr_flat = northArr.flatten()
         hNew_flatten = list(hNew.flatten())
         if self.debug:
-            logging.info(">>> converting UTM --> WVG84")
+            logging.info(">>> converting UTM --> WGS84")
 
         (lat_flat, lon_flat, alt_flat) = geoRT.ConvCoordMap1ToMap2_Batch(X=eastArr_flat,
                                                                          Y=northArr_flat,

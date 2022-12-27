@@ -1,18 +1,16 @@
+"""
+# Author : Saif Aati
+# Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
+# Copyright (C) 2022
+"""
 import os.path
 import pandas
 import numpy as np
 
 
 def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
-    """
-
-    :param reportPath:
-    :param snrTh:
-    :return:
-    """
     df = pandas.read_csv(reportPath)
 
-    print(df)
     totalNbLoop = list(df["nbLoop"])[-1]
     # print(totalNbLoop)
     loopList = []
@@ -28,13 +26,12 @@ def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
         dxList = []
         dyList = []
         for item, dxPix_, dyPix_, snr_ in zip(list(df["nbLoop"]), list(df["dxPix"]), list(df["dyPix"]),
-                                                        list(df["SNR"])):
+                                              list(df["SNR"])):
             if item == loop_:
                 itemList.append(item)
                 dxPixList.append(dxPix_)
                 dyPixList.append(dyPix_)
                 snrList.append(snr_)
-
 
         nanList = [item_ for item_ in snrList if item_ == 0]
         snrThList = [item_ for item_ in snrList if item_ > snrTh]
@@ -82,6 +79,6 @@ def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
         ax.set_xlabel('#iterations')
         ax.set_ylabel("Error [pix]")
         # plt.show()
-        fig.savefig(os.path.join(os.path.dirname(reportPath), "CoregistrationError.svg"), dpi=400)
+        fig.savefig(os.path.join(os.path.dirname(reportPath), "CoregistrationError.png"), dpi=400)
 
     return loopList[indexMin], totalNbLoop, np.min(avgErrorList)

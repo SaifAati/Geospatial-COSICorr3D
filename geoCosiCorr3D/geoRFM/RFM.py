@@ -334,3 +334,13 @@ class RFM(ReadRFM):
         minAlt = self.altOff - scaleFactor * self.altScale
         maxAlt = self.altOff + scaleFactor * self.altScale
         return [minAlt, maxAlt]
+
+
+if __name__ == '__main__':
+    #TODO add to unit/functional tests
+    img = '/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/3-geoOrtho_Test/Sample/Sample1/SPOT2.TIF'
+    # img = '/media/cosicorr/storage/Saif/Planet_project/PlanetScope_L1As/Ridgecrest/Dove-R/Ridgecrest.3284591/L1As/20200402_183354_92_105c_1A_AnalyticMS.tif'
+    rfm = RFM(img, debug=True)
+    print(f'attitude range:{rfm.get_altitude_range()}')
+    print(f'GSD:{rfm.get_GSD()}')
+    print(f'geoTransform:{rfm.get_geoTransform()}')

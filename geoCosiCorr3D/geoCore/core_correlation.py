@@ -5,24 +5,20 @@
 """
 
 import logging
-import os
 import sys
 import warnings
 from ctypes import cdll
 from pathlib import Path
-from typing import List, Any, Optional, Dict, Tuple
-import numpy as np
+from typing import List, Any, Optional, Tuple
 
 import geoCosiCorr3D.geoImageCorrelation.misc as misc
-from geoCosiCorr3D.geoCore.constants import CORRELATION
-from geoCosiCorr3D.geoConfig import cgeoCfg
-from geoCosiCorr3D.geoCore.base.base_correlation import BaseCorrelation, BaseFreqCorr, BaseSpatialCorr, \
-    BaseCorrelationEngine
+from geoCosiCorr3D.geoCore.base.base_correlation import (BaseCorrelation, BaseFreqCorr, BaseSpatialCorr,
+                                                         BaseCorrelationEngine)
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
+from geoCosiCorr3D.geoCore.constants import *
 
-cfg = cgeoCfg()
-FREQ_CORR_LIB = cfg.geoFreqCorrLib
-STAT_CORR_LIB = cfg.geoStatCorrLib
+FREQ_CORR_LIB = CORRELATION.FREQ_CORR_LIB
+STAT_CORR_LIB = CORRELATION.STAT_CORR_LIB
 
 
 # TODO:
@@ -30,6 +26,11 @@ STAT_CORR_LIB = cfg.geoStatCorrLib
 #  2- Base class for overlap based on projection and based on pixel, for the pixel based we need to add x_off and y_off
 #  3- Support: Optical flow correlation, MicMac, ASP, Skitimage, OpenCV corr, ....
 #  4- Data sets: geometry artifacts (PS, HiRISE,WV, GF), glacier , cloud detection, earthquake, landslide, dune
+
+# define Python user-defined exceptions
+class InvalidCorrLib(Exception):
+    pass
+
 
 class RawFreqCorr(BaseFreqCorr):
     def __init__(self,
@@ -113,13 +114,10 @@ class RawFreqCorr(BaseFreqCorr):
                        step: List[int],
                        iterations: int,
                        mask_th: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        # load the library
-        ## TODO: check lib
-        #
-
-        # TODO change the name
-        lib_cfreq_corr = cdll.LoadLibrary(FREQ_CORR_LIB)
-
+        try:
+            lib_cfreq_corr = cdll.LoadLibrary(FREQ_CORR_LIB)
+        except:
+            raise InvalidCorrLib
         lib_cfreq_corr.InputData.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32),
                                              np.ctypeslib.ndpointer(dtype=np.int32),
                                              np.ctypeslib.ndpointer(dtype=np.int32),
@@ -233,8 +231,11 @@ class RawSpatialCorr(BaseSpatialCorr):
                        window_size: List[int],
                        step: List[int],
                        search_range: List[int]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        try:
+            libCstatCorr = cdll.LoadLibrary(STAT_CORR_LIB)
+        except:
+            raise InvalidCorrLib
 
-        libCstatCorr = cdll.LoadLibrary(STAT_CORR_LIB)
         libCstatCorr.InputData.argtypes = [np.ctypeslib.ndpointer(dtype=np.int32),
                                            np.ctypeslib.ndpointer(dtype=np.int32),
                                            np.ctypeslib.ndpointer(dtype=np.int32),
@@ -419,7 +420,7 @@ class RawCorrelation(BaseCorrelation):
                                                               self.corr_engine.corr_params.step[0])
 
         if self.debug:
-            self.set_corr_debug()
+            # self.set_corr_debug()
             logging.info("Correlation engine:{} , params:{}".format(self.corr_engine.correlator_name,
                                                                     self.corr_engine.corr_params.__dict__))
 
@@ -433,7 +434,7 @@ class RawCorrelation(BaseCorrelation):
 
         self.base_original_dims: List[float] = self.base_dims_pix
         self.margins = self.set_margins()
-        logging.info("correlation margins:{}".format(self.margins))
+        logging.info(f'{self.__class__.__name__}:correlation margins:{self.margins}')
         return
 
     def set_margins(self) -> List[int]:
@@ -767,7 +768,7 @@ class RawCorrelation(BaseCorrelation):
         self.nb_corr_col_per_roi: int = int(
             (self.nb_col_img - self.win_area_x) / self.corr_engine.corr_params.step[0] + 1)
 
-        #TODO change ROI per tile
+        # TODO change ROI per tile
         self.nb_roi: int = int(
             (self.nb_row_img - self.win_area_y + self.corr_engine.corr_params.step[1]) / (
                     (self.nb_corr_row_per_roi - 1) * self.corr_engine.corr_params.step[1] + (
@@ -804,8 +805,6 @@ class RawCorrelation(BaseCorrelation):
                                                self.corr_engine.corr_params.step[1] + self.win_area_y - 1)]
 
         # Define boundaries of the last tile and the number of correlation column and lines computed for the last tile
-        # print(self.dimsBaseTile)
-        # print(self.dimsTargetTile)
         self.nb_rows_left: int = int((self.base_dims_pix[4] - self.dims_base_tile[self.nb_roi - 1, 4] + 1) - 1)
         if self.debug:
             logging.info("nbRowsLeft:{}".format(self.nb_rows_left, "\n"))
@@ -835,8 +834,6 @@ class RawCorrelation(BaseCorrelation):
 
     def write_blank_pixels(self):
         ## In case of non-gridded correlation,write the top blank correlation lines
-        # print(borderRowTop)
-        # print(outputRowBlank.shape)
         # Define a "blank" (i.e., invalid) correlation line
         temp_add = np.empty((self.border_row_top, self.ew_output.shape[1]))
         temp_add[:] = np.nan

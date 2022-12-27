@@ -8,7 +8,8 @@ import numpy as np
 import pandas
 import uuid
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-
+import os
+from pathlib import Path
 from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
 from typing import Optional, List, Dict
@@ -36,9 +37,16 @@ class TPsTOGCPS(RawTP2GCP):
 
         if self.dem_info is not None:
             if self.dem_info.epsg_code != self.ref_img_info.epsg_code:
-                new_dem_path = geoRT.ReprojectRaster(input_raster_path=self.dem_path, o_prj=self.ref_img_info.epsg_code)
+                new_dem_path = geoRT.ReprojectRaster(
+                    input_raster_path=self.dem_path,
+                    o_prj=self.ref_img_info.epsg_code,
+                    vrt=True,
+                    output_raster_path=os.path.join(os.path.dirname(self.output_gcp_path),
+                                                    Path(self.dem_path).stem + "_" + str(
+                                                        self.ref_img_info.epsg_code) + ".vrt"))
                 if self.debug:
                     logging.info(f'Convert input DEM from:{self.dem_info.epsg_code} ---> {self.ref_img_info.epsg_code}')
+                self.dem_path = new_dem_path
                 self.dem_info = geoRT.cRasterInfo(new_dem_path)
 
         ## Convert Tie points of ref Image to Map coordinate
@@ -75,7 +83,7 @@ class TPsTOGCPS(RawTP2GCP):
         if self.dem_info is None:
             logging.warning('No DEM used - Altitude set at 0.0')
             alt = [0.0] * self.nb_Tps
-            # TODO: add SRTM4 in case no DEM is provided by the user or COPDEM
+            # TODO: add SRTM4/COPDEM in case no DEM is provided by the user
             return alt
 
         else:

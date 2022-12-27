@@ -44,6 +44,13 @@ Third party libraries and packages (optional):
 
 1- Ames Stereo Pipeline ([ASP](https://github.com/NeoGeographyToolkit/StereoPipeline.git)) for WV1 and WV2 CCD correction using [wv_correct] : set the binary path of ASP in the configuration file ('geoConfig.py')
 
+
+Note:
+
+To update the `geoCosiCorr3D` env you can use the following cmd:
+
+    conda env update --file geoCosiCorr3D.yml --prune
+
 ### Option 2: Docker
 1- Build the image:
 
@@ -65,19 +72,13 @@ If you are using this software for academic research or publications we ask that
 
 <a id="1">[1]</a> Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of ground deformation from optimized registration and correlation of optical images and ICA-based filtering of image geometry artifacts. Remote Sensing of Environment 277, 113038. https://doi.org/10.1016/j.rse.2022.113038
 
-# Patents
-<a id="1">[2]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
 
-<a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
-
-<a id="1">[4]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
 
 # References
 
-<a id="1">[5]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification, Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements," in IEEE Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
+<a id="1">[2]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification, Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements," in IEEE Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
 
-<a id="1">[6]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
-
+<a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
 
 
 

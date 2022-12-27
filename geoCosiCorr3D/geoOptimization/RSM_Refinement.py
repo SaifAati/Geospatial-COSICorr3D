@@ -36,7 +36,7 @@ class cRSMRefinement:
         logging.info("Performing RSM refinement ...")
         self.compute_look_direction_error()
         self.compute_correction()
-        # self.Plot_Error()
+        # self.plot_error() # TODO
         # print(self.corr_model)
 
         # import matplotlib.pyplot as plt
@@ -172,7 +172,7 @@ class cRSMRefinement:
 
         return P
 
-    def Plot_Error(self):
+    def plot_error(self):
         import matplotlib.pyplot as plt
         from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                        AutoMinorLocator)

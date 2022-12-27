@@ -9,9 +9,6 @@ import logging
 
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation, get_dem_dims, ComputeFootprint
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RSMOrtho
-from geoCosiCorr3D.geoConfig import cgeoCfg
-
-geoCfg = cgeoCfg()
 
 
 class RSMG2P:

@@ -4,33 +4,24 @@
 # Copyright (C) 2022
 """
 import logging
-
 import numpy as np
+from typing import Optional
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS
+
 
 class cGetSatMapGrid:
     def __init__(self,
                  rasterInfo: geoRT.cRasterInfo,
                  modelData,
                  modelType,
-                 modelCorr=np.zeros((3, 3)),
+                 modelCorr: Optional[np.ndarray] = None,
                  rDEM=None,
                  newRes=None,
                  gridEPSG=None,
                  debug=True):
-        """
-
-        Args:
-            rasterInfo:
-            modelData:
-            modelType: RFM or RSM
-            modelCorr:
-            rDEM:
-            newRes:
-            gridEPSG:
-            debug:
-        """
+        if modelCorr is None:
+            modelCorr = np.zeros((3, 3))
         self.gridEPSG = gridEPSG
         self.rasterInfo = rasterInfo
         self.modelData = modelData
