@@ -4,13 +4,14 @@
 # Copyright (C) 2022
 """
 import os, sys, pandas
-from tqdm import tqdm
+# from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
 import logging
+from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from multiprocessing import Pool, cpu_count
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
 from geoCosiCorr3D.geoCore.constants import SOFTWARE, SATELLITE_MODELS, GEOCOSICORR3D_SATELLITE_MODELS, \
@@ -546,7 +547,7 @@ class cGCPOptimization:
         self.opt_report_path = os.path.join(os.path.dirname(self.opt_gcp_file),
                                             Path(self.opt_gcp_file).stem + ".opt_report.csv")
         df_report.to_csv(self.opt_report_path, index=False)
-        self.opt_report_df  = df_report
+        self.opt_report_df = df_report
         if self.debug:
             from geoCosiCorr3D.geoTiePoints.misc import opt_report
             opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)

@@ -6,6 +6,7 @@
 import logging
 import warnings
 from typing import Optional
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.core_resampling import RawResampling, SincResampler, BilinearResampler, ResamplingEngine
 from geoCosiCorr3D.geoCore.constants import *
@@ -13,7 +14,7 @@ from geoCosiCorr3D.geoCore.constants import *
 
 class Resampling(RawResampling):
     def __init__(self, input_raster_info: geoRT.cRasterInfo, transformation_mat: np.ndarray,
-                 resampling_params: Optional[Dict] = None, debug: Optional[bool] = False):
+                 resampling_params: Optional[Dict] = None, debug: bool = False):
         super().__init__(input_raster_info, transformation_mat, resampling_params, debug)
 
     def resample(self):

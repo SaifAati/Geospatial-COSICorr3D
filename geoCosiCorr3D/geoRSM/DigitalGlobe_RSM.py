@@ -3,7 +3,6 @@ AUTHOR: Saif Aati (saif@caltech.edu)
 PURPOSE: Read QuickBird/WorldView1-2-3-4 Image MetaData ASCII & XML files and Build RSM.
 """
 import logging
-
 import numpy as np
 
 import geoCosiCorr3D.geoRSM.misc as geoRSMMisc

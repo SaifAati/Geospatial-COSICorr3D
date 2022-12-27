@@ -10,9 +10,10 @@ import uuid
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import os
 from pathlib import Path
+from typing import Optional, List, Dict
+
 from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
-from typing import Optional, List, Dict
 
 
 class TPsTOGCPS(RawTP2GCP):

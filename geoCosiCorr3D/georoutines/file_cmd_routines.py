@@ -6,8 +6,9 @@
 
 import fnmatch
 import os
-from shutil import rmtree, copyfile
 import shutil
+from shutil import rmtree, copyfile
+from typing import List, Optional
 
 
 def GetFilesBasedOnExtension(path, filter="*.tif", disp=False):
@@ -34,18 +35,10 @@ def GetFilesBasedOnExtension(path, filter="*.tif", disp=False):
     return filesList
 
 
-def GetFilesBasedOnExtensions(path, filterList=["*.tif", "*.vrt"], disp=False):
-    """
-
-    Args:
-        path:
-        filterList:
-        disp:
-
-    Returns:
-
-    """
+def GetFilesBasedOnExtensions(path, filterList: Optional[List] = None, disp=False):
     import glob
+    if filterList is None:
+        filterList = ["*.tif", "*.vrt"]
     os.chdir(path)
     filesList = []
 
@@ -59,7 +52,7 @@ def GetFilesBasedOnExtensions(path, filterList=["*.tif", "*.vrt"], disp=False):
     return filesList
 
 
-def FilesInDirectory(path, exclusionFilter=[], displayFile=False):
+def FilesInDirectory(path, exclusionFilter: Optional[List] = None, displayFile=False):
     """
 
     Args:
@@ -70,6 +63,8 @@ def FilesInDirectory(path, exclusionFilter=[], displayFile=False):
     Returns:
 
     """
+    if exclusionFilter is None:
+        exclusionFilter = []
     files = os.listdir(path)
     files.sort()
     if exclusionFilter:
@@ -352,7 +347,7 @@ def LocateFile(pattern, root=os.curdir):
             yield os.path.join(path, filename)
 
 
-def ExtractSubfiles(inputdirectory, fileExtension=[".NTF"], disp=False):
+def ExtractSubfiles(inputdirectory, fileExtension: Optional[List] = None, disp=False):
     """
 
     Args:
@@ -363,6 +358,8 @@ def ExtractSubfiles(inputdirectory, fileExtension=[".NTF"], disp=False):
     Returns:
 
     """
+    if fileExtension is None:
+        fileExtension = [".NTF"]
 
     filesList = []
     for root, dirs, files in os.walk(inputdirectory):

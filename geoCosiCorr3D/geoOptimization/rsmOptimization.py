@@ -4,8 +4,6 @@
 # Copyright (C) 2022
 """
 import numpy as np
-import sys
-import geoCosiCorr3D.georoutines.georoutines as geoRT
 
 
 class cRSMOptimization:
@@ -134,6 +132,7 @@ class cRSMOptimization:
         return P
 
     def Plot_Error(self):
+        import geoCosiCorr3D.georoutines.georoutines as geoRT
         import matplotlib.pyplot as plt
         from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                        AutoMinorLocator)
@@ -168,7 +167,8 @@ class cRSMOptimization:
         # ax.plot(np.arange(0, self.gcps.shape[0], 1), dU_est[:, 0], c="k", linestyle="-", marker="o", label="dUx_opt")
         # ax.plot(np.arange(0, self.gcps.shape[0], 1), dU_est[:, 1], c="g", linestyle="-", marker="o", label="dUy_opt")
         # ax.plot(np.arange(0, self.gcps.shape[0], 1), dU_est[:, 2], c="r", linestyle="-", marker="o", label="dUz_opt")
-        ax.plot(np.arange(0, self.gcps.shape[0], 1), sorted(dU_est_norm), c="g", linestyle="-", marker="o", label="dU_opt")
+        ax.plot(np.arange(0, self.gcps.shape[0], 1), sorted(dU_est_norm), c="g", linestyle="-", marker="o",
+                label="dU_opt")
         # ax.axhline(y=float(stat.mean), color='r', linewidth=4, linestyle='--')
         ax.grid()
 

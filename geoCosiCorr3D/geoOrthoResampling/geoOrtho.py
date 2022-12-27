@@ -4,14 +4,14 @@
 # Copyright (C) 2022
 """
 import logging
-import os, psutil
+import psutil
 import ctypes, ctypes.util, goto, sys
 import warnings
-import numpy as np
+
 from inspect import currentframe
 from goto import with_goto
 from dominate.tags import label
-from typing import Optional, Dict
+from typing import Optional
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
@@ -24,7 +24,6 @@ from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 from geoCosiCorr3D.geoCore.geoRawInvOrtho import RawInverseOrtho
 from geoCosiCorr3D.geoCore.constants import *
-
 
 geoWarns.wrIgnoreNotGeoreferencedWarning()
 process = psutil.Process(os.getpid())

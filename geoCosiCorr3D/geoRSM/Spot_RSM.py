@@ -3,10 +3,10 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-
+import logging
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d, splrep, splev
-import logging
+
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetSpot15Metadata, cGetSpot67Metadata
 from geoCosiCorr3D.geoRSM.misc import *

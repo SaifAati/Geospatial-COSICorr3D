@@ -10,11 +10,9 @@ from typing import List
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-# from geoCosiCorr3D.geoConfig import cgeoCfg
 from geoCosiCorr3D.geoCore.constants import EARTH
 from geoCosiCorr3D.geoCore.geoRawRSMMapping import RawPix2GroundDirectModel
 
-# geoCfg = cgeoCfg()
 
 INTERSECTON_TOL = 1e-3
 MAX_ITER = 10

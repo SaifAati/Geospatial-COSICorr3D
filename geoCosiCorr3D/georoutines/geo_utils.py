@@ -7,16 +7,17 @@ import matplotlib.pyplot as plt
 import rasterio
 import numpy as np
 import warnings
-from typing import Any, List, Optional
-from astropy.time import Time
-from scipy.stats import norm
-from scipy import stats
 import os
 import gdal
 import osr
 import pyproj
 import logging
+from typing import Any, List, Optional
+from astropy.time import Time
+from scipy.stats import norm
+from scipy import stats
 from pathlib import Path
+
 from geoCosiCorr3D.geoCore.base.base_georoutines import BaseRasterInfo
 from geoCosiCorr3D.geoCore.constants import WRITERASTER, SOFTWARE
 
@@ -717,8 +718,9 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data=
                              epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data)
     return output_path
 
+
 class geoStat:
-    def __init__(self, in_array:np.ndarray, display_values:Optional[bool]=True):
+    def __init__(self, in_array: np.ndarray, display_values: Optional[bool] = True):
         sample = np.ma.masked_invalid(in_array)
         mask = np.ma.getmask(sample)
 

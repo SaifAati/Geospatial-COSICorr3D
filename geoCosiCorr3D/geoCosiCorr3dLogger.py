@@ -5,9 +5,10 @@
 """
 import logging
 import os, sys
-from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from datetime import datetime
 from typing import Optional
+
+from geoCosiCorr3D.geoCore.constants import SOFTWARE
 
 
 class geoCosiCorr3DLog:

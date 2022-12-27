@@ -56,17 +56,7 @@ class HeightInterpolation:
 
     @staticmethod
     def get_h_from_DEM_v2(geo_coords: List, dem_path: str, h: float = None, step=3):
-        """
 
-        Args:
-            geo_coords: [lat,lon]
-            demInfo:
-            h:
-            step:
-
-        Returns:
-
-        """
         from geoCosiCorr3D.georoutines.geo_utils import Convert
         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
         from geoCosiCorr3D.georoutines.geo_utils import cRasterInfoGDAL

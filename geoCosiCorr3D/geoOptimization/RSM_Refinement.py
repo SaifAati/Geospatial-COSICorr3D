@@ -4,12 +4,10 @@
 # Copyright (C) 2022
 """
 import numpy as np
-import sys
-
 import pandas
+import logging
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import logging
 
 
 class cRSMRefinement:
@@ -131,9 +129,9 @@ class cRSMRefinement:
     def compute_correction(self):
         for i in range(3):
             corrParams = self.fit_correction_plan(x=self.gcp_df['xPix'],
-                                                   y=self.gcp_df['yPix'],
-                                                   w=self.gcp_df['weight'],
-                                                   obs=self.dU[:, i])
+                                                  y=self.gcp_df['yPix'],
+                                                  w=self.gcp_df['weight'],
+                                                  obs=self.dU[:, i])
             self.corr_model[:, i] = corrParams
         return
 

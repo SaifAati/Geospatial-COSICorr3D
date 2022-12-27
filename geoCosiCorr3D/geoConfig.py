@@ -5,7 +5,6 @@
 """
 # This is a configuration file, containing all the parameters of the geoCosiCorr3D workflow.
 
-import os
 import sys
 from geoCosiCorr3D.georoutines.file_cmd_routines import CreateDirectory
 from geoCosiCorr3D.geoCore.constants import *
