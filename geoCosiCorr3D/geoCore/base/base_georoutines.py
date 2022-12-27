@@ -3,8 +3,6 @@
 # Copyright (C) 2022
 
 from typing import Optional
-import rasterio
-import numpy as np
 from abc import ABC
 
 
