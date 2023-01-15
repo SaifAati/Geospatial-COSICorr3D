@@ -10,7 +10,7 @@ import pytest
 import geoCosiCorr3D
 from geoCosiCorr3D.geoRSM.geoRSM_generation import geoRSM_generation
 from geoCosiCorr3D.geoCore.constants import SENSOR, SOFTWARE
-from geoCosiCorr3D.geoRSM.Spot_RSM import cSpot67,cSpot15
+from geoCosiCorr3D.geoRSM.Spot_RSM import cSpot67
 from geoCosiCorr3D.utils.misc import read_json_as_dict
 
 folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
@@ -21,9 +21,9 @@ test_sensor_list = [SENSOR.SPOT1, SENSOR.SPOT2, SENSOR.SPOT3, SENSOR.SPOT4, SENS
                     SENSOR.WV2, SENSOR.WV3]
 rsm_models = [geoRSM_generation(sensor_name=sensor, metadata_file=metadata_file) for (sensor, metadata_file) in
               zip(test_sensor_list, metadata_list)]
-expected_model_classes = 5 * [cSpot15]
+expected_model_classes = 5 * [geoCosiCorr3D.geoRSM.Spot_RSM.cSpot15]
 expected_model_classes.extend(
-    [cSpot67, geoCosiCorr3D.geoRSM.DigitalGlobe_RSM.cDigitalGlobe])
+    [geoCosiCorr3D.geoRSM.Spot_RSM.cSpot67, geoCosiCorr3D.geoRSM.DigitalGlobe_RSM.cDigitalGlobe])
 expected_model_classes.extend(2 * [geoCosiCorr3D.geoRSM.DigitalGlobe_RSM.cDigitalGlobe])
 
 
@@ -35,7 +35,7 @@ def test_rsm_generation(test_input, expected):
 
 expec_res = read_json_as_dict(os.path.join(folder, 'expec_test_georsm.json'))
 
-model: cSpot67 = rsm_models[5]
+model: geoCosiCorr3D.geoRSM.Spot_RSM.cSpot67 = rsm_models[5]
 
 
 @pytest.mark.parametrize('test_input, expected', [

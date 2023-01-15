@@ -6,7 +6,6 @@
 import pandas
 import pytest
 import tempfile
-
 from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
 from geoCosiCorr3D.geoCore.constants import *
