@@ -9,11 +9,10 @@ import math
 import logging
 from typing import List, Optional, Dict
 from abc import abstractmethod
-
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoRSM.Ground2Pixel import RSMG2P
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoCore.constants import Resampling_Methods, SATELLITE_MODELS
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
 
 
 class GCPPatch:
@@ -29,7 +28,7 @@ class GCPPatch:
         ref_ortho_patch_dim_pix, patch_map_extent = \
             GCPPatch.get_patch_dim_l3b(patch_sz_pix=[patch_sz[0], patch_sz[1]],
                                        gcp_coord=[x_map_coord, y_map_coord],
-                                       l3b_img_path=l3b_img_path)
+                                       l3b_raster_info=l3b_img_path)
         if np.all(ref_ortho_patch_dim_pix.values() == 0) and np.all(patch_map_extent.values() == 0):
             msg = f'Patch ref boundaries for GCP {gcp_id} is outside ref l3b image'
             logging.warning(msg)
@@ -69,7 +68,7 @@ class GCPPatch:
         """
         dem_bbox_pix = {'x_dem_min_pix': 0, 'x_dem_max_pix': 0, 'y_dem_min_pix': 0, 'y_dem_max_pix': 0}
         xRefMin_map, yRefMin_map, xRefMax_map, yRefMax_map = bbox_map_coord[0], bbox_map_coord[1], bbox_map_coord[2], \
-                                                             bbox_map_coord[3]
+            bbox_map_coord[3]
         xDemMinPix, yDemMinPix = dem_info.Map2Pixel(x=xRefMin_map, y=yRefMin_map)
         xDemMaxPix, yDemMaxPix = dem_info.Map2Pixel(x=xRefMax_map, y=yRefMax_map)
         xDemMinPix = int(xDemMinPix - margin)
@@ -87,7 +86,7 @@ class GCPPatch:
                     'y_dem_max_pix': yDemMaxPix}
 
     @staticmethod
-    def get_patch_dim_l3b(patch_sz_pix: List, gcp_coord: List, l3b_img_path: str, tol: float = 1e-3):
+    def get_patch_dim_l3b(patch_sz_pix: List, gcp_coord: List, l3b_raster_info: geoRT.cRasterInfo, tol: float = 1e-3):
         # TODO update the description
         """
             Determining the Reference Image subset surrounding the gcp in the Reference Image.
@@ -99,7 +98,7 @@ class GCPPatch:
             Returns:
                 Returns: Subset pixel corners coordinates of the refImage and gcpPatch dimensions
         """
-        l3b_raster_info = geoRT.cRasterInfo(l3b_img_path)
+        # l3b_raster_info = geoRT.cRasterInfo(l3b_img_path)
         fullwinszX, fullwinszY = patch_sz_pix[0], patch_sz_pix[1]
         x_ref_pix_, y_ref_pix_ = l3b_raster_info.Map2Pixel(x=gcp_coord[0], y=gcp_coord[1])
         x_ref_pix = math.floor(x_ref_pix_)
@@ -144,17 +143,17 @@ class GCPPatch:
             bot_right_ew = x_map_min + np.abs(l3b_raster_info.pixel_width) * fullwinszX
             bot_right_ns = y_map_max - np.abs(l3b_raster_info.pixel_height) * fullwinszY
             bbox_map['up_left_ew'], bbox_map['up_left_ns'], bbox_map['bot_right_ew'], \
-            bbox_map['bot_right_ns'] = up_left_ew, up_left_ns, bot_right_ew, bot_right_ns
+                bbox_map['bot_right_ns'] = up_left_ew, up_left_ns, bot_right_ew, bot_right_ns
             return bbox_pix, bbox_map
 
     pass
 
 
 class OrthoPatch(GCPPatch):
-    def __init__(self, ortho_img, patch_sz, gcp):
-        self.ortho_img_path = ortho_img
-        self.ortho_info = geoRT.cRasterInfo(self.ortho_img_path)
-
+    def __init__(self, ortho_info: geoRT.cRasterInfo, patch_sz, gcp):
+        # self.ortho_img_path = ortho_img
+        # self.ortho_info = geoRT.cRasterInfo(self.ortho_img_path)
+        self.ortho_info = ortho_info
         self.gcp = gcp
         self.patch_sz = patch_sz
         self.patch_status = True
@@ -175,7 +174,7 @@ class OrthoPatch(GCPPatch):
         self.ortho_patch_pix_extent, self.ortho_patch_map_extent = \
             GCPPatch.get_patch_dim_l3b(patch_sz_pix=[self.patch_sz[0], self.patch_sz[1]],
                                        gcp_coord=[self.gcp['x_map'], self.gcp['y_map']],
-                                       l3b_img_path=self.ortho_img_path)
+                                       l3b_raster_info=self.ortho_info)
         if np.all(self.ortho_patch_pix_extent.values() == 0) and np.all(self.ortho_patch_map_extent.values() == 0):
             gcp_id = self.gcp.get('gcp_id', [self.gcp['x_map'], self.gcp['y_map']])
             msg = f'Patch ref boundaries for GCP {gcp_id} is outside ref l3b image'
@@ -185,11 +184,12 @@ class OrthoPatch(GCPPatch):
 
 
 class RawInverseOrthoPatch(GCPPatch):
-    def __init__(self, raw_img, sat_model, corr_model, patch_sz, patch_epsg, patch_res, patch_map_extent, dem_path=None,
+    def __init__(self, raw_img_info: geoRT.cRasterInfo, sat_model, corr_model, patch_sz, patch_epsg, patch_res,
+                 patch_map_extent, dem_path: Optional[str] = None,
                  model_type=SATELLITE_MODELS.RSM, resampling_method=Resampling_Methods.SINC, debug=False):
         self.debug = debug
         self.patch_sz = patch_sz
-        self.raw_img_path = raw_img
+        self.raw_img_info = raw_img_info
         self.sat_model = sat_model
         self.corr_model = corr_model
         self.model_type = model_type
@@ -217,7 +217,7 @@ class RawInverseOrthoPatch(GCPPatch):
 
     def compute_ortho_patch(self):
         if self.model_type == SATELLITE_MODELS.RSM:
-            patch_ortho_obj = RSMOrthorectifyPatch(raw_img_path=self.raw_img_path,
+            patch_ortho_obj = RSMOrthorectifyPatch(raw_img_info=self.raw_img_info,
                                                    rsm_model=self.sat_model,
                                                    patch_map_grid=self.raw_ortho_patch_map_grid,
                                                    rsm_corr_model=self.corr_model,
@@ -259,7 +259,7 @@ class PatchMapGrid:
 
 class RSMOrthorectifyPatch:
     def __init__(self,
-                 raw_img_path,
+                 raw_img_info,
                  rsm_model,
                  patch_map_grid: PatchMapGrid,
                  rsm_corr_model=None,
@@ -274,17 +274,17 @@ class RSMOrthorectifyPatch:
         self.rsm_model = rsm_model
         self.dem_info = dem_info
         self.resampling_method = resampling_method
-        self.raw_img_path = raw_img_path
+        self.raw_img_info = raw_img_info
         self.debug = debug
         self.ingest()
         self.compute_transformation_model()
 
         if self.debug:
-            logging.info('patch tx_model:{}'.format(self.transform_model.shape))
+            logging.info('{} patch tx_model:{}'.format(self.__class__.__name__, self.transform_model.shape))
         self.orthorectify()
 
     def ingest(self):
-        self.raw_img_info = geoRT.cRasterInfo(self.raw_img_path)
+
         if self.rsm_corr_model is None:
             self.rsm_corr_model = np.zeros((3, 3))
         if self.transform_model_shape is None:
@@ -304,7 +304,8 @@ class RSMOrthorectifyPatch:
                                      yMap=northing,
                                      projEPSG=self.grid.grid_epsg,
                                      rsmCorrection=self.rsm_corr_model,
-                                     demInfo=self.dem_info)
+                                     demInfo=self.dem_info,
+                                     debug=self.debug)
         self.transform_model = transform_model_obj.get_pix_coords()
         logging.info(
             f'Trx model:x_range:{np.min(self.transform_model[0]), np.max(self.transform_model[0])}, '

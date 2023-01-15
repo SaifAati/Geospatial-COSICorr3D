@@ -8,7 +8,6 @@ import pandas, warnings, math, affine6p
 import numpy as np
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
 
 
 def EstimateGeoTransformation(pixObs, groundObs):
@@ -172,7 +171,7 @@ def GetPatchDims(rOrthoInfo, gcpCorr, winSz, tol=1e-3):
     return rOrthoPatchDimsArray, rawImgPatchX0Y0Array
 
 
-def GetDEM_subsetDim(bboxCoords, demInfo:geoRT.cRasterInfo, margin=5):
+def GetDEM_subsetDim(bboxCoords, demInfo: geoRT.cRasterInfo, margin=5):
     """
     Determining the DEM subset covering the patch area.
     The subset is enlarged of margin pixels for interpolation.
@@ -201,60 +200,6 @@ def GetDEM_subsetDim(bboxCoords, demInfo:geoRT.cRasterInfo, margin=5):
     else:
         # Store the subset pixel corners coordinates in the DEM
         return [1, xDemMinPix, xDemMaxPix, yDemMinPix, yDemMaxPix]
-
-
-
-
-
-def ComputeFootprint(rsmModel, oProj, demInfo:geoRT.cRasterInfo=None, rsmCorrectionArray=np.zeros((3, 3))):
-    """
-
-    Args:
-        rsmModel:
-        demInfo:
-        rsmCorrectionArray:
-
-    Returns:
-
-    """
-    xBBox = [0, rsmModel.nbCols - 1, 0, rsmModel.nbCols - 1]
-    yBBox = [0, 0, rsmModel.nbRows - 1, rsmModel.nbRows - 1]
-
-    geoCoordList = []
-
-    for xVal, yVal in zip(xBBox, yBBox):
-        # print("\n----- xVal:{},yVal:{}".format(xVal, yVal))
-
-        if demInfo is not None:
-            pix2Ground_obj = cPix2GroundDirectModel(rsmModel=rsmModel,
-                                                    xPix=xVal,
-                                                    yPix=yVal,
-                                                    rsmCorrectionArray=rsmCorrectionArray,
-                                                    demFile=demInfo.input_raster_path)
-        else:
-            pix2Ground_obj = cPix2GroundDirectModel(rsmModel=rsmModel,
-                                                    xPix=xVal,
-                                                    yPix=yVal,
-                                                    rsmCorrectionArray=rsmCorrectionArray,
-                                                    demFile=None)
-
-        geoCoordList.append(pix2Ground_obj.geoCoords)
-
-    ## Convert foot printcoord to the grid projection system
-
-    geoGround = np.asarray(geoCoordList)
-
-    utmGround = geoRT.Convert.coord_map1_2_map2(X=list(geoGround[:, 1]),
-                                                Y=list(geoGround[:, 0]),
-                                                Z=list(geoGround[:, -1]),
-                                                targetEPSG=oProj)
-
-    topLeftGround = [utmGround[0][0], utmGround[1][0], utmGround[2][0]]
-    topRightGround = [utmGround[0][1], utmGround[1][1], utmGround[2][1]]
-    bottomLeftGround = [utmGround[0][2], utmGround[1][2], utmGround[2][2]]
-    bottomRightGround = [utmGround[0][3], utmGround[1][3], utmGround[2][3]]
-
-    return topLeftGround, topRightGround, bottomLeftGround, bottomRightGround, xBBox, yBBox
 
 
 def Decimalmod(value, param, precision=None):
@@ -405,6 +350,8 @@ def get_dem_dims(xBBox, yBBox, demInfo: geoRT.cRasterInfo, margin=2):
     dims = [int(x) for x in dims]
     # print("dims=", dims)
     return dims
+
+
 def GetDEM_dims_old(xBBox, yBBox, demInfo, margin=2):
     """
     Determining the DEM dimension needed to cover BBox extent .
