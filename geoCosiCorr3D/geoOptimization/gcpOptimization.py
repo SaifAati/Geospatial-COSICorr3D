@@ -3,24 +3,22 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import os, sys, pandas
-# from tqdm import tqdm
-import numpy as np
-import matplotlib.pyplot as plt
+import sys, pandas
 import logging
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from multiprocessing import Pool, cpu_count
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
-from geoCosiCorr3D.geoCore.constants import SOFTWARE, SATELLITE_MODELS, GEOCOSICORR3D_SATELLITE_MODELS, \
-    GEOCOSICORR3D_SENSORS_LIST, CORRELATION, Resampling_Methods
+import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarn
+from geoCosiCorr3D.geoCore.constants import *
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOptimization.RSM_Refinement import cRSMRefinement
-import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarn
-from geoCosiCorr3D.geoCore.core_correlation import FreqCorrelator, SpatialCorrelator
-from geoCosiCorr3D.geoOrthoResampling.GCPPatch import GCPPatch, OrthoPatch, RawInverseOrthoPatch
+from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator, SpatialCorrelator)
+from geoCosiCorr3D.geoOrthoResampling.GCPPatch import (GCPPatch, OrthoPatch, RawInverseOrthoPatch)
 
 geoWarn.wrIgnoreNotGeoreferencedWarning()
 
@@ -44,7 +42,7 @@ class cGCPOptimization:
         self.sat_model_params = sat_model_params
         self.debug = debug
         self.opt_gcp_file = opt_gcp_file_path
-        self.svg_patches = svg_patches
+        self.svg_patches = True
         if opt_params is None:
             self.opt_params = {}
         else:
@@ -63,12 +61,15 @@ class cGCPOptimization:
             self.gcp_df.drop('Unnamed: 0', axis=1, inplace=True)
         logging.info(f'{self.__class__.__name__}: input GCPs:{self.gcp_df.shape}')
         self.nb_gcps = self.gcp_df.shape[0]
+        logging.info(f'{self.__class__.__name__}: loading RAW IMG')
         self.raw_img_info = geoRT.cRasterInfo(self.raw_img_path)
+        logging.info(f'{self.__class__.__name__}: loading REF IMG')
         self.ref_ortho_info = geoRT.cRasterInfo(self.ref_ortho_img)
         if self.dem_path is None:
             self.dem_info = None
             logging.warning('No DEM provided')
         else:
+            logging.info(f'{self.__class__.__name__}: loading DEM ')
             self.dem_info = geoRT.cRasterInfo(self.dem_path)
         self.nb_loops = self.opt_params.get('nb_loops', 3)
         self.snr_th = self.opt_params.get('snr_th', 0.9)
@@ -106,7 +107,7 @@ class cGCPOptimization:
                 logging.info(f'{self.__class__.__name__}: {self.sat_model_name} sensor: {self.sensor}')
                 self.sat_model = RSM.build_RSM(metadata_file=self.sat_model_metadata, sensor_name=self.sensor,
                                                debug=self.debug)
-                logging.info(f'{self.__class__.__name__}: {self.sat_model_name} model: {self.sat_model}')
+                logging.info(f'{self.__class__.__name__}: {self.sat_model_name}')
 
         if self.sat_model_name == SATELLITE_MODELS.RFM:
             # TODO implement RFM
@@ -123,8 +124,11 @@ class cGCPOptimization:
         self.corr_wz = corr_params.get('window_size', [128, 128, 128, 128])
         logging.info(f'correlation params: {self.corr_method} || {self.corr_wz}')
 
-        self.patches_folder = fileRT.CreateDirectory(directoryPath=os.path.dirname(self.opt_gcp_file),
-                                                     folderName=f"{self.sat_model_name}_gcp_patches", cal="y")
+        if self.svg_patches:
+            self.patches_folder = fileRT.CreateDirectory(directoryPath=os.path.dirname(self.opt_gcp_file),
+                                                         folderName=f"{self.sat_model_name}_gcp_patches", cal="y")
+        else:
+            self.patches_folder = None
 
         return
 
@@ -195,63 +199,35 @@ class cGCPOptimization:
             np.asarray(dem_patch_dims), valid_gcps
 
     @staticmethod
-    def generate_patches(raw_img_path, sat_model, corr_model, patch_sz, ref_ortho_img, patches_folder,
+    def generate_patches(raw_img_info: geoRT.cRasterInfo, sat_model, corr_model, patch_sz,
+                         ortho_info: geoRT.cRasterInfo,
+                         patches_folder,
                          gcp: pandas.DataFrame,
                          dem_path,
                          sat_model_type=SATELLITE_MODELS.RSM,
                          loop_nb=None) -> Tuple:
-        ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
-        ref_ortho_patch: OrthoPatch = OrthoPatch(ortho_img=ref_ortho_img,
+        # ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
+        ref_ortho_patch: OrthoPatch = OrthoPatch(ortho_info=ortho_info,
                                                  patch_sz=patch_sz,
                                                  gcp=gcp)
         if ref_ortho_patch.patch_status == False:
             # TODO: implement exit
             pass
         # TODO add status to RAwInverseOrtho
-        raw_ortho_patch: RawInverseOrthoPatch = RawInverseOrthoPatch(raw_img=raw_img_path,
+
+        raw_ortho_patch: RawInverseOrthoPatch = RawInverseOrthoPatch(raw_img_info=raw_img_info,
                                                                      sat_model=sat_model,
                                                                      corr_model=corr_model,
                                                                      patch_sz=patch_sz,
-                                                                     patch_epsg=ref_ortho_info.epsg_code,
-                                                                     patch_res=np.abs(ref_ortho_info.pixel_width),
+                                                                     patch_epsg=ortho_info.epsg_code,
+                                                                     patch_res=np.abs(ortho_info.pixel_width),
                                                                      patch_map_extent=ref_ortho_patch.ortho_patch_map_extent,
                                                                      dem_path=dem_path,
                                                                      model_type=sat_model_type,
                                                                      resampling_method=Resampling_Methods.SINC,
                                                                      debug=False)
+
         # TOdo: change the patch writing to optional
-        patches_path = cGCPOptimization.write_patches(patches_folder=patches_folder,
-                                                      ref_ortho_patch=ref_ortho_patch.get_patch(),
-                                                      raw_ortho_patch=raw_ortho_patch.get_patch(),
-                                                      gcp_id=gcp['gcp_id'],
-                                                      loop_nb=loop_nb)
-
-        return patches_path, gcp, raw_ortho_patch.raw_ortho_patch_map_grid.grid_res
-
-    @staticmethod
-    def generate_patches_mp(args):
-        (raw_img_path, sat_model, corr_model, patch_sz, ref_ortho_img, patches_folder,
-         gcp, dem_path, sat_model_type, loop_nb) = args
-        ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
-        ref_ortho_patch: OrthoPatch = OrthoPatch(ortho_img=ref_ortho_img,
-                                                 patch_sz=patch_sz,
-                                                 gcp=gcp)
-        if ref_ortho_patch.patch_status == False:
-            # TODO: implement exit
-            pass
-        # TODO add status to RAwInverseOrtho
-        raw_ortho_patch: RawInverseOrthoPatch = RawInverseOrthoPatch(raw_img=raw_img_path,
-                                                                     sat_model=sat_model,
-                                                                     corr_model=corr_model,
-                                                                     patch_sz=patch_sz,
-                                                                     patch_epsg=ref_ortho_info.epsg_code,
-                                                                     patch_res=np.abs(ref_ortho_info.pixel_width),
-                                                                     patch_map_extent=ref_ortho_patch.ortho_patch_map_extent,
-                                                                     dem_path=dem_path,
-                                                                     model_type=sat_model_type,
-                                                                     resampling_method=Resampling_Methods.SINC,
-                                                                     debug=False)
-
         patches_path = cGCPOptimization.write_patches(patches_folder=patches_folder,
                                                       ref_ortho_patch=ref_ortho_patch.get_patch(),
                                                       raw_ortho_patch=raw_ortho_patch.get_patch(),
@@ -264,8 +240,8 @@ class cGCPOptimization:
     def compute_patch_shift(patch_path, patch_gsd, gcp, patches_folder,
                             corr_method=CORRELATION.FREQUENCY_CORRELATOR, debug=False, loop_nb=None):
         # TODO change this function to take as input equal arrays and correlation params
-        # toDO Move this function to the correlation package or to the image registration package
-        ## what we can do this function will be a class function of GCP patch that call a higher level function geoImageCorrealtion package
+        # TODO Move this function to the correlation package or to the image registration package
+        ## what we can do also: this function will be a class function of GCP patch that call a higher level function geoImageCorrealtion package
 
         ## TODO add the PhaseCorr-CV, PhaseCorr-SK, OpticalFlow
         ew, ns, snr, orthoSubsetRes, dx, dy = np.nan, np.nan, 0, 0, np.nan, np.nan
@@ -459,7 +435,6 @@ class cGCPOptimization:
             dem_path = None
 
         for loop in range(self.nb_loops):
-
             logging.info(f"--------------------- #Loop:{loop}-----------------------")
             if self.sat_model_name == SATELLITE_MODELS.RSM:
                 self.corr_model = self.compute_rsm_correction(self.sat_model, self.gcp_df_corr)
@@ -473,9 +448,9 @@ class cGCPOptimization:
 
             dx_pixs: List = []
             dy_pixs: List = []
-
-            gcp_patches = generate_gcp_patches(self.nb_gcps, self.raw_img_path, self.sat_model, self.corr_model,
-                                               self.patch_sz, self.ref_ortho_img, self.patches_folder,
+            logging.info(f'{self.__class__.__name__}: GCP patch generation ...')
+            gcp_patches = generate_gcp_patches(self.nb_gcps, self.raw_img_info, self.sat_model, self.corr_model,
+                                               self.patch_sz, self.ref_ortho_info, self.patches_folder,
                                                self.gcp_df_corr, dem_path, loop)
 
             for gcp_patch in gcp_patches:
@@ -484,13 +459,13 @@ class cGCPOptimization:
                                                                gcp=gcp_patch[1],
                                                                patches_folder=self.patches_folder,
                                                                corr_method=CORRELATION.FREQUENCY_CORRELATOR,
-                                                               debug=True,
+                                                               debug=self.svg_patches,
                                                                loop_nb=loop)
-                if self.debug:
-                    logging.info(
-                        'Loop:{} #GCP:{}--> dx[pix]:{:.4f},dy[pix]:{:.4f},snr:{:.4f}'.format(loop,
-                                                                                             gcp_patch[1]['gcp_id'], dx,
-                                                                                             dy, snr))
+
+                logging.info(
+                    'Loop:{} #GCP:{}--> dx[pix]:{:.4f},dy[pix]:{:.4f},snr:{:.4f}'.format(loop,
+                                                                                         gcp_patch[1]['gcp_id'], dx,
+                                                                                         dy, snr))
 
                 report_dict["GCP_ID"].append(gcp_patch[1]['gcp_id'])
                 report_dict["Lon"].append("%.10f" % (gcp_patch[1]['lon']))
@@ -529,8 +504,8 @@ class cGCPOptimization:
             std_dx_pix = np.nanstd(np.asarray(dx_pixs))
             std_dy_pix = np.nanstd(np.asarray(dy_pixs))
             xy_rmse = np.sqrt(std_dx_pix ** 2 + std_dy_pix ** 2)
-            if self.debug:
-                logging.info(f'mean_err[pix]:{mean_err_xy_pix} -->  RMSE[pix]:{xy_rmse}')
+
+            logging.info(f'{self.__class__.__name__}:: mean_err[pix]:{mean_err_xy_pix} --  RMSE[pix]:{xy_rmse}')
 
             if self.debug and self.svg_patches:
                 # TODO another plot will be the cumulative error plot, where we can compute the elbow thrshold and filter outliers
@@ -646,11 +621,13 @@ class cGCPOptimization:
         return patches_raster_path
 
 
-def generate_gcp_patches(nb_gcps, raw_img_path, sat_model, corr_model, patch_sz, ref_ortho_img,
+def generate_gcp_patches(nb_gcps, raw_img_info, sat_model, corr_model, patch_sz,
+                         ref_ortho_info,
                          patches_folder, gcp_df_corr, dem_path, loop):
     arg_list: List = []
+    # ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
     for i in range(nb_gcps):
-        arg = [raw_img_path, sat_model, corr_model, patch_sz, ref_ortho_img,
+        arg = [raw_img_info, sat_model, corr_model, patch_sz, ref_ortho_info,
                patches_folder, gcp_df_corr.iloc[i], dem_path, SATELLITE_MODELS.RSM, loop]
         arg_list.append(arg)
     # FIXME
@@ -661,7 +638,8 @@ def generate_gcp_patches(nb_gcps, raw_img_path, sat_model, corr_model, patch_sz,
     # pool.close()
 
     gcp_patches = []
-    for arg in arg_list:
+    for index, arg in enumerate(arg_list):
+        logging.info(f'___ Loop:{loop}  GCP:{index + 1}/{len(arg_list)} ___')
         gcp_patches.append(cGCPOptimization.generate_patches(*arg))
 
     return gcp_patches
