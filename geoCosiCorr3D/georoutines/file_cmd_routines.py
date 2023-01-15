@@ -6,63 +6,42 @@
 
 import fnmatch
 import os
-import shutil
 from shutil import rmtree, copyfile
-from typing import List, Optional
+import shutil
+from typing import Optional, List
 
 
-def GetFilesBasedOnExtension(path, filter="*.tif", disp=False):
-    """
-
-    Args:
-        path:
-        filter:
-        disp:
-
-    Returns:
-
-    """
+def get_files_based_on_extension(dir, filter="*.tif", disp=False):
     import glob
-    os.chdir(path)
-    filesList = []
+    os.chdir(dir)
+    files_list = []
 
     for file in glob.glob(filter):
-        filesList.append(os.path.join(path, file))
-    filesList.sort()
+        files_list.append(os.path.join(dir, file))
+    files_list.sort()
     if disp:
-        print("The list of ", filter, " files are:", filesList, " Ntot=", len(filesList))
+        print("The list of ", filter, " files are:", files_list, " Ntot=", len(files_list))
 
-    return filesList
+    return files_list
 
 
-def GetFilesBasedOnExtensions(path, filterList: Optional[List] = None, disp=False):
+def get_files_based_on_extensions(dir, filter_list: Optional[List] = None):
     import glob
-    if filterList is None:
-        filterList = ["*.tif", "*.vrt"]
-    os.chdir(path)
-    filesList = []
+    if filter_list is None:
+        filter_list = ["*.tif", "*.vrt"]
+    os.chdir(dir)
+    files_list = []
 
-    for filter in filterList:
+    for filter in filter_list:
         for file in glob.glob(filter):
-            filesList.append(os.path.join(path, file))
-    filesList.sort()
-    if disp:
-        print("The list of ", filterList, " files are:", filesList, " Ntot=", len(filesList))
+            files_list.append(os.path.join(dir, file))
+    files_list.sort()
 
-    return filesList
+    return files_list
 
 
-def FilesInDirectory(path, exclusionFilter: Optional[List] = None, displayFile=False):
-    """
+def FilesInDirectory(path, exclusionFilter:Optional[List]=None, displayFile=False):
 
-    Args:
-        path:
-        exclusionFilter:
-        displayFile:
-
-    Returns:
-
-    """
     if exclusionFilter is None:
         exclusionFilter = []
     files = os.listdir(path)
@@ -273,7 +252,7 @@ def UncompressBatch(directoryInput, directoryOutput):
     Returns:
 
     """
-    filesList = GetFilesBasedOnExtension(path=directoryInput, filter="*.zip")
+    filesList = get_files_based_on_extension(dir=directoryInput, filter="*.zip")
     nbTot = len(filesList)
     for index, file_ in enumerate(filesList):
         baseName = os.path.basename(file_)[0:-4]
@@ -347,7 +326,7 @@ def LocateFile(pattern, root=os.curdir):
             yield os.path.join(path, filename)
 
 
-def ExtractSubfiles(inputdirectory, fileExtension: Optional[List] = None, disp=False):
+def ExtractSubfiles(inputdirectory, fileExtension:Optional[List]=None, disp=False):
     """
 
     Args:
@@ -359,8 +338,7 @@ def ExtractSubfiles(inputdirectory, fileExtension: Optional[List] = None, disp=F
 
     """
     if fileExtension is None:
-        fileExtension = [".NTF"]
-
+        fileExtension = ['.NTF']
     filesList = []
     for root, dirs, files in os.walk(inputdirectory):
         for name in files:

@@ -8,16 +8,15 @@ import rasterio
 import numpy as np
 import warnings
 import os
-import gdal
-import osr
 import pyproj
 import logging
+from osgeo import osr, gdal
 from typing import Any, List, Optional
 from astropy.time import Time
 from scipy.stats import norm
 from scipy import stats
-from pathlib import Path
 
+from pathlib import Path
 from geoCosiCorr3D.geoCore.base.base_georoutines import BaseRasterInfo
 from geoCosiCorr3D.geoCore.constants import WRITERASTER, SOFTWARE
 
@@ -27,12 +26,12 @@ warnings.filterwarnings("ignore", category=rasterio.errors.NotGeoreferencedWarni
 class cRasterInfo(BaseRasterInfo):
     def __init__(self, input_raster_path: str):
         super().__init__(input_raster_path)
-        self.raster = None
         self.raster = rasterio.open(self.get_raster_path)
         self.raster_width, self.raster_height = self.raster.width, self.raster.height
         self.band_number = self.raster.count
         self.raster_type = self.raster.dtypes
         self.no_data = self.raster.nodata  # src.nodatavals
+        self.bands_description= self.raster.descriptions
         try:
             self.valid_map_info = True
             self.proj = self.raster.crs.wkt
@@ -486,7 +485,7 @@ def ComputeEpsg(lon, lat):
     return const + zone
 
 
-def ConvCoordMap1ToMap2(x, y, targetEPSG, z=None, sourceEPSG=4326, display=False):
+def ConvCoordMap1ToMap2(x, y, targetEPSG, z: Optional[float] = None, sourceEPSG=4326, display=False):
     """
     convert point coordinates from source to target system
     Args:
@@ -514,7 +513,7 @@ def ConvCoordMap1ToMap2(x, y, targetEPSG, z=None, sourceEPSG=4326, display=False
 
     transform = osr.CoordinateTransformation(source,
                                              target)  # instance of the class Coordinate Transformation
-    if z == None:
+    if z is None:
         coord = transform.TransformPoint(x, y)
 
     else:
@@ -525,7 +524,7 @@ def ConvCoordMap1ToMap2(x, y, targetEPSG, z=None, sourceEPSG=4326, display=False
     return coord
 
 
-def ConvCoordMap1ToMap2_Batch(X, Y, targetEPSG, Z: List = None, sourceEPSG=4326):
+def ConvCoordMap1ToMap2_Batch(X, Y, targetEPSG, Z: Optional[List] = None, sourceEPSG=4326):
     """
     Convert point coordinates from source to target system
 
@@ -555,7 +554,7 @@ def ConvCoordMap1ToMap2_Batch(X, Y, targetEPSG, Z: List = None, sourceEPSG=4326)
         return transformer.transform(X, Y, Z)
 
 
-def ReprojectRaster(input_raster_path, o_prj, vrt: bool = True, output_raster_path: str = None):
+def ReprojectRaster(input_raster_path, o_prj, vrt: bool = True, output_raster_path: Optional[str] = None):
     """
     Reproject a raster to a new projection system
 
@@ -655,7 +654,7 @@ class Convert:
             sys.exit("Error: Conversion from WG84 --> Cartesian ! ")
 
     @staticmethod
-    def coord_map1_2_map2(X, Y, targetEPSG, Z: List = None, sourceEPSG=4326):
+    def coord_map1_2_map2(X, Y, targetEPSG, Z: Optional[List] = None, sourceEPSG=4326):
         """
             Convert point coordinates from source to target system
 
@@ -687,7 +686,8 @@ class Convert:
             return transformer.transform(X, Y, Z)
 
 
-def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data=None, mask_vls: List = None) -> str:
+def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data: Optional[float] = None,
+                                   mask_vls: Optional[List] = None) -> str:
     """
 
     Args:
@@ -757,3 +757,76 @@ class geoStat:
                   "mad=",
                   self.mad, "nmad=", self.nmad)
             print("CE68=", self.ce68, "CE90=", self.ce90, "CE95=", self.ce95, "CE99=", self.ce99)
+
+
+def crop_raster(input_raster, roi_coord_wind, output_dir: Optional[str] = None, vrt=False,
+                raster_type=gdal.GDT_Float32):
+    if output_dir is None:
+        output_dir = os.path.dirname(input_raster)
+
+    if vrt:
+        format = "VRT"
+        o_path = os.path.join(output_dir, f"{Path(input_raster).stem}.crop.vrt")
+    else:
+        format = "GTiff"
+        o_path = os.path.join(output_dir, f"{Path(input_raster).stem}.crop.tif")
+    params = gdal.TranslateOptions(projWin=roi_coord_wind, format=format, outputType=raster_type, noData=-32767)
+
+    gdal.Translate(destName=o_path,
+                   srcDS=gdal.Open(input_raster),
+                   options=params)
+
+    return o_path
+
+
+def compute_rasters_overlap(rasters: List[str]):
+    from shapely.geometry import box
+
+    fp_extent = []
+    for raster_path in rasters:
+        raster = rasterio.open(raster_path)
+        extent_geom = box(*raster.bounds)
+        fp_extent.append(extent_geom)
+
+    overlap_area = fp_extent[0].intersection(fp_extent[1]) if fp_extent[0].intersects(fp_extent[1]) else None
+    index = 2
+
+    while overlap_area is not None and index < len(rasters):
+        overlap_area = overlap_area.intersection(fp_extent[index]) if overlap_area.intersects(
+            fp_extent[index]) else None
+        index += 1
+
+    return overlap_area
+
+
+def merge_tiles(in_tiles:List, o_file):
+    from rasterio.merge import merge
+
+    src_files_to_mosaic = []
+    for fp in in_tiles:
+        src = rasterio.open(fp)
+        src_files_to_mosaic.append(src)
+    # Merge function returns a single mosaic array and the transformation info
+    mosaic, out_trans = merge(src_files_to_mosaic)
+    # print(mosaic.shape)
+    #### Copy the metadata
+    out_meta = src.meta.copy()
+    crs = src.crs
+    # print(crs)
+    # Update the metadata
+    out_meta.update({"driver": "GTiff", "height": mosaic.shape[1], "width": mosaic.shape[2], "transform": out_trans,
+                     "crs": crs})  # "+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs "
+    print(in_tiles[0])
+    rasterInfo = cRasterInfo(in_tiles[0])
+    print(in_tiles[0])
+    descriptions = rasterInfo. bands_description  # rasterTemp["BandInfo"]
+    listArrays = []
+    for id in range(mosaic.shape[0]):
+        with rasterio.open(o_file, "w", **out_meta) as dest:
+            # the .astype(rasterio.int16) forces dtype to int16
+            dest.write_band(id + 1, mosaic[id, :, :])
+            dest.set_band_description(id + 1, descriptions[id])
+        listArrays.append(mosaic[id, :, :])
+
+    WriteRaster(oRasterPath=o_file, descriptions=descriptions, arrayList=listArrays, epsg=rasterInfo.epsg_code,
+                geoTransform=rasterInfo.geo_transform)
