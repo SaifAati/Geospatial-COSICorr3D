@@ -5,13 +5,14 @@
 """
 import logging
 import numpy as np
+from typing import Optional
 import sys
 import warnings
 import affine6p
-from typing import Optional, List
-
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+
+from typing import List
 from geoCosiCorr3D.geoCore.core_RFM import RawRFM
 
 
@@ -341,7 +342,7 @@ class RFM(ReadRFM):
 
 
 if __name__ == '__main__':
-    # TODO add to unit/functional tests
+    #TODO add to unit/functional tests
     img = '/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/3-geoOrtho_Test/Sample/Sample1/SPOT2.TIF'
     # img = '/media/cosicorr/storage/Saif/Planet_project/PlanetScope_L1As/Ridgecrest/Dove-R/Ridgecrest.3284591/L1As/20200402_183354_92_105c_1A_AnalyticMS.tif'
     rfm = RFM(img, debug=True)
