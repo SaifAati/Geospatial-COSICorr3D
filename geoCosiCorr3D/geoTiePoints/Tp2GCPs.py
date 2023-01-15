@@ -10,24 +10,14 @@ import uuid
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import os
 from pathlib import Path
-from typing import Optional, List, Dict
-
 from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
+from typing import Optional, List, Dict
 
 
 class TPsTOGCPS(RawTP2GCP):
     def __init__(self, in_tp_file: str, ref_img_path: str, base_img_path: str,
                  dem_path: Optional[str] = None, output_gcp_path: Optional[str] = None, debug: bool = False):
-        """
-
-        Args:
-            in_tp_file:
-            ref_img_path:
-            base_img_path:
-            dem_path:
-            output_gcp_path:
-        """
 
         super().__init__(in_tp_file, ref_img_path, base_img_path, dem_path, output_gcp_path, debug)
         self.ingest()
@@ -75,8 +65,9 @@ class TPsTOGCPS(RawTP2GCP):
         self.write_gcps()
         if self.debug:
             self.debug_plot()
-            self.plot_gcps(ref_ortho_path=self.ref_img_path, raw_img_path=self.base_img_path, gcp_df=self.gcp_df,
-                           output_gcp_path=self.output_gcp_path)
+            # Fixme: memory issue when the image is very large: downsample the image before plotting
+            # self.plot_gcps(ref_ortho_path=self.ref_img_path, raw_img_path=self.base_img_path, gcp_df=self.gcp_df,
+            #                output_gcp_path=self.output_gcp_path)
         return
 
     def set_gcp_alt(self) -> List:
@@ -159,6 +150,7 @@ class TPsTOGCPS(RawTP2GCP):
         Returns:
         Note: we assume that the DEM and the ref_ortho_img have the same projection.
         """
+        #TODO add RAW img groud extent
         import rasterio
         import matplotlib.pyplot as plt
         import shapely.geometry
@@ -171,19 +163,19 @@ class TPsTOGCPS(RawTP2GCP):
         src_ref = rasterio.open(self.ref_img_info.input_raster_path)
         fp_shp_ref = shapely.geometry.box(*src_ref.bounds)
         ax.plot(fp_shp_ref.exterior.xy[0], fp_shp_ref.exterior.xy[1], color='#F08080', alpha=0.7,
-                linewidth=3, solid_capstyle='round', zorder=2, label='ref_img')
+                linewidth=3, solid_capstyle='round', zorder=2, label='REF_IMG')
         # ax.scatter(self.xy_map_ref_img[:, 0], self.xy_map_ref_img[:, 1], label="GCPS")
         ax.scatter(self.gcp_df['x_map'], self.gcp_df['y_map'], label="GCPs", c=RENDERING.GCP_COLOR,
                    s=RENDERING.GCP_SZ, marker=RENDERING.GCP_MARKER)
 
-        ax.set_title('GCPs + DEM + Ref_Ortho')
+        ax.set_title('GCPs + REF_ORTHO + DEM')
         ax.set_xlabel('X_MAP_UTM')
         ax.set_ylabel('Y_MAP_UTM')
         plt.legend()
         plt.savefig(f'{self.output_gcp_path}.png')
         src_ref, src_dem = None, None
         plt.clf()
-        plt.close(fig)
+        # plt.close(fig)
         return
 
     @staticmethod

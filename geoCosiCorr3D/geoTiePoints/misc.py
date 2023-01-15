@@ -82,3 +82,42 @@ def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
         fig.savefig(os.path.join(os.path.dirname(reportPath), "CoregistrationError.png"), dpi=400)
 
     return loopList[indexMin], totalNbLoop, np.min(avgErrorList)
+
+
+def parse_opt_report(opt_report_path):
+    df = pandas.read_csv(opt_report_path)
+
+    nb_loops = list(df["nbLoop"])[-1]
+    loopList = []
+    rmse = []
+    avg_error = []
+    for loop_ in range(nb_loops + 1):
+
+        itemList = []
+        dxPixList = []
+        dyPixList = []
+        snrList = []
+        for item, dxPix_, dyPix_, snr_ in zip(list(df["nbLoop"]), list(df["dxPix"]), list(df["dyPix"]),
+                                              list(df["SNR"])):
+            if item == loop_:
+                itemList.append(item)
+                dxPixList.append(dxPix_)
+                dyPixList.append(dyPix_)
+                snrList.append(snr_)
+        dxPixAvg = np.nanmean(np.asarray(dxPixList))
+        dyPixAvg = np.nanmean(np.asarray(dyPixList))
+
+        dxPixRMSE = np.nanstd(np.asarray(dxPixList))
+        dyPixRMSE = np.nanstd(np.asarray(dyPixList))
+
+        xyErrorAvg = np.sqrt(dxPixAvg ** 2 + dyPixAvg ** 2)
+        xyRMSE = np.sqrt(dxPixRMSE ** 2 + dyPixRMSE ** 2)
+        loopList.append(loop_)
+        rmse.append(xyRMSE)
+        avg_error.append(xyErrorAvg)
+    idx_min = np.argmin(avg_error)
+    loop_min_err = loopList[idx_min]
+    # print("Loop of Min Error:{} --> RMSE:{:.3f} , avgErr:{:.3f}".format(loopList[indexMin], np.min(rmse),
+    #                                                                     np.min(avg_error)))
+
+    return rmse, avg_error, loop_min_err

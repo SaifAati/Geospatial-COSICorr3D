@@ -17,11 +17,14 @@ from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 class cMicMacTp(RawMMTP):
 
     def __init__(self, ref_img_path: str, raw_img_path: str, o_dir: Optional[str] = None,
-                 mode: str = "All", scale_factor: float = 1 / 8, tmp_dir: Optional[str] = None,
-                 plot_tps: bool = False, tp_format: str = "COSI-Corr"):
+                 mode: str = ASIFT_TP_PARAMS.MODE, scale_factor: Optional[float] = None,
+                 tmp_dir: Optional[str] = None,
+                 plot_tps: bool = False, tp_format: str = "COSI-Corr",
+                 max_pts: Optional[int] = None):
 
         config = {"method": "mmSIFT", "scale_factor": scale_factor, "mode": mode,
-                  "tp_format": tp_format, "mm_temp_folder": tmp_dir}
+                  "tp_format": tp_format, "mm_temp_folder": tmp_dir, 'max_pts': max_pts}
+
         super().__init__(config)
 
         self.raw_img_path = raw_img_path
@@ -64,7 +67,8 @@ class cMicMacTp(RawMMTP):
             self.tp_report_dic: Optional[Dict] = self.mm_tps(img_i=tmp_ref_img_path,
                                                              img_j=tmp_raw_img_path,
                                                              homol_dir=homol_path,
-                                                             format_cosi_corr=self.cosi_corr_format)
+                                                             format_cosi_corr=self.cosi_corr_format,
+                                                             max_tps = self.max_pts)
             if self.tp_report_dic is not None:
                 self.tp: pandas.DataFrame = self.tp_report_dic["DataFrame"]
                 self.o_tp_path = fileRT.CopyFile(inputFilePath=self.tp_report_dic["TpFile"], outputFolder=self.o_dir)
