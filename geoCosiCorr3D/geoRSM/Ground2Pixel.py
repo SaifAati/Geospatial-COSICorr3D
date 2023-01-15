@@ -6,9 +6,12 @@
 
 import numpy as np
 import logging
+from typing import Optional
 
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation, get_dem_dims, ComputeFootprint
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation, get_dem_dims
+from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RSMOrtho
+from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo, Convert
 
 
 class RSMG2P:
@@ -17,9 +20,9 @@ class RSMG2P:
                  xMap,
                  yMap,
                  projEPSG,
-                 rsmCorrection=None,
-                 demInfo=None,
-                 hMean=None,
+                 rsmCorrection: Optional[np.ndarray] = None,
+                 demInfo: Optional[cRasterInfo] = None,
+                 hMean: Optional[float] = None,
                  debug=False):
         """
         Compute pixel coordinate from a list of ground coordinates using RSM- for pushbroom system.
@@ -58,19 +61,18 @@ class RSMG2P:
         demDims = np.zeros((1, 4))
         if self.demInfo:
             demDims = get_dem_dims(xBBox=xBBox, yBBox=yBBox, demInfo=self.demInfo)
-            logging.info(demDims)
+            logging.info(f'{self.__class__.__name__}:DEM dims:{demDims}')
 
         ## Estimate Initial solution only for the first row
+        # logging.info('START SOL INI')
         self.get_init_sol()
-
+        # logging.info('END SOL INI')
         ## Compute the mesh-grid of ground coordinates grid
         self.eastArr = np.tile(xMap, (len(yMap), 1))
 
         tempNorthing = [yMap[i] for i in range(len(yMap))]
         self.northArr = np.tile(tempNorthing, (len(xMap), 1)).T
-
         self.DEM_interpolation(demDims=demDims)
-
         self.oArray = self.compute_pix_coords()
 
     def DEM_interpolation(self, demDims):
@@ -104,12 +106,25 @@ class RSMG2P:
         easting = self.xMap
         northing = self.yMap
         oColsNb = len(easting)
-        topLeftGround, topRightGround, bottomLeftGround, bottomRightGround, iXPixList, iYPixList = \
-            ComputeFootprint(rsmModel=self.rsmModel,
-                             demInfo=self.demInfo,
-                             rsmCorrectionArray=self.rsmCorrection,
-                             oProj=self.projEPSG)
+        polygon_extent, iXPixList, iYPixList, _ = RSM.compute_rsm_footprint(rsm_model=self.rsmModel,
+                                                                            dem_file=None if self.demInfo is None else self.demInfo.input_raster_path,
+                                                                            rsm_corr_model=self.rsmCorrection)
+
+        extent_geo_coords = np.asarray(polygon_extent['coordinates'])
+        extent_utm_coords = Convert.coord_map1_2_map2(X=list(extent_geo_coords[:, 1]),  # LAT
+                                                      Y=list(extent_geo_coords[:, 0]),  # LON
+                                                      Z=list(extent_geo_coords[:, -1]),
+                                                      targetEPSG=self.projEPSG)
+
+        topLeftGround = [extent_utm_coords[0][0], extent_utm_coords[1][0], extent_utm_coords[2][0]]
+        topRightGround = [extent_utm_coords[0][1], extent_utm_coords[1][1], extent_utm_coords[2][1]]
+        bottomRightGround = [extent_utm_coords[0][2], extent_utm_coords[1][2], extent_utm_coords[2][2]]
+        bottomLeftGround = [extent_utm_coords[0][3], extent_utm_coords[1][3], extent_utm_coords[2][3]]
+        logging.info(
+            f'{self.__class__.__name__}: patch ground extent:{topLeftGround, topRightGround, bottomLeftGround, bottomRightGround, iXPixList, iYPixList}')
+
         pixObs = np.array([iXPixList, iYPixList]).T
+
         groundObs = np.array([topLeftGround, topRightGround, bottomLeftGround, bottomRightGround])
         xBBox = [0, self.rsmModel.nbCols - 1, 0, self.rsmModel.nbCols - 1]
         yBBox = [0, 0, self.rsmModel.nbRows - 1, self.rsmModel.nbRows - 1]
@@ -140,13 +155,13 @@ class RSMG2P:
                                                             target_epsg=self.projEPSG)
         return outX, outY, oRowsNb
 
-
     def compute_pix_coords(self):
         outX, outY, oRowsNb = self.fG2Px()
         oArray = np.zeros((2, outX.shape[0], outX.shape[1]))
         oArray[0, :, :] = outX
         oArray[1, :, :] = outY
         return oArray
+
     def get_pix_coords(self):
 
         return self.oArray

@@ -20,7 +20,7 @@ class HeightInterpolation:
         """
 
         Args:
-            geo_coords: [lat,lon]
+            geo_coords: [lon, lat]
             demInfo:
             h:
             step:
@@ -30,16 +30,17 @@ class HeightInterpolation:
         """
         from geoCosiCorr3D.georoutines.geo_utils import Convert
         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
-        demCoord = Convert.coord_map1_2_map2(X=geo_coords[0],
-                                             Y=geo_coords[1],
+
+        demCoord = Convert.coord_map1_2_map2(X=geo_coords[1],  # LAT
+                                             Y=geo_coords[0],  # LON
                                              Z=h,
                                              targetEPSG=demInfo.epsg_code,
                                              sourceEPSG=4326)
+
         xdemCoord = demCoord[0]
         ydemCoord = demCoord[1]
         xdemPix = (xdemCoord - demInfo.x_map_origin) / np.abs(demInfo.pixel_width)
         ydemPix = (demInfo.y_map_origin - ydemCoord) / np.abs(demInfo.pixel_height)
-
         XdemMin, XdemMax, YdemMin, YdemMax = HeightInterpolation.check_DEM_subset(xdemPix=xdemPix,
                                                                                   ydemPix=ydemPix,
                                                                                   demInfo=demInfo,
@@ -56,7 +57,17 @@ class HeightInterpolation:
 
     @staticmethod
     def get_h_from_DEM_v2(geo_coords: List, dem_path: str, h: float = None, step=3):
+        """
 
+        Args:
+            geo_coords: [lat,lon]
+            demInfo:
+            h:
+            step:
+
+        Returns:
+
+        """
         from geoCosiCorr3D.georoutines.geo_utils import Convert
         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
         from geoCosiCorr3D.georoutines.geo_utils import cRasterInfoGDAL
@@ -214,34 +225,6 @@ def Qaut2Rot(quat_, axis=1, order=2):
             [(xy - wz), (1 - xx - zz), (yz + wx)],
             [(xz + wy), (yz - wx), (1 - xx - yy)]]
     return temp
-
-
-def BuildRSMfile(rsmObj, oFolder, fileName=None, debug=False):
-    """
-
-    Args:
-        rsmObj:
-        oFolder:
-
-    Returns: rsmFile path
-
-    """
-    if fileName == None:
-        rsmFile = os.path.join(oFolder, Path(rsmObj.file).stem + ".pkl")
-    else:
-        rsmFile = os.path.join(oFolder, fileName + ".pkl")
-    with open(rsmFile, "wb") as output:
-        pickle.dump(rsmObj, output, pickle.HIGHEST_PROTOCOL)
-    if debug:
-        print("RSM file:", rsmFile)
-
-    return rsmFile
-
-
-def ReadRSMpkl(pklFile):
-    with open(pklFile, "rb") as output:
-        data = pickle.load(output)
-    return data
 
 
 def GetRot_Geographic2LocalRefSystem(ptLon, ptLat, unit="degree"):

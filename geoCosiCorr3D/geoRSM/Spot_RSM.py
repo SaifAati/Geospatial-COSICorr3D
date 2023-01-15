@@ -3,10 +3,10 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import logging
+
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d, splrep, splev
-
+import logging
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetSpot15Metadata, cGetSpot67Metadata
 from geoCosiCorr3D.geoRSM.misc import *
@@ -23,11 +23,14 @@ class cSpot67(RSM):
     """
 
     def __init__(self, dmpXml: str, debug: bool = False):
+        super().__init__()
         self.debug = debug
         self.dmpFile = dmpXml
         self.file = self.dmpFile
         # self.imgFilePath = os.path.join(os.path.dirname(dmpXml), "IMG_" + Path(dmpXml).stem.split("DIM_")[1] + ".tif")
         self.spotMetadata = cGetSpot67Metadata(self.dmpFile)
+        self.date = self.spotMetadata.imagingDate
+        self.time = self.spotMetadata.time
         self.platform = self.spotMetadata.instrument + " " + self.spotMetadata.instrumentIndex
 
         self.nbRows = self.spotMetadata.nbRows
@@ -266,12 +269,15 @@ class cSpot15(RSM):
     """
 
     def __init__(self, dmpFile: str, debug: bool = True):
+        super().__init__()
         self.debug = debug
         self.dmpFile = dmpFile
         self.spotMetadata = cGetSpot15Metadata(dmpFile=self.dmpFile, debug=self.debug)
 
         acqTime = self.spotMetadata.date + "T" + self.spotMetadata.time
         self.date_time_obj = datetime.datetime.strptime(acqTime, '%Y-%m-%dT%H:%M:%S')
+        self.data = self.spotMetadata.date
+        self.time = self.spotMetadata.time
 
         ##Spot-MISSION-INSTRUMENTNAME-INSTRUMENTINDEX-MODE
         self.platform = "Spot-" + str(self.spotMetadata.mission) + "-" + self.spotMetadata.instrumentName + "-" + str(

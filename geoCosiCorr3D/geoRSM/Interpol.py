@@ -9,6 +9,8 @@ from scipy import interpolate
 from scipy.interpolate import *
 from typing import Optional, List
 
+from geoCosiCorr3D.geoCore.constants import INTERPOLATION_TYPES
+
 
 def isMonotonic(A):
     """
@@ -74,7 +76,7 @@ def Value_Locate(vector, values):
     return inds
 
 
-def Interpol(VV, XX, xOut: Optional[List] = None, interType="linear"):
+def Interpol(VV, XX, xOut: Optional[List] = None, interType=INTERPOLATION_TYPES.LINEAR):
     """
 
     Args:
@@ -135,7 +137,7 @@ def LinearIterpolation(array, location):
     return res
 
 
-def Interpolate2D(inArray, x, y, kind='cubic'):
+def Interpolate2D(inArray, x, y, kind=INTERPOLATION_TYPES.CUBIC):
     """
     Procedure for 2D interpolation
     Args:
@@ -175,7 +177,6 @@ def Interpolate2D(inArray, x, y, kind='cubic'):
         if len(x) > 1 and len(y) > 1:
             res = []
             for x_, y_ in zip(x, y):
-
                 res.append(f(x_, y_).item())
             return res
         else:
@@ -202,6 +203,17 @@ def Interpolate2D(inArray, x, y, kind='cubic'):
                                                 fill_value=np.nan)
 
         return f(np.array([x, y]).T)
+
+
+def Interpoate1D(X, Y, xCord, kind=INTERPOLATION_TYPES.LINEAR):
+    # print(X,Y)
+    f = interp1d(X, Y, kind=kind, fill_value="extrapolate")
+    ynew = f(xCord)  # use interpolation function returned by `inter
+
+    if len(ynew) > 1:
+        return ynew
+    else:
+        return [ynew.item()]
 
 
 if __name__ == '__main__':

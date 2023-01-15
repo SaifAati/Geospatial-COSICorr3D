@@ -3,6 +3,7 @@ AUTHOR: Saif Aati (saif@caltech.edu)
 PURPOSE: Read QuickBird/WorldView1-2-3-4 Image MetaData ASCII & XML files and Build RSM.
 """
 import logging
+
 import numpy as np
 
 import geoCosiCorr3D.geoRSM.misc as geoRSMMisc
@@ -21,10 +22,13 @@ class cDigitalGlobe(RSM):
         Args:
             dgFile:
         """
+        super().__init__()
         self.file = dgFile
         self.debug = debug
         self.dgMetadata = cGetDGMetadata(dgFile=dgFile, debug=self.debug)
         self.platform = self.dgMetadata.platform
+        self.date = self.dgMetadata.date
+        self.time = self.dgMetadata.time
         self.productCatalogId = self.dgMetadata.productCatalogId
         self.imgLevel = self.dgMetadata.imgLevel
         self.bandId = self.dgMetadata.bandId

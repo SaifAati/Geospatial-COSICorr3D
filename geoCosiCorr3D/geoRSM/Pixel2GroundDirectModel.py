@@ -6,13 +6,12 @@
 import logging
 import warnings
 import numpy as np
-from typing import List
+from typing import List, Optional
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.constants import EARTH
 from geoCosiCorr3D.geoCore.geoRawRSMMapping import RawPix2GroundDirectModel
-
 
 INTERSECTON_TOL = 1e-3
 MAX_ITER = 10
@@ -23,18 +22,19 @@ class cPix2GroundDirectModel(RawPix2GroundDirectModel):
     def __init__(self, rsmModel,
                  xPix,
                  yPix,
-                 rsmCorrectionArray=np.zeros((3, 3)),
-                 demFile=None,
-                 hMean=None,
+                 rsmCorrectionArray: Optional[np.ndarray] = None,
+                 demFile: Optional[str] = None,
+                 hMean: Optional[float] = None,
                  oProjEPSG=None,
                  semiMajor=EARTH.SEMIMAJOR,
                  semiMinor=EARTH.SEMIMINOR,
                  debug=False):
-
+        if rsmCorrectionArray is None:
+            rsmCorrectionArray = np.zeros((3, 3))
         super().__init__(rsmModel, xPix, yPix, rsmCorrectionArray, demFile, hMean, oProjEPSG, semiMajor, semiMinor,
                          debug)
 
-        self.geoCoords = self.compute_pix2ground_direct_model()
+        self.geoCoords = self.compute_pix2ground_direct_model()  # LON, LAT, ALT
 
     def compute_pix2ground_direct_model(self):
 
@@ -141,7 +141,7 @@ class cPix2GroundDirectModel(RawPix2GroundDirectModel):
             OM3_Y = u3_Y * mu + satPosY
             OM3_Z = u3_Z * mu + satPosZ
             # print("OM3_X:{}, OM3_Y:{}, OM3_Z:{}".format(OM3_X, OM3_Y, OM3_Z))
-            geoCoords = geoRT.Convert.cartesian_2_geo(x=OM3_X, y=OM3_Y, z=OM3_Z)
+            geoCoords = geoRT.Convert.cartesian_2_geo(x=OM3_X, y=OM3_Y, z=OM3_Z)  # LON, LAT,
 
             tempEPSG = geoRT.ComputeEpsg(lon=geoCoords[0], lat=geoCoords[1])
 
@@ -172,4 +172,3 @@ class cPix2GroundDirectModel(RawPix2GroundDirectModel):
 
     def __str__(self):
         pass
-

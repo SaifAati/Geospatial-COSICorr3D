@@ -3,6 +3,7 @@ Author: Saif Aati (saif@caltech.edu)
 Read QuickBird/WorldView1-2-3-4 Image MetaData ASCII and XML files
 """
 import logging
+
 import numpy as np
 import datetime, os
 import xml.etree.ElementTree as ET
