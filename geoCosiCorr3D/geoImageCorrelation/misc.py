@@ -67,3 +67,11 @@ def decimal_mod(value: float, param: float, precision: Optional[float] = 1e-5):
         result = 0
     return result
 
+class cCorrelationInfo:
+    def __init__(self, corr_file_path):
+        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
+        self.corr_raster_info:cRasterInfo = cRasterInfo(corr_file_path)
+        self.ew_corr = self.corr_raster_info.image_as_array(band=1)
+        self.ns_corr = self.corr_raster_info.image_as_array(band=2)
+        self.snr_corr = self.corr_raster_info.image_as_array(band=3)
+        self.corr_sz = np.shape(self.ew_corr)

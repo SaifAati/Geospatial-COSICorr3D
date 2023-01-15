@@ -8,10 +8,11 @@ import json
 import logging
 import os
 import sys
-import matplotlib.pyplot as plt
-import numpy as np
 from pathlib import Path
 from typing import List, Any, Optional, Dict
+
+import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 
 import geoCosiCorr3D.geoImageCorrelation.geoCorr_utils as utils

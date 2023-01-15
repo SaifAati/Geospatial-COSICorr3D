@@ -58,7 +58,7 @@ def correlate(base_image, target_image, base_band, target_band, output, correlat
     Alt Usage: cc.py correlate CONFIGURATION_FILE"""
 
     # Check if only one argument, and if so, load json and re-invoke command with parameters as options
-    if target_image == None:
+    if target_image is None:
         if CorrOpt.options_used:
             raise click.UsageError("Options cannot be used with 'correlate CONFIGURATION_FILE'.")
         call_with_conf(correlate, corrArgToConfig, base_image)
