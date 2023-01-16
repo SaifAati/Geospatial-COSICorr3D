@@ -70,7 +70,7 @@ class RawGeoTP(ABC):
         ax.axis('off')
         ax.set_title("{} \n #matches:{}".format(Path(matches_file).stem, str(matches12.shape[0])))
 
-        plt.savefig(os.path.join(os.path.dirname(matches_file), Path(matches_file).stem + ".png"), dpi=200)
+        plt.savefig(os.path.join(os.path.dirname(matches_file), Path(matches_file).stem + ".png"), dpi=100)
         return
 
 
@@ -83,10 +83,14 @@ class RawMMTP(RawGeoTP):
         self._ingest()
 
     def _ingest(self):
-        self.scale_factor = self.in_config.get("scale_factor", 1 / 8)
-        self.mode = self.in_config.get("mode", "All")  ## mode : MulScale,All, Line,Georef
+        self.scale_factor = float(ASIFT_TP_PARAMS.SCALE_FACTOR \
+                                      if self.in_config.get("scale_factor", ASIFT_TP_PARAMS.SCALE_FACTOR) is None \
+                                      else self.in_config.get("scale_factor", ASIFT_TP_PARAMS.SCALE_FACTOR))
+
+        self.mode = self.in_config.get("mode", ASIFT_TP_PARAMS.MODE)  ## mode : MulScale,All, Line,Georef
         self.tp_format = self.in_config.get("tp_format", "COSI-Corr")
         self.tmp_dir = self.in_config.get("mm_temp_folder", None)
+        self.max_pts = 60 if self.in_config.get('max_pts', None) is None else self.in_config.get('max_pts')
 
     @staticmethod
     def run_mm_tapioca(mm_lib_path, mode, in_imgs_folder, img_size=ASIFT_TP_PARAMS.IMG_SIZE):
@@ -94,7 +98,7 @@ class RawMMTP(RawGeoTP):
         cmd = [mm_lib_path + " Tapioca"]
         cmd.extend([mode])
         cmd.extend([os.path.join(in_imgs_folder, ".*tif")])
-        if mode == "All":
+        if mode == ASIFT_TP_PARAMS.MODE:
             cmd.extend([str(img_size)])
         cmd.extend(["ExpTxt=true"])
         logging.info(cmd)
@@ -106,7 +110,8 @@ class RawMMTP(RawGeoTP):
         return
 
     @staticmethod
-    def mm_tps(img_i: str, img_j: str, homol_dir: str, format_cosi_corr: Optional[bool] = False) -> Optional[Dict]:
+    def mm_tps(img_i: str, img_j: str, homol_dir: str, format_cosi_corr: Optional[bool] = False,
+               max_tps: Optional[int] = None) -> Optional[Dict]:
         ref_img_name = os.path.basename(img_i)
         raw_img_name = os.path.basename(img_j)
         file_list = FilesInDirectory(path=homol_dir, displayFile=True)
@@ -117,6 +122,12 @@ class RawMMTP(RawGeoTP):
                 return None
             if os.path.exists(os.path.join(tempPath__, raw_img_name + ".txt")):
                 data = np.loadtxt(os.path.join(tempPath__, raw_img_name + ".txt"))
+                nb_tps = data.shape[0]
+                if max_tps is not None:
+                    step = int(nb_tps / max_tps)
+                    if step > 1:
+                        data = data[0::int(step)]
+                        logging.info(f'Reducing matching(target max pts {max_tps}) :{nb_tps}-->{data.shape[0]}')
                 data_dic: Dict = {"ref_xPix": data[:, 0], "ref_yPix": data[:, 1], "target_xPix": data[:, 2],
                                   "target_yPix": data[:, 3]}
                 data_df = pandas.DataFrame(data_dic)
