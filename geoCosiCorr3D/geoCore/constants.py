@@ -3,13 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import gdal
+
 import numpy as np
 import os
 import configparser
 from enum import Enum
 from dataclasses import dataclass
 from typing import Dict
+from osgeo import gdal
 
 GEOCOSICORR3D_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 GEOCOSICORR3D_SETUP_CFG = os.path.join(GEOCOSICORR3D_PACKAGE_DIR, 'setup.cfg')
@@ -65,6 +66,15 @@ class WRITERASTER:
 @dataclass(frozen=True)
 class RASTER_TYPE():
     GDAL_UINT16 = gdal.GDT_UInt16
+    GDAL_FLOAT32 = gdal.GDT_Float32
+    GDAL_FLOAT64 = gdal.GDT_Float64
+
+
+@dataclass(frozen=True)
+class INTERPOLATION_TYPES():
+    RectBivariateSpline = "RectBivariateSpline"
+    CUBIC = 'cubic'
+    LINEAR = 'linear'
 
 
 @dataclass(frozen=True)
@@ -93,7 +103,7 @@ class SENSORS(Enum):
     WV4 = "WV4"
     GE = "GE"
     QB = "QB"
-    DG = "Dg"
+    DG = "DG"
     SENSOR_LIST = [SPOT1, SPOT2, SPOT3, SPOT4, SPOT5, SPOT1_5, SPOT6, SPOT7, SPOT67, WV1, WV2, WV3, WV4, GE, QB, DG]
 
 
@@ -173,7 +183,7 @@ class ASIFT_TP_PARAMS:
         gdal.ParseCommandLine(
             f"-ot UInt16 -of {WRITERASTER.DRIVER} -co BIGTIFF=YES -co COMPRESS={WRITERASTER.COMPRESS} -b 1 -co NBITS=16"))
     SCALE_FACTOR = 1 / 8
-    MODE = 'ALL'
+    MODE = 'All'
     IMG_SIZE = 1000
     MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/mmlibs/bin/mm3d")
 
@@ -199,4 +209,3 @@ class TEST_CONFIG:
                        }
     GCP_OPT_CONFIG = {'nb_loops': 3, 'snr_th': 0.9, 'mean_error_th': 1 / 20,
                       'resampling_method': Resampling_Methods.SINC}
-
