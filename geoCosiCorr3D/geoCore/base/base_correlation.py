@@ -1,10 +1,10 @@
 # Author : Saif Aati
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
-import numpy as np
+
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
-
+import numpy as np
 from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import ConfigReader
 from geoCosiCorr3D.geoCore.constants import CORRELATION
 
