@@ -3,20 +3,27 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import os
+
 import logging
 import sys
-from pathlib import Path
 import pickle
-import numpy as np
-from geoCosiCorr3D.geoCore.base.base_RSM import BaseRSM
+from pathlib import Path
+from typing import Optional
+from multiprocessing import Pool, cpu_count
 
-from geoCosiCorr3D.geoCore.constants import GEOCOSICORR3D_SENSOR_DG, GEOCOSICORR3D_SENSOR_SPOT_15, \
-    GEOCOSICORR3D_SENSOR_SPOT_67, SOFTWARE
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+from geoCosiCorr3D.geoCore.base.base_RSM import BaseRSM
+from geoCosiCorr3D.geoCore.constants import *
 
 
 class RSM(BaseRSM):
+
+    def __init__(self):
+        self.time = None
+        self.date = None
+        self.gsd = None
+        self.platform = None
+        self.date_time_obj = None
 
     def ComputeAttitude(self):
         pass
@@ -40,6 +47,7 @@ class RSM(BaseRSM):
         elif sensor_name in GEOCOSICORR3D_SENSOR_SPOT_67:
             # "model Path should be the XML file "
             from geoCosiCorr3D.geoRSM.Spot_RSM import cSpot67
+            logging.info(f'{metadata_file}')
             rsm_sensor_model = cSpot67(dmpXml=metadata_file, debug=True)
 
             img_path = os.path.join(os.path.dirname(metadata_file),
@@ -64,38 +72,41 @@ class RSM(BaseRSM):
     def write_rsm(output_rsm_file, rsm_model):
         with open(output_rsm_file, "wb") as output:
             pickle.dump(rsm_model, output, pickle.HIGHEST_PROTOCOL)
-        return
+        return output_rsm_file
 
     @staticmethod
-    def rsm_footprint(rsmModel, demFile=None, hMean=None, pointingCorrection=np.zeros((3, 3))):
-        """
-        Computing the footprint of raster using the RSM.
-        Args:
-            rsmModel:
-            demFile:
-            hMean:
-            pointingCorrection:
-
-        Returns:  array(5,3)
-            rows : ul,ur,lr,lf,ul
-            cols: [lon ,lat, alt]
-        """
+    def compute_rsm_footprint(rsm_model, dem_file: Optional[str] = None,
+                              rsm_corr_model: Optional[np.ndarray] = None, hMean: Optional[float] = None):
         from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
-        #TODO this function is not tested yet.
-        rasterWidth = rsmModel.nbCols
-        rasterHeight = rsmModel.nbRows
-        xPixList = [0, rasterWidth, rasterWidth, 0, 0]
-        yPixList = [0, 0, rasterHeight, rasterHeight, 0]
-        resTemp_ = []
-        for i in range(len(xPixList)):
-            pix2GroundObj = cPix2GroundDirectModel(rsmModel=rsmModel,
-                                                   xPix=xPixList[i],
-                                                   yPix=yPixList[i],
-                                                   demFile=demFile,
-                                                   hMean=hMean,
-                                                   rsmCorrectionArray=pointingCorrection
-                                                   )
-            resTemp_.append(pix2GroundObj)
+        from shapely import Polygon
+        import geopandas
+        if rsm_corr_model is None:
+            rsm_corr_model = np.zeros((3, 3))
 
-        resTemp = [item.geoCoords for item in resTemp_]
-        return np.asarray(resTemp)
+        xBBox = [0, rsm_model.nbCols - 1, 0, rsm_model.nbCols - 1]
+        yBBox = [0, 0, rsm_model.nbRows - 1, rsm_model.nbRows - 1]
+
+        extent_coords = []
+        for xVal, yVal in zip(xBBox, yBBox):
+            # print("\n----- xVal:{},yVal:{}".format(xVal, yVal))
+            arg = (rsm_model, xVal, yVal, rsm_corr_model, dem_file, hMean)
+            pix2Ground_obj = cPix2GroundDirectModel(*arg)
+
+            extent_coords.append(pix2Ground_obj.geoCoords)  # lon , Lat, ALT
+        ground_extent = {'ul': extent_coords[0], 'ur': extent_coords[1], 'lf': extent_coords[2], 'lr': extent_coords[3]}
+        fp = {'type': 'Polygon',
+              'coordinates': [[ground_extent['ul'][0], ground_extent['ul'][1], ground_extent['ul'][2]],
+                              [ground_extent['ur'][0], ground_extent['ur'][1], ground_extent['ur'][2]],
+                              [ground_extent['lr'][0], ground_extent['lr'][1], ground_extent['lr'][2]],
+                              [ground_extent['lf'][0], ground_extent['lf'][1], ground_extent['lf'][2]]],
+              }
+
+        fp_poly = Polygon(fp['coordinates'])
+        fp_gdf = geopandas.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[fp_poly])
+        return fp, xBBox, yBBox, fp_gdf
+
+    @staticmethod
+    def read_geocosicorr3d_rsm_file(pkl_file):
+        with open(pkl_file, "rb") as output:
+            geocosicorr3d_rsm_model = pickle.load(output)
+        return geocosicorr3d_rsm_model
