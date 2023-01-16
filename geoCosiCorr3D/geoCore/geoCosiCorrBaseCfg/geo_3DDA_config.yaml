@@ -1,0 +1,47 @@
+feature_points_params:
+  method: 'ASIFT'
+  kernel:
+  scale_factor: 0.125
+  matching_filter: False
+  max_pts: 50
+  min_pts: 15
+
+opt_corr_config:
+  correlator_name: "frequency"
+  correlator_params:
+    window_size: [ 64,64,64,64 ]
+    step: [ 8, 8 ]
+    grid: True
+    mask_th: 0.95
+    nb_iters: 4
+
+sat_model_params:
+  sat_model:
+  metadata:
+  sensor:
+
+opt_params:
+  nb_loops: 4
+  snr_th: 0.9
+  mean_error_th: 0.2
+  resampling_method: 'sinc'
+
+ortho_params:
+  method:
+    method_type: "RSM"
+    metadata:
+    sensor:
+    corr_model:
+
+  GSD: 1
+  resampling_method: "sinc"
+corr_config:
+  correlator_name: "frequency"
+  correlator_params:
+    window_size: [ 64,64,64,64 ]
+    step: [ 8, 8 ]
+    grid: True
+    mask_th: 0.95
+    nb_iters: 4
+  mode: pre_post
+  strategy: full
