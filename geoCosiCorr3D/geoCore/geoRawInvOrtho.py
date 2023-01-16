@@ -17,7 +17,8 @@ from geoCosiCorr3D.geoCore.constants import SOFTWARE, SATELLITE_MODELS
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 
-
+class InvalidOutputOrthoPath(Exception):
+    pass
 class RawInverseOrtho(BaseInverseOrtho):
     def __init__(self, input_l1a_path: str, output_ortho_path: str, output_trans_path: Optional[str],
                  ortho_params: Dict, dem_path: Optional[str], debug: bool = True):
@@ -50,6 +51,8 @@ class RawInverseOrtho(BaseInverseOrtho):
         self.resampling_method = self.ortho_params.get("resampling_method", None)
 
         # self.resampling_engine = self._set_ortho_resampling_method(self.resampling_method)
+        if self.output_ortho_path is None:
+            raise InvalidOutputOrthoPath
         return
 
     def orthorectify(self):
@@ -70,6 +73,7 @@ class RawInverseOrtho(BaseInverseOrtho):
                 msg = "Reproject DEM from {}-->{}".format(self.dem_raster_info.epsg_code,
                                                           self.ortho_grid.gridEPSG)
                 warnings.warn(msg)
+
                 self.dem_path = geoRT.ReprojectRaster(input_raster_path=self.dem_raster_info.input_raster_path,
                                                       o_prj=self.ortho_grid.gridEPSG,
                                                       output_raster_path=os.path.join(
