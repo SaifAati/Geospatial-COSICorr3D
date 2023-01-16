@@ -1,9 +1,9 @@
 feature_points_params:
-  method: 'ASIFT' # cvTP, geoSIFT
+  method: 'ASIFT'
   kernel:
-  scale_factor:
+  scale_factor: 0.5
   matching_filter: False
-  max_pts':
+  max_pts': 50
 
 opt_corr_config:
   correlator_name: "frequency"
@@ -20,9 +20,9 @@ sat_model_params:
   sensor:
 
 opt_params:
-  nb_loops: 5
+  nb_loops: 4
   snr_th: 0.9
-  mean_error_th: 1 / 20
+  mean_error_th: 0.2
   resampling_method: 'sinc'
 
 ortho_params:
