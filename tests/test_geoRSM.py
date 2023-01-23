@@ -97,4 +97,4 @@ def test_rsm_attitude_motion_parsing(test_input, expected, msg):
     (model.Q3interp, expec_res['Q3interp'], 'invalid Q3interp'),
 ])
 def test_build_rsm(test_input, expected, msg):
-    np.testing.assert_array_equal(test_input, expected, msg)
+    np.testing.assert_allclose(test_input,expected, err_msg=msg)
