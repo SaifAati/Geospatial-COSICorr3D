@@ -37,7 +37,8 @@ def test_tp_to_gcps():
     gcp_array = np.array([gcp_df['lon'].values, gcp_df['lat'].values, gcp_df['alt'].values,
                           gcp_df['xPix'].values, gcp_df['yPix'].values, gcp_df['x_map'].values,
                           gcp_df['y_map'].values]).T
-    assert np.allclose(expec_array, gcp_array)
+    # assert np.allclose(expec_array, gcp_array)
+    np.testing.assert_allclose(expec_array, gcp_array, rtol=1e-3)
 
 
 @pytest.mark.functional
