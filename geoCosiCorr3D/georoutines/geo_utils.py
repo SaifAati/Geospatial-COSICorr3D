@@ -720,7 +720,7 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data:
 
 
 class geoStat:
-    def __init__(self, in_array: np.ndarray, display_values: Optional[bool] = True):
+    def __init__(self, in_array: np.ndarray, display_values: Optional[bool] = False):
         sample = np.ma.masked_invalid(in_array)
         mask = np.ma.getmask(sample)
 
@@ -758,7 +758,8 @@ class geoStat:
                   self.mad, "nmad=", self.nmad)
             print("CE68=", self.ce68, "CE90=", self.ce90, "CE95=", self.ce95, "CE99=", self.ce99)
 
-
+    def __repr__(self):
+        return "mu:{} , sigm:{} , RMSE:{}, CE90:{}".format(self.mu, self.sigma, self.RMSE, self.ce90)
 def crop_raster(input_raster, roi_coord_wind, output_dir: Optional[str] = None, vrt=False,
                 raster_type=gdal.GDT_Float32):
     if output_dir is None:
