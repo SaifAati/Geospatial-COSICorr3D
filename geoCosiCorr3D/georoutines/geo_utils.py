@@ -328,8 +328,20 @@ class cRasterInfo(BaseRasterInfo):
         raster = None
         return (xMap, yMap)
 
+    def raster_dims(self):
+
+        ds = rasterio.open(self.get_raster_path)
+        bounds = ds.bounds
+        raster_map_dims = [bounds.left, bounds.right,bounds.bottom, bounds.top]
+
+        x0, y0 = self.Map2Pixel(x=bounds.left, y=bounds.bottom)
+        xf, yf = self.Map2Pixel(x=bounds.right, y=bounds.top)
+        # imgDimsPix = {"x0Pix": int(x0), "xfPix": int(xf), "y0Pix": int(y0), "yfPix": int(yf)}
+        raster_pix_dims = [int(x0), int(xf), int(y0), int(yf)]
+        # return list(imgDimsMap.values()), list(imgDimsPix.values())
+        return raster_pix_dims, raster_map_dims
     def __repr__(self):
-        # TODO: same as RFM
+        # TODO
         pass
 
     def __str__(self):
