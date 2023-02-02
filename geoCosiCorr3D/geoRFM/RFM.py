@@ -5,14 +5,15 @@
 """
 import logging
 import numpy as np
-from typing import Optional
 import sys
 import warnings
 import affine6p
+import geopandas
+from typing import List, Optional
+from shapely.geometry import Polygon
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-
-from typing import List
 from geoCosiCorr3D.geoCore.core_RFM import RawRFM
 
 
@@ -163,7 +164,7 @@ class RFM(ReadRFM):
         if np.array(alt).any() == True:
             alt = np.asarray(alt)
         else:
-            if demInfo != None:
+            if demInfo is not None:
                 warnings.warn("INTERPOLATE FROM DEM --> TODO")
                 logging.warning("INTERPOLATE FROM DEM --> TODO")
             else:
@@ -187,8 +188,8 @@ class RFM(ReadRFM):
             return col, row
 
     def Img2Ground_RFM(self, col, lin,
-                       altIni: List = None,
-                       demInfo: geoRT.cRasterInfo = None,
+                       altIni: Optional[List] = None,
+                       demInfo: Optional[geoRT.cRasterInfo] = None,
                        corrModel=np.zeros((3, 3)),
                        normalized=False):
         """
@@ -283,7 +284,7 @@ class RFM(ReadRFM):
             return lonN, latN, None
 
     def get_geoTransform(self):
-        ## Compute the fooot print box
+
         h = int(self.linOff * 2)
         w = int(self.colOff * 2)
         BBoxPix = [[0, 0],
@@ -306,6 +307,25 @@ class RFM(ReadRFM):
         geoTrans_h = np.array(mat)
         geo_transform = [mat[0][-1], mat[0][0], mat[0][1], mat[1][-1], mat[1][0], mat[1][1]]
         return geo_transform
+
+    def compute_footprint(self, corr_model: Optional[np.ndarray] = None,
+                          dem_info: Optional[geoRT.cRasterInfo] = None) -> [Polygon, geopandas.GeoDataFrame]:
+        h = int(self.linOff * 2)
+        w = int(self.colOff * 2)
+        z = self.altOff
+        if corr_model is None:
+            corr_model = np.zeros((3, 3))
+        lons, lats, _ = self.Img2Ground_RFM(col=[0, 0, w, w, 0],
+                                            lin=[0, h, h, 0, 0],
+                                            altIni=[z, z, z, z, z],
+                                            normalized=False,
+                                            corrModel=corr_model,
+                                            demInfo=dem_info)
+
+        fp_poly_geom = Polygon(zip(lons, lats))
+        gpd_polygon = geopandas.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[fp_poly_geom])
+
+        return fp_poly_geom, gpd_polygon
 
     def get_GSD(self):
 
@@ -342,7 +362,7 @@ class RFM(ReadRFM):
 
 
 if __name__ == '__main__':
-    #TODO add to unit/functional tests
+    # TODO add to unit/functional tests
     img = '/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/3-geoOrtho_Test/Sample/Sample1/SPOT2.TIF'
     # img = '/media/cosicorr/storage/Saif/Planet_project/PlanetScope_L1As/Ridgecrest/Dove-R/Ridgecrest.3284591/L1As/20200402_183354_92_105c_1A_AnalyticMS.tif'
     rfm = RFM(img, debug=True)
