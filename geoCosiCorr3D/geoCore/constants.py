@@ -175,6 +175,8 @@ class TP_DETECTION_METHODS:
     ASIFT = 'ASIFT'
     CVTP = 'cvTP'
     GEOSIFT = 'geoSIFT'
+    ASP_SIFT = 'aspSIFT'
+    ASP_IAGD = 'asp_IAGD'
 
 
 @dataclass(frozen=True)

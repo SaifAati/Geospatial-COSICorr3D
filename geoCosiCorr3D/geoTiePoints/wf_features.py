@@ -25,7 +25,15 @@ def features(img1: str, img2: str, tp_params: Dict, output_folder: Optional[str]
         return tp.o_tp_path
 
     if method == TP_DETECTION_METHODS.CVTP:
+        # TODO: Not tested with master (dev)
         raise NotImplementedError
 
     if method == TP_DETECTION_METHODS.GEOSIFT:
+        # TODO: Not tested with master (dev)
+        raise NotImplementedError
+    if method == TP_DETECTION_METHODS.ASP_IAGD:
+        # TODO: Future work
+        raise NotImplementedError
+    if method == TP_DETECTION_METHODS.ASP_SIFT:
+        # TODO: Future work
         raise NotImplementedError
