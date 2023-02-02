@@ -4,7 +4,7 @@
 # Copyright (C) 2023
 """
 import os.path
-
+import sys
 import pandas, shutil
 import warnings
 
@@ -115,10 +115,11 @@ class GeoCosiCorr3DPipeline:
                 dmp_file = None
                 logging.error(f'Enable to find RSM file for {raw_img}')
                 continue
+            logging.info(f'metadat file:{dmp_file}')
             try:
                 shutil.copy(dmp_file, os.path.join(self.rsm_folder, os.path.basename(dmp_file)))
                 dmp_file = os.path.join(self.rsm_folder, os.path.basename(dmp_file))
-                rsm_model = geoRSM_generation(SENSOR.DG, metadata_file=dmp_file, debug=True)
+                rsm_model = geoRSM_generation(sensor_name=self.sensor, metadata_file=dmp_file, debug=True)
 
                 name = rsm_model.date_time_obj.strftime("%Y-%m-%d-%H-%M-%S") + "-" + rsm_model.platform + "-" + str(
                     rsm_model.gsd)
@@ -159,6 +160,7 @@ class GeoCosiCorr3DPipeline:
     def compute_footprint(self, data_file):
         from geoCosiCorr3D.geoCore.core_RSM import RSM
         dataDf = self.parse_data_file(data_file)
+
         Path(self.fp_folder).mkdir(parents=True, exist_ok=True)
         validIndexList = [index for index, row in dataDf.iterrows()]
         for index in tqdm(validIndexList, desc="Computing footprint"):
@@ -282,7 +284,7 @@ class GeoCosiCorr3DPipeline:
             self.config['ortho_params']['method']['sensor'] = self.sensor
             self.config['ortho_params']['method']['corr_model'] = \
                 get_files_based_on_extension(os.path.dirname(dataDf.loc[validIndex, "RSM_Refinement"]),
-                                         f"*_{loop_min_err}_correction.txt")[0]
+                                             f"*_{loop_min_err}_correction.txt")[0]
             self.config['ortho_params']['GSD'] = ortho_gsd
             RSMOrtho(input_l1a_path=dataDf.loc[validIndex, "ImgPath"],
                      ortho_params=self.config['ortho_params'],
@@ -598,7 +600,7 @@ class GeoCosiCorr3DPipeline:
                                          data_df=pandas.read_csv(data_file),
                                          event_date=datetime.datetime.strptime(self.event_date, '%Y-%m-%d'),
                                          corr_dir=self.corr_folder,
-                                         corr_config = self.config['corr_config'],
+                                         corr_config=self.config['corr_config'],
                                          dem_file=self.dem_file,
                                          tile_sz=128,
                                          num_cpus=40,
