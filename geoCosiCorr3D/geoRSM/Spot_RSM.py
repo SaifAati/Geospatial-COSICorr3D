@@ -276,6 +276,7 @@ class cSpot15(RSM):
 
         acqTime = self.spotMetadata.date + "T" + self.spotMetadata.time
         self.date_time_obj = datetime.datetime.strptime(acqTime, '%Y-%m-%dT%H:%M:%S')
+        self.date = self.spotMetadata.date
         self.data = self.spotMetadata.date
         self.time = self.spotMetadata.time
 
