@@ -701,6 +701,14 @@ class Convert:
         else:
             return transformer.transform(X, Y, Z)
 
+    @staticmethod
+    def polygon(input_polygon: Polygon, source_epsg_code: int, target_epsg_code: int) -> Polygon:
+        import geopandas
+        shp_df = geopandas.GeoDataFrame({'geometry': [input_polygon]}, crs=rasterio.crs.CRS.from_epsg(source_epsg_code))
+        shp_df = shp_df.to_crs(rasterio.crs.CRS.from_epsg(target_epsg_code))
+
+        return shp_df['geometry'][0]
+
 
 def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data: Optional[float] = None,
                                    mask_vls: Optional[List] = None) -> str:

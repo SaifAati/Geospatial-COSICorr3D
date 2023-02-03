@@ -150,27 +150,30 @@ class TPsTOGCPS(RawTP2GCP):
         Returns:
         Note: we assume that the DEM and the ref_ortho_img have the same projection.
         """
-        #TODO add RAW img groud extent
+
+        # TODO add RAW img ground extent
         import rasterio
         import matplotlib.pyplot as plt
         import shapely.geometry
         from geoCosiCorr3D.geoCore.constants import RENDERING
+        from geoCosiCorr3D.georoutines.geo_utils import Convert
         fig, ax = plt.subplots(1, 1)
         src_dem = rasterio.open(self.dem_info.input_raster_path)
         fp_shp_dem = shapely.geometry.box(*src_dem.bounds)
+        fp_shp_dem = Convert.polygon(fp_shp_dem, src_dem.crs.to_epsg(), 4326)
         ax.plot(fp_shp_dem.exterior.xy[0], fp_shp_dem.exterior.xy[1], color='#6699cc', alpha=0.7,
                 linewidth=3, solid_capstyle='round', zorder=2, label="DEM")
         src_ref = rasterio.open(self.ref_img_info.input_raster_path)
         fp_shp_ref = shapely.geometry.box(*src_ref.bounds)
+        fp_shp_ref = Convert.polygon(fp_shp_ref, src_ref.crs.to_epsg(), 4326)
         ax.plot(fp_shp_ref.exterior.xy[0], fp_shp_ref.exterior.xy[1], color='#F08080', alpha=0.7,
                 linewidth=3, solid_capstyle='round', zorder=2, label='REF_IMG')
-        # ax.scatter(self.xy_map_ref_img[:, 0], self.xy_map_ref_img[:, 1], label="GCPS")
-        ax.scatter(self.gcp_df['x_map'], self.gcp_df['y_map'], label="GCPs", c=RENDERING.GCP_COLOR,
+        ax.scatter(self.gcp_df['lon'], self.gcp_df['lat'], label="GCPs", c=RENDERING.GCP_COLOR,
                    s=RENDERING.GCP_SZ, marker=RENDERING.GCP_MARKER)
 
-        ax.set_title('GCPs + REF_ORTHO + DEM')
-        ax.set_xlabel('X_MAP_UTM')
-        ax.set_ylabel('Y_MAP_UTM')
+        ax.set_title(f'GCPs [{self.gcp_df.shape[0]}] + REF_ORTHO + DEM')
+        ax.set_xlabel('LON [$^\circ$]')
+        ax.set_ylabel('LAT [$^\circ$]')
         plt.legend()
         plt.savefig(f'{self.output_gcp_path}.png')
         src_ref, src_dem = None, None
