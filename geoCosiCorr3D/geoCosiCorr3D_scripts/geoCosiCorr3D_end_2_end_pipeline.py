@@ -4,7 +4,6 @@
 # Copyright (C) 2023
 """
 import os.path
-import sys
 import pandas, shutil
 import warnings
 
@@ -118,6 +117,7 @@ class GeoCosiCorr3DPipeline:
             logging.info(f'metadat file:{dmp_file}')
             try:
                 shutil.copy(dmp_file, os.path.join(self.rsm_folder, os.path.basename(dmp_file)))
+                dmp_file_orig = dmp_file
                 dmp_file = os.path.join(self.rsm_folder, os.path.basename(dmp_file))
                 rsm_model = geoRSM_generation(sensor_name=self.sensor, metadata_file=dmp_file, debug=True)
 
@@ -127,7 +127,7 @@ class GeoCosiCorr3DPipeline:
                                                        rsm_model=rsm_model)
                 logging.info(f'{self.__class__.__name__}:: name:{name}')
                 self.data_dic["ImgPath"].append(raw_img)
-                self.data_dic["DIM"].append(dmp_file)
+                self.data_dic["DIM"].append(dmp_file_orig)
                 self.data_dic["Name"].append(name)
                 self.data_dic["Date"].append(rsm_model.date)
                 self.data_dic["Time"].append(rsm_model.time)
@@ -178,11 +178,14 @@ class GeoCosiCorr3DPipeline:
         Path(self.matches_folder).mkdir(parents=True, exist_ok=True)
         validIndexList = [index for index, row in dataDf.iterrows()]
         for index in tqdm(validIndexList, desc="Tp detection and Matching"):
-            match_file = features(img1=self.ref_ortho,
-                                  img2=dataDf["ImgPath"][index],
-                                  tp_params=self.config['feature_points_params'],
-                                  output_folder=self.matches_folder)
-            dataDf.loc[index, "Tp"] = np.loadtxt(match_file, comments=';').shape[0]
+            raw_match_file = features(img1=self.ref_ortho,
+                                      img2=dataDf["ImgPath"][index],
+                                      tp_params=self.config['feature_points_params'],
+                                      output_folder=self.matches_folder)
+            dataDf.loc[index, "Tp"] = np.loadtxt(raw_match_file, comments=';').shape[0]
+            match_file = os.path.join(self.matches_folder,
+                                      f"{Path(self.ref_ortho).stem}_VS_{dataDf['Name'][index]}_matches.pts")
+            os.rename(raw_match_file, match_file)
             dataDf.loc[index, "MatchFile"] = match_file
 
         self.update_data_file(data_file=data_file, updated_df=dataDf)
@@ -239,7 +242,8 @@ class GeoCosiCorr3DPipeline:
                                     'sensor': self.sensor}
                 logging.info(
                     f"{self.__class__.__name__}:RSM refinement:{sat_model_params['metadata']}")
-                rsm_refinement_dir = os.path.join(self.rsm_refinement_folder, Path(sat_model_params['metadata']).stem)
+                rsm_refinement_dir = os.path.join(self.rsm_refinement_folder,
+                                                  f"{dataDf.loc[validIndex, 'Name']}_{Path(sat_model_params['metadata']).stem}")
                 Path(rsm_refinement_dir).mkdir(parents=True, exist_ok=True)
                 opt = cGCPOptimization(gcp_file_path=gcp_file,
                                        raw_img_path=dataDf.loc[validIndex, "ImgPath"],
@@ -250,8 +254,8 @@ class GeoCosiCorr3DPipeline:
                                        opt_gcp_file_path=os.path.join(rsm_refinement_dir,
                                                                       Path(gcp_file).stem + "_opt.pts"),
                                        corr_config=self.config['opt_corr_config'],
-                                       debug=True,
-                                       svg_patches=True)
+                                       debug=False,
+                                       svg_patches=False)
                 dataDf.loc[validIndex, "RSM_Refinement"] = opt.opt_report_path
             else:
                 msg = "RSM optimization and correction files exists for img :{}".format(dataDf.loc[validIndex, "Name"])
