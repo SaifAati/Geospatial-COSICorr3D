@@ -203,7 +203,7 @@ def GetDEM_subsetDim(bboxCoords, demInfo: geoRT.cRasterInfo, margin=5):
 
 
 def Decimalmod(value, param, precision=None):
-    if precision == None:
+    if precision is None:
         precision = 1e-5
 
     result = value % param
@@ -213,18 +213,9 @@ def Decimalmod(value, param, precision=None):
     return result
 
 
-def ComputeoMapGrid(upLeftEW, upLeftNS, botRightEW, botRightNS, oRes):
+def ComputeoMapGrid(upLeftEW, upLeftNS, botRightEW, botRightNS, oRes, grid_precision=1e5):
     """
     Compute regular output grid.
-    Args:
-        upLeftEW:
-        upLeftNS:
-        botRightEW:
-        botRightNS:
-        oRes:
-
-    Returns:
-
     """
 
     oUpLeftEW = upLeftEW
@@ -233,26 +224,25 @@ def ComputeoMapGrid(upLeftEW, upLeftNS, botRightEW, botRightNS, oRes):
     oUpLeftNS = upLeftNS
     oBotRightNS = botRightNS
 
-    if Decimalmod(upLeftEW, oRes, oRes / 1000) != 0:
+    if Decimalmod(upLeftEW, oRes, oRes / grid_precision) != 0:
         if (upLeftEW - (upLeftEW % oRes)) > upLeftEW:
             oUpLeftEW = upLeftEW - (upLeftEW % oRes)
         else:
-
             oUpLeftEW = (upLeftEW - (upLeftEW % oRes) + oRes)
 
-    if Decimalmod(botRightEW, oRes, oRes / 1000) != 0:
+    if Decimalmod(botRightEW, oRes, oRes / grid_precision) != 0:
         if (botRightEW - (botRightEW % oRes)) < botRightEW:
             oBotRightEW = botRightEW - (botRightEW % oRes)
         else:
             oBotRightEW = (botRightEW - (botRightEW % oRes) + oRes)
 
-    if Decimalmod(upLeftNS, oRes, oRes / 1000) != 0:
+    if Decimalmod(upLeftNS, oRes, oRes / grid_precision) != 0:
         if (upLeftNS - (upLeftNS % oRes)) < upLeftNS:
             oUpLeftNS = upLeftNS - (upLeftNS % oRes)
         else:
             oUpLeftNS = (upLeftNS - (upLeftNS % oRes) + oRes)
 
-    if Decimalmod(botRightNS, oRes, oRes / 1000) != 0:
+    if Decimalmod(botRightNS, oRes, oRes / grid_precision) != 0:
         if (botRightNS - (botRightNS % oRes)) > botRightNS:
             oBotRightNS = botRightNS - (botRightNS % oRes)
         else:

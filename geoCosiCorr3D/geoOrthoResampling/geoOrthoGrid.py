@@ -185,16 +185,16 @@ class cGetSatMapGrid:
             projEPSG = {}
             -- ESTIMATED GRID --
             res (ew,ns) = [{:.3f} , {:.3f}] m
-            upLeft= [{:.3f} , {:.3f}]
-            upRight = [{:.3f} , {:.3f}]
-            botLeft= [{:.3f} , {:.3f}]
-            botRight = [{:.3f} , {:.3f}]
+            upLeft= [{:.5f} , {:.5f}]
+            upRight = [{:.5f} , {:.5f}]
+            botLeft= [{:.5f} , {:.5f}]
+            botRight = [{:.5f} , {:.5f}]
             -- OUTPUT GRID --
-            oUpleftEW={:.3f}
-            oBotrightEW={:.3f}
-            oUpleftNS={:.3f}
-            oBotrightNS={:.3f}
-            oRes= {:.3f}
+            oUpleftEW={:.5f}
+            oBotrightEW={:.5f}
+            oUpleftNS={:.5f}
+            oBotrightNS={:.5f}
+            oRes= {:.5f}
             ________________________""".format(self.gridEPSG,
                                                self.resEW, self.resNS,
                                                self.upLeftEW, self.upLeftNS,
