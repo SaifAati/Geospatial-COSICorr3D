@@ -86,7 +86,7 @@ class TPsTOGCPS(RawTP2GCP):
                 arg = (val[0], val[1], self.dem_info.input_raster_path)
                 arg_list.append(arg)
             logging.info(f'#CPU:{cpu_count()}')
-            with Pool(processes=cpu_count()) as pool:
+            with Pool(processes=int(cpu_count() / 2)) as pool:
                 alt = pool.starmap(self.get_gcp_alt, arg_list)
             logging.info(f'alts:{len(alt)}')
             return alt
@@ -175,7 +175,9 @@ class TPsTOGCPS(RawTP2GCP):
         plt.savefig(f'{self.output_gcp_path}.png')
         src_ref, src_dem = None, None
         plt.clf()
+        plt.switch_backend('agg')
         plt.close(fig)
+
         return
 
     @staticmethod

@@ -5,11 +5,13 @@
 """
 import matplotlib.pyplot as plt
 import rasterio
+import rasterio.crs
 import numpy as np
 import warnings
 import os
 import pyproj
 import logging
+from shapely.geometry import Polygon
 from osgeo import osr, gdal
 from typing import Any, List, Optional
 from astropy.time import Time
@@ -31,11 +33,12 @@ class cRasterInfo(BaseRasterInfo):
         self.band_number = self.raster.count
         self.raster_type = self.raster.dtypes
         self.no_data = self.raster.nodata  # src.nodatavals
-        self.bands_description= self.raster.descriptions
+        self.bands_description = self.raster.descriptions
         try:
             self.valid_map_info = True
             self.proj = self.raster.crs.wkt
-            self.epsg_code = int(str(self.raster.crs).split(":")[1])
+            # self.epsg_code = int(str(self.raster.crs).split(":")[1])
+            self.epsg_code = self.raster.crs.to_epsg()
         except:
             self.valid_map_info = False
             self.proj = None
@@ -332,7 +335,7 @@ class cRasterInfo(BaseRasterInfo):
 
         ds = rasterio.open(self.get_raster_path)
         bounds = ds.bounds
-        raster_map_dims = [bounds.left, bounds.right,bounds.bottom, bounds.top]
+        raster_map_dims = [bounds.left, bounds.right, bounds.bottom, bounds.top]
 
         x0, y0 = self.Map2Pixel(x=bounds.left, y=bounds.bottom)
         xf, yf = self.Map2Pixel(x=bounds.right, y=bounds.top)
@@ -340,6 +343,7 @@ class cRasterInfo(BaseRasterInfo):
         raster_pix_dims = [int(x0), int(xf), int(y0), int(yf)]
         # return list(imgDimsMap.values()), list(imgDimsPix.values())
         return raster_pix_dims, raster_map_dims
+
     def __repr__(self):
         # TODO
         pass
@@ -772,6 +776,8 @@ class geoStat:
 
     def __repr__(self):
         return "mu:{} , sigm:{} , RMSE:{}, CE90:{}".format(self.mu, self.sigma, self.RMSE, self.ce90)
+
+
 def crop_raster(input_raster, roi_coord_wind, output_dir: Optional[str] = None, vrt=False,
                 raster_type=gdal.GDT_Float32):
     if output_dir is None:
@@ -812,7 +818,7 @@ def compute_rasters_overlap(rasters: List[str]):
     return overlap_area
 
 
-def merge_tiles(in_tiles:List, o_file):
+def merge_tiles(in_tiles: List, o_file):
     from rasterio.merge import merge
 
     src_files_to_mosaic = []
@@ -832,7 +838,7 @@ def merge_tiles(in_tiles:List, o_file):
     print(in_tiles[0])
     rasterInfo = cRasterInfo(in_tiles[0])
     print(in_tiles[0])
-    descriptions = rasterInfo. bands_description  # rasterTemp["BandInfo"]
+    descriptions = rasterInfo.bands_description  # rasterTemp["BandInfo"]
     listArrays = []
     for id in range(mosaic.shape[0]):
         with rasterio.open(o_file, "w", **out_meta) as dest:

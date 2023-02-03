@@ -33,7 +33,7 @@ class cGCPOptimization:
                  opt_gcp_file_path: Optional[str] = None,
                  corr_config: Optional[Dict] = None,
                  debug: Optional[bool] = False,
-                 svg_patches: Optional[bool] = True):
+                 svg_patches: Optional[bool] = False):
 
         self.gcp_file_path = gcp_file_path
         self.raw_img_path = raw_img_path

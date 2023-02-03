@@ -69,7 +69,6 @@ class RawGeoTP(ABC):
         plot_matches(ax, img1, img2, keypoints1, keypoints2, matches12, keypoints_color='r', only_keypoints=True)
         ax.axis('off')
         ax.set_title("{} \n #matches:{}".format(Path(matches_file).stem, str(matches12.shape[0])))
-
         plt.savefig(os.path.join(os.path.dirname(matches_file), Path(matches_file).stem + ".png"), dpi=100)
         return
 
