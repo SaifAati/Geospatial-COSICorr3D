@@ -38,7 +38,10 @@ class ReadRFM(RawRFM):
             logging.info("RFM file format: Raster")
             self.RFM_Read_fromRaster(self.rfm_file)
         else:
-            sys.exit(f'RFM file:{self.rfm_file}  is not valid')
+            try:
+                self.RFM_Read_fromTXT(self.rfm_file)
+            except:
+                raise IOError(f'RFM file:{self.rfm_file}  is not valid')
 
     def parse_file(self, param, lines):
         from re import search
