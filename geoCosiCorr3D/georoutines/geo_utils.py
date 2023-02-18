@@ -96,17 +96,6 @@ class cRasterInfo(BaseRasterInfo):
                      compress: str = WRITERASTER.COMPRESS,
                      no_data=None):
         """
-
-        Args:
-            output_raster_path:
-            array_list:
-            geo_transform:
-            epsg_code:
-            dtype:
-            descriptions:
-            compress:
-
-        Returns:
         Notes:
             geo_transform = [x-origin, x-res,0, y-origin,0,-y-res,]
             geo_transform_affine = [x-res,0,x-origin] [0, -y-res,y-origin] [0 , 0 , 1]
@@ -118,7 +107,11 @@ class cRasterInfo(BaseRasterInfo):
                 'width': array_list[0].shape[1],
                 'height': array_list[0].shape[0],
                 'count': len(array_list),
-                'compress': compress}
+                'compress': compress,
+                # 'blockxsize': 256,
+                # 'blockysize': 256,
+                'BIGTIFF': 'YES'
+                }
         if geo_transform is None:
             geo_transform = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         meta['transform'] = rasterio.Affine(geo_transform[1], geo_transform[2], geo_transform[0]
@@ -428,7 +421,7 @@ def WriteRaster(oRasterPath,
     rows, cols = np.shape(arrayList[0])
     # print(oRasterPath, cols, rows, len(arrayList), dtype)
     outRaster = driver.Create(oRasterPath, cols, rows, len(arrayList), dtype,
-                              options=["TILED=YES", "COMPRESS=LZW", "BIGTIFF=YES"])
+                              options=["TILED=YES", "BIGTIFF=YES", "COMPRESS=LZW"])
     outRaster.SetGeoTransform((geoTransform[0], geoTransform[1], geoTransform[2], geoTransform[3], geoTransform[4],
                                geoTransform[5]))
     # dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0,
