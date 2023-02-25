@@ -25,7 +25,7 @@ class Resampling(RawResampling):
         nbBands = self.raster_info.band_number
         ##Fixme: force band = 1
         if nbBands > 1:
-            nbBands = 2
+            nbBands = 1
             msg = f"Multi-band image: This version does not support multi-band ortho-rectification, only band {nbBands} will be orthorectified "
             warnings.warn(msg)
             logging.warning(msg)
