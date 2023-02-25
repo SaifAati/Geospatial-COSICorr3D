@@ -104,6 +104,10 @@ class SENSORS(Enum):
     GE = "GE"
     QB = "QB"
     DG = "DG"
+    SKYSAT = 'Skysat'
+    PS_DOVE_C = 'Dove-C'
+    PS_DOVE_R = 'Dove-R'
+    PS_SUPER_DOVE = 'PSSD'
     SENSOR_LIST = [SPOT1, SPOT2, SPOT3, SPOT4, SPOT5, SPOT1_5, SPOT6, SPOT7, SPOT67, WV1, WV2, WV3, WV4, GE, QB, DG]
 
 
@@ -128,6 +132,8 @@ class SENSOR:
     GE = SENSORS.GE.value
     QB = SENSORS.QB.value
     DG = SENSORS.DG.value
+    PSSD = SENSORS.PS_SUPER_DOVE.value
+    SKYSAT = SENSORS.SKYSAT.value
     SENSOR_LIST = SENSORS.SENSOR_LIST.value
 
 

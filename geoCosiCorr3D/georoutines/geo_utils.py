@@ -13,7 +13,7 @@ import pyproj
 import logging
 from shapely.geometry import Polygon
 from osgeo import osr, gdal
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from astropy.time import Time
 from scipy.stats import norm
 from scipy import stats
@@ -89,7 +89,7 @@ class cRasterInfo(BaseRasterInfo):
     @staticmethod
     def write_raster(output_raster_path,
                      array_list: List[Any],
-                     geo_transform: List[float] = None,
+                     geo_transform: Union[List[float], rasterio.Affine] = None,
                      epsg_code=None,
                      dtype: str = "uint16",
                      descriptions: List[str] = None,
@@ -110,12 +110,17 @@ class cRasterInfo(BaseRasterInfo):
                 'compress': compress,
                 # 'blockxsize': 256,
                 # 'blockysize': 256,
+
                 'BIGTIFF': 'YES'
                 }
         if geo_transform is None:
             geo_transform = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-        meta['transform'] = rasterio.Affine(geo_transform[1], geo_transform[2], geo_transform[0]
-                                            , geo_transform[4], geo_transform[5], geo_transform[3])
+        if isinstance(geo_transform, rasterio.Affine):
+            meta['transform'] = geo_transform
+        else:
+
+            meta['transform'] = rasterio.Affine(geo_transform[1], geo_transform[2], geo_transform[0]
+                                                , geo_transform[4], geo_transform[5], geo_transform[3])
         if epsg_code is not None:
             meta['crs'] = epsg_code  # CRS.from_epsg(32647),']
 

@@ -25,10 +25,10 @@ class Resampling(RawResampling):
         nbBands = self.raster_info.band_number
         ##Fixme: force band = 1
         if nbBands > 1:
-            msg = "Multi-band image: This version does not support multi-band ortho-rectification, only band 1 will be orthorectified "
+            nbBands = 2
+            msg = f"Multi-band image: This version does not support multi-band ortho-rectification, only band {nbBands} will be orthorectified "
             warnings.warn(msg)
             logging.warning(msg)
-            nbBands = 1
 
         # Definition of the matrices dimensions
         dims_geom = [0, self.trans_matx.shape[2] - 1, 0, self.trans_matx.shape[1] - 1]
