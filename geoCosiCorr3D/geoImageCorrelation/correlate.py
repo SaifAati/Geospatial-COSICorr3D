@@ -29,7 +29,9 @@ class Correlate(RawCorrelation):
                  base_band: int = 1,
                  target_band: int = 1,
                  output_corr_path: Optional[str] = None,
-                 corr_show: Optional[bool] = True):
+                 corr_show: Optional[bool] = True,
+                 vmin: float = -1,
+                 vmax: float = 1):
         self.corr_config = corr_config
         if self.corr_config is None:
             self.corr_config = {}
@@ -48,7 +50,7 @@ class Correlate(RawCorrelation):
             logging.info(f'{self.__class__.__name__}: Plotting correlation results')
             self.plt_cfg = self.get_corr_config.get_config['CORRELATION_PLOT']
             self.plot_correlation_map(corr_path=self.output_corr_path, cfg=self.plt_cfg,
-                                      ground_space=self.flags.get("groundSpaceCorr"))
+                                      ground_space=self.flags.get("groundSpaceCorr"), vmin=vmin, vmax=vmax)
         return
 
     def run_correlation(self):
@@ -252,7 +254,7 @@ class Correlate(RawCorrelation):
         return
 
     @staticmethod
-    def plot_correlation_map(corr_path, cfg, ground_space=False, vmin=-2, vmax=2, title=None):
+    def plot_correlation_map(corr_path, cfg, ground_space=False, vmin=-1, vmax=1, title: Optional[str] = None):
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         from geoCosiCorr3D.geoImageCorrelation.plot import show
