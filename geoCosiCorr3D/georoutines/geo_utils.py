@@ -709,14 +709,8 @@ class Convert:
 
 
 def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data: Optional[float] = None,
-                                   mask_vls: Optional[List] = None) -> str:
+                                   mask_vls: Optional[List] = None, band_idx=1, dtype = 'uint16') -> str:
     """
-
-    Args:
-        raster_list:
-        output_path:
-
-    Returns:
     Notes: we assume the input raster have the same resolution and projection system
     """
 
@@ -727,7 +721,7 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data:
         no_data = info.no_data
     for index, img_ in enumerate(raster_list):
         raster_info = cRasterInfo(img_)
-        array = raster_info.image_as_array(read_masked=True)
+        array = raster_info.image_as_array(read_masked=True, band=band_idx)
 
         if mask_vls is not None:
             for mask_val in mask_vls:
@@ -737,7 +731,7 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data:
         band_description.append("Band" + str(index + 1) + "_" + Path(img_).stem)
 
     cRasterInfo.write_raster(output_raster_path=output_path, array_list=array_list, geo_transform=info.geo_transform,
-                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data)
+                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data, dtype= dtype)
     return output_path
 
 
