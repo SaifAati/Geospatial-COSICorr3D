@@ -22,9 +22,9 @@ STAT_CORR_LIB = CORRELATION.STAT_CORR_LIB
 
 
 # TODO:
-#  1- add flag to perform correlation pixel based
-#  2- Base class for overlap based on projection and based on pixel, for the pixel based we need to add x_off and y_off
-#  3- Support: Optical flow correlation, MicMac, ASP, Skitimage, OpenCV corr, ....
+#  1- add flag to perform pixel-based correlation
+#  2- Base class for overlap based on projection and based on pixel, for the pixel based we need support x_off and y_off
+#  3- Support: Optical flow correlation, MicMac, ASP, Sckit-image, OpenCV corr, ....
 #  4- Data sets: geometry artifacts (PS, HiRISE,WV, GF), glacier , cloud detection, earthquake, landslide, dune
 
 # define Python user-defined exceptions
@@ -40,16 +40,7 @@ class RawFreqCorr(BaseFreqCorr):
                  resampling: bool = False,
                  nb_iter: int = 4,
                  grid: bool = True):
-        """
 
-        Args:
-            window_size:
-            step:
-            mask_th:
-            resampling:
-            nb_iter:
-            grid:
-        """
         if window_size is None:
             self.window_size = 4 * [64]
         else:
@@ -101,10 +92,8 @@ class RawFreqCorr(BaseFreqCorr):
             logging.info("corr margins: {}".format(margins))
             return margins
         else:
-            # TODO TO CHECK
             logging.warning("Compute margin based on resampling Kernel ! ")
-            # warnings.warn("Compute margin based on resampling Kernel ! ")
-            sys.exit("Not implemented  ")
+            raise NotImplementedError
 
     # TODO: change to static method or adapt to class method
     @classmethod
@@ -318,7 +307,7 @@ class RawCorrelationEngine(BaseCorrelationEngine):
                                                            grid=self._ingest_params()[3])
 
         if self.debug:
-            print(self.__dict__)
+            logging.info(self.__dict__)
         return
 
     @staticmethod
@@ -396,8 +385,7 @@ class RawCorrelation(BaseCorrelation):
         self.debug = debug
 
     def _ingest(self):
-        ######
-        # TODO: figure out how we need to declare the following attributes
+
         self.x_res: float
         self.y_res: float
         self.win_area_x: int
@@ -420,7 +408,6 @@ class RawCorrelation(BaseCorrelation):
                                                               self.corr_engine.corr_params.step[0])
 
         if self.debug:
-            # self.set_corr_debug()
             logging.info("Correlation engine:{} , params:{}".format(self.corr_engine.correlator_name,
                                                                     self.corr_engine.corr_params.__dict__))
 
@@ -865,7 +852,7 @@ class RawCorrelation(BaseCorrelation):
             self.snr_output = np.vstack((self.snr_output.T, temp_add.T)).T
 
     def set_geo_referencing(self):
-        # TODO change this to a class method
+        # TODO change this function to a class method
         if all(self.flagList):
             if self.corr_engine.corr_params.grid:
                 x_map_origin = self.base_info.x_map_origin + (
