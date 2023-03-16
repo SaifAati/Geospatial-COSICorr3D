@@ -414,7 +414,6 @@ class RawCorrelation(BaseCorrelation):
         logging.info(f'{self.__class__.__name__}:correlation margins:{self.margins}')
         if self.pixel_based_correlation is None:
             self.pixel_based_correlation = False
-            logging.info(' USER: PIXEL-BASED CORRELATION ')
         return
 
     def set_margins(self) -> List[int]:
@@ -429,6 +428,7 @@ class RawCorrelation(BaseCorrelation):
         ##Check that the images have identical projection reference system
         self.flags = {"validMaps": False, "groundSpaceCorr": False, "continue": True}
         if self.pixel_based_correlation:
+            logging.info(' USER: PIXEL-BASED CORRELATION ')
             self.flagList = self.updateFlagList(self.flags)
             return
         if self.base_info.valid_map_info and self.target_info.valid_map_info:
