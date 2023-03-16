@@ -19,6 +19,9 @@ class CosiCorr3DEncoder(json.JSONEncoder):
             return obj.tolist()
         if isinstance(obj, Decimal):
             return str(obj)
+        if isinstance(obj, np.float32):
+            return float(obj)
+        
         return json.JSONEncoder.default(self, obj)
 
 
