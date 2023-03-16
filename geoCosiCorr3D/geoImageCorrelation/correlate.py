@@ -8,11 +8,10 @@ import json
 import logging
 import os
 import sys
-from pathlib import Path
-from typing import List, Any, Optional, Dict
-
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
+from typing import List, Any, Optional, Dict
 from tqdm import tqdm
 
 import geoCosiCorr3D.geoImageCorrelation.geoCorr_utils as utils
@@ -154,7 +153,13 @@ class Correlate(RawCorrelation):
             ew_array, ns_array, snr_array = self.run_corr_engine(base_subset, target_subset)
 
             ew_array_list.append(ew_array * self.x_res)
-            ns_array_list.append(ns_array * (-self.y_res))
+            if all(self.flagList):
+                ns_array_list.append(
+                    ns_array * (-self.y_res))
+            else:
+                logging.warning('image based correlation -> y_res=1')
+                ns_array_list.append(ns_array)
+
             snr_array_list.append(snr_array)
 
         self.ew_output = np.vstack(tuple(ew_array_list))
@@ -254,7 +259,8 @@ class Correlate(RawCorrelation):
         return
 
     @staticmethod
-    def plot_correlation_map(corr_path, cfg, ground_space=False, vmin=-1, vmax=1, title: Optional[str] = None):
+    def plot_correlation_map(corr_path, cfg, ground_space=False, vmin: float = -1, vmax: float = 1,
+                             title: Optional[str] = None):
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         from geoCosiCorr3D.geoImageCorrelation.plot import show
