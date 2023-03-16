@@ -353,20 +353,9 @@ class RawCorrelation(BaseCorrelation):
                  output_corr_path: Optional[str] = None,
                  tile_size_mb: Optional[int] = CORRELATION.TILE_SIZE_MB,
                  visualize: Optional[bool] = False,
-                 debug: Optional[bool] = True):
-        """
+                 debug: Optional[bool] = True,
+                 pixel_based_correlation: Optional[bool] = None):
 
-        Args:
-            base_image_path:
-            target_image_path:
-            corr_config:
-            base_band:
-            target_band:
-            output_corr_path:
-            tile_size_mb:
-            visualize:
-            debug:
-        """
         self.snr_output = None
         self.ns_output = None
         self.ew_output = None
@@ -383,6 +372,7 @@ class RawCorrelation(BaseCorrelation):
         self.target_band_nb = target_band
         self.output_corr_path = output_corr_path
         self.debug = debug
+        self.pixel_based_correlation = pixel_based_correlation
 
     def _ingest(self):
 
@@ -422,6 +412,9 @@ class RawCorrelation(BaseCorrelation):
         self.base_original_dims: List[float] = self.base_dims_pix
         self.margins = self.set_margins()
         logging.info(f'{self.__class__.__name__}:correlation margins:{self.margins}')
+        if self.pixel_based_correlation is None:
+            self.pixel_based_correlation = False
+            logging.info(' USER: PIXEL-BASED CORRELATION ')
         return
 
     def set_margins(self) -> List[int]:
@@ -435,6 +428,9 @@ class RawCorrelation(BaseCorrelation):
         # TODO: move this function misc
         ##Check that the images have identical projection reference system
         self.flags = {"validMaps": False, "groundSpaceCorr": False, "continue": True}
+        if self.pixel_based_correlation:
+            self.flagList = self.updateFlagList(self.flags)
+            return
         if self.base_info.valid_map_info and self.target_info.valid_map_info:
             self.flags["validMaps"] = True
             if self.base_info.epsg_code != self.target_info.epsg_code:

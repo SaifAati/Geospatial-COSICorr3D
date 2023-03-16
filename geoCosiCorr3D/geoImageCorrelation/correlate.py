@@ -30,17 +30,19 @@ class Correlate(RawCorrelation):
                  output_corr_path: Optional[str] = None,
                  corr_show: Optional[bool] = True,
                  vmin: float = -1,
-                 vmax: float = 1):
+                 vmax: float = 1,
+                 pixel_based_correlation: Optional[bool] = None):
         self.corr_config = corr_config
         if self.corr_config is None:
             self.corr_config = {}
+        self.pixel_based_correlation = pixel_based_correlation
 
         super().__init__(base_image_path,
                          target_image_path,
                          self.corr_config,
                          base_band,
                          target_band,
-                         output_corr_path)
+                         output_corr_path,pixel_based_correlation=pixel_based_correlation)
 
         self._ingest()
         self.run_correlation()
