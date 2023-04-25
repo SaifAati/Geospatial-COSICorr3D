@@ -30,7 +30,7 @@ dependencies:
     - ttkthemes==3.2.2
     - Pillow==9.2.0
     - seaborn==0.12.0
-    - sklearn
+    - sklearn-learn
     - tox==3.24.3
     - pytest==6.2.5
     - pytest-cov==2.12.1

@@ -76,18 +76,8 @@ def Value_Locate(vector, values):
     return inds
 
 
-def Interpol(VV, XX, xOut: Optional[List] = None, interType=INTERPOLATION_TYPES.LINEAR):
-    """
+def Interpol(VV, XX, xOut: Optional[List] = None):
 
-    Args:
-        VV:
-        XX:
-        xOut:
-        interType:
-
-    Returns:
-
-    """
     if xOut is None:
         xOut = []
     # print(np.size(xOut))
@@ -101,14 +91,13 @@ def Interpol(VV, XX, xOut: Optional[List] = None, interType=INTERPOLATION_TYPES.
     v = np.copy(VV)
     x = np.copy(XX)
     m = np.size(v)  ## Nbr of inputs points
-    # print(m)
+
 
     if regular == 1:
-        print("Not implemented yet ")
-        return
+        raise NotImplementedError
 
     if np.size(x) != m:
-        print("Error! v and X array must have the same nb of elts")
+        raise EOFError("Error! v and X array must have the same nb of elts")
     else:
         s = Value_Locate(vector=x, values=xOut)
 

@@ -12,12 +12,12 @@ COPY geoCosiCorr3D ./geoCosiCorr3D
 COPY ./geoCosiCorr3D_DK.yml ./
 COPY ./README.md ./
 
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 RUN mkdir /root/.conda
-RUN bash Anaconda3-2021.11-Linux-x86_64.sh -b
-RUN rm -f Anaconda3-2021.11-Linux-x86_64.sh
+RUN bash Miniconda3-latest-Linux-x86_64.sh -b
+RUN rm -f Miniconda3-latest-Linux-x86_64.sh
 
-ENV PATH="/root/anaconda3/bin:${PATH}"
+ENV PATH="/root/miniconda3/bin:${PATH}"
 RUN conda init bash
 RUN conda env create --file geoCosiCorr3D_DK.yml
 RUN echo "source activate geoCosiCorr3D" >> ~/.bashrc

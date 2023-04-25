@@ -394,8 +394,8 @@ class cSpot15(RSM):
             raise ValueError("Ephemeris is missing")
 
     @staticmethod
-    def LagrangeInterpolation(linesDaates, satPos, ephTime):
-        sz = len(linesDaates)
+    def LagrangeInterpolation(linesDates, satPos, ephTime):
+        sz = len(linesDates)
         oArray = []
         for scanLine_ in range(sz):
             interpValue = 0
@@ -403,7 +403,7 @@ class cSpot15(RSM):
                 iterVal = satPos[j]
                 for i in range(len(ephTime)):
                     if i != j:
-                        iterVal = iterVal * (linesDaates[scanLine_] - ephTime[i]) / (ephTime[j] - ephTime[i])
+                        iterVal = iterVal * (linesDates[scanLine_] - ephTime[i]) / (ephTime[j] - ephTime[i])
                 interpValue += iterVal
             oArray.append(interpValue)
         return oArray
