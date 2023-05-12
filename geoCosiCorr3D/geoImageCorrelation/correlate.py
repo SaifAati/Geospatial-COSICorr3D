@@ -321,7 +321,7 @@ class Correlate(RawCorrelation):
                                    )
                 cbar1 = fig.colorbar(im, cax=axins, orientation="horizontal", extend='both')
                 cbar1.ax.set_title(title_)
-
+        #TODO change to loop function
         axs[0].xaxis.set_minor_locator(AutoMinorLocator())
         axs[0].yaxis.set_minor_locator(AutoMinorLocator())
         axs[0].xaxis.set_major_locator(MaxNLocator(3))
