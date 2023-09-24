@@ -3,13 +3,12 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
-import sys
+import logging
 
+import numpy as np
 import pandas
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import logging
 
 
 class cRSMRefinement:
@@ -174,8 +173,7 @@ class cRSMRefinement:
 
     def plot_error(self):
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                                       AutoMinorLocator)
+        from matplotlib.ticker import AutoMinorLocator
         dU_est = np.dot(self.cartCoordPlaneCoefs.T,
                         np.array([self.gcps[:, 3], self.gcps[:, 4], self.gcps.shape[0] * [1]])).T
         dU_res = self.dU - dU_est

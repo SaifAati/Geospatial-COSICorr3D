@@ -4,16 +4,17 @@
 # Copyright (C) 2022
 """
 import logging
-import numpy as np
 import sys
 import warnings
+from typing import List, Optional
+
 import affine6p
 import geopandas
-from typing import List, Optional
+import numpy as np
 from shapely.geometry import Polygon
 
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.core_RFM import RawRFM
 
 

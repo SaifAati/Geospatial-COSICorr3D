@@ -8,15 +8,18 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
-from typing import List, Any, Optional, Dict
 from tqdm import tqdm
 
 import geoCosiCorr3D.geoImageCorrelation.geoCorr_utils as utils
 from geoCosiCorr3D.geoCore.constants import CORRELATION
-from geoCosiCorr3D.geoCore.core_correlation import RawCorrelation, FreqCorrelator, SpatialCorrelator
+from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator,
+                                                    RawCorrelation,
+                                                    SpatialCorrelator)
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
@@ -42,7 +45,7 @@ class Correlate(RawCorrelation):
                          self.corr_config,
                          base_band,
                          target_band,
-                         output_corr_path,pixel_based_correlation=pixel_based_correlation)
+                         output_corr_path, pixel_based_correlation=pixel_based_correlation)
 
         self._ingest()
         self.run_correlation()
@@ -264,10 +267,11 @@ class Correlate(RawCorrelation):
     def plot_correlation_map(corr_path, cfg, ground_space=False, vmin: float = -1, vmax: float = 1,
                              title: Optional[str] = None):
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import AutoMinorLocator, MaxNLocator
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
         from geoCosiCorr3D.geoImageCorrelation.plot import show
         from geoCosiCorr3D.georoutines.geo_utils import ReprojectRaster
-        from matplotlib.ticker import (AutoMinorLocator, MaxNLocator)
         BORDER_PAD = 2
         corr_raster_info = cRasterInfo(corr_path)
 
@@ -321,7 +325,7 @@ class Correlate(RawCorrelation):
                                    )
                 cbar1 = fig.colorbar(im, cax=axins, orientation="horizontal", extend='both')
                 cbar1.ax.set_title(title_)
-        #TODO change to loop function
+        # TODO change to loop function
         axs[0].xaxis.set_minor_locator(AutoMinorLocator())
         axs[0].yaxis.set_minor_locator(AutoMinorLocator())
         axs[0].xaxis.set_major_locator(MaxNLocator(3))

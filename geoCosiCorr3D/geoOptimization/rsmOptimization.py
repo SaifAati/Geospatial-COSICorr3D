@@ -132,24 +132,24 @@ class cRSMOptimization:
         return P
 
     def Plot_Error(self):
-        import geoCosiCorr3D.georoutines.georoutines as geoRT
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                                       AutoMinorLocator)
+        from matplotlib.ticker import AutoMinorLocator
+
+        import geoCosiCorr3D.georoutines.geo_utils as geoRT
         dU_est = np.dot(self.cartCoordPlaneCoefs.T,
                         np.array([self.gcps[:, 3], self.gcps[:, 4], self.gcps.shape[0] * [1]])).T
         dU_res = self.dU - dU_est
         dU_norm = np.sqrt(self.dU[:, 0] ** 2 + self.dU[:, 1] ** 2 + self.dU[:, 2] ** 2)
         dU_est_norm = np.sqrt(dU_est[:, 0] ** 2 + dU_est[:, 1] ** 2 + dU_est[:, 2] ** 2)
 
-        stat_dU = geoRT.cgeoStat(inputArray=dU_norm, displayValue=False)
+        stat_dU = geoRT.geoStat(in_array=dU_norm, display_values=False)
 
         print("Pointing Error Ini :mean:{:.3f} ,median:{:.3f}, std:{:.3f}, RMSE:{:.3f}".format(float(stat_dU.mean),
                                                                                                float(stat_dU.median),
                                                                                                float(stat_dU.std),
                                                                                                float(stat_dU.RMSE)))
 
-        stat_dU_est = geoRT.cgeoStat(inputArray=dU_est_norm, displayValue=False)
+        stat_dU_est = geoRT.geoStat(in_array=dU_est_norm, display_values=False)
 
         print("Pointing Error opt_est :mean:{:.3f} ,median:{:.3f}, std:{:.3f}, RMSE:{:.3f}".format(
             float(stat_dU_est.mean),

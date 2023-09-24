@@ -3,15 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import os, pickle
 import datetime
-import numpy as np
-from pathlib import Path
-from typing import List
 import warnings
+from typing import List
 
-from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+import numpy as np
+
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
+from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
 
 
 class HeightInterpolation:
@@ -68,9 +67,9 @@ class HeightInterpolation:
         Returns:
 
         """
-        from geoCosiCorr3D.georoutines.geo_utils import Convert
+        from geoCosiCorr3D.georoutines.geo_utils import (Convert,
+                                                         cRasterInfoGDAL)
         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
-        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfoGDAL
         demInfo = cRasterInfoGDAL(dem_path)
         demCoord = Convert.coord_map1_2_map2(X=geo_coords[0],
                                              Y=geo_coords[1],

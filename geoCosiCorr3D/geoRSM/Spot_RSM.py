@@ -4,13 +4,19 @@
 # Copyright (C) 2022
 """
 
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d, splrep, splev
+import datetime
 import logging
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.interpolate import interp1d, splev, splrep
+
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
-from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetSpot15Metadata, cGetSpot67Metadata
-from geoCosiCorr3D.geoRSM.misc import *
 from geoCosiCorr3D.geoCore.core_RSM import RSM
+from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import (
+    cGetSpot15Metadata, cGetSpot67Metadata)
+from geoCosiCorr3D.geoRSM.misc import NormalizeArray, cSpatialRotations
 
 geoCosiCorr3DOrientation = SOFTWARE.geoCosiCorr3DOrientation
 

@@ -3,23 +3,25 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2023
 """
+import datetime
+import glob
+import multiprocessing
 import os
 import pickle
-import datetime
-import multiprocessing
-from typing import List, Optional
-from osgeo import gdal
-import glob
-import pandas
-from p_tqdm import p_map
 from pathlib import Path
-import numpy as np
-from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extensions, CreateDirectory, CopyFile
+from typing import List, Optional
 
-from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo, ReprojectRaster, crop_raster
-from geoCosiCorr3D.geo3DDA.misc import ImgInfo, all_equal
+import numpy as np
+import pandas
+from osgeo import gdal
+from p_tqdm import p_map
+
 from geoCosiCorr3D.geo3DDA.compute_3DD import cCompute3DD, fun_compute3DD
-from geoCosiCorr3D.geo3DDA.misc import merge_3dd_tiles
+from geoCosiCorr3D.geo3DDA.misc import ImgInfo, all_equal, merge_3dd_tiles
+from geoCosiCorr3D.georoutines.file_cmd_routines import (
+    CopyFile, CreateDirectory, get_files_based_on_extensions)
+from geoCosiCorr3D.georoutines.geo_utils import (ReprojectRaster, cRasterInfo,
+                                                 crop_raster)
 
 TILE_FOLDER_SUFFIX = '-TILE'
 TILE_FILE_SUFFIX = 'tile'

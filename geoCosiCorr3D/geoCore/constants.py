@@ -4,17 +4,18 @@
 # Copyright (C) 2022
 """
 
-import numpy as np
-import os
 import configparser
-from enum import Enum
+import os
 from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
 from typing import Dict
+
+import numpy as np
 from osgeo import gdal
 
-GEOCOSICORR3D_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-GEOCOSICORR3D_SETUP_CFG = os.path.join(GEOCOSICORR3D_PACKAGE_DIR, 'setup.cfg')
-
+GEOCOSICORR3D_PACKAGE_DIR = Path(__file__).parent.parent
+GEOCOSICORR3D_SETUP_CFG = os.path.join(GEOCOSICORR3D_PACKAGE_DIR.parent, 'setup.cfg')
 config = configparser.ConfigParser()
 config.read(GEOCOSICORR3D_SETUP_CFG)
 
@@ -33,7 +34,7 @@ class SOFTWARE:
     CORR_PARAMS_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                       'geoCosiCorrBaseCfg/corr_params.json')
 
-    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "geoCosiCorr3D/lib/lfgeoCosiCorr3D.so")
+    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER.parent, "lib/lfgeoCosiCorr3D.so")
 
 
 @dataclass(frozen=True)
@@ -153,8 +154,8 @@ class CORR_METHODS(Enum):
 
 
 class CORR_LIBS(Enum):
-    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/lgeoFreqCorr_v1.so")
-    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/libgeoStatCorr.so.1")
+    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/lgeoFreqCorr_v1.so")
+    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/libgeoStatCorr.so.1")
 
 
 @dataclass(frozen=True)

@@ -3,27 +3,33 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import ctypes
+import ctypes.util
 import logging
-import psutil
-import ctypes, ctypes.util, goto, sys
+import os
+import sys
 import warnings
-
 from inspect import currentframe
-from goto import with_goto
+from typing import Dict, Optional
+
+import goto
+import numpy as np
+import psutil
 from dominate.tags import label
-from typing import Optional
+from goto import with_goto
 
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation
-from geoCosiCorr3D.geoRFM.RFM import RFM
+import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+from geoCosiCorr3D.geoCore.constants import (EARTH, GEOCOSICORR3D_SENSORS_LIST,
+                                             SOFTWARE)
 from geoCosiCorr3D.geoCore.core_RSM import RSM
-from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 from geoCosiCorr3D.geoCore.geoRawInvOrtho import RawInverseOrtho
-from geoCosiCorr3D.geoCore.constants import *
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import \
+    EstimateGeoTransformation
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
+from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
+from geoCosiCorr3D.geoRFM.RFM import RFM
 
 geoWarns.wrIgnoreNotGeoreferencedWarning()
 process = psutil.Process(os.getpid())

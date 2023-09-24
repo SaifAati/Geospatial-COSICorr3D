@@ -5,11 +5,16 @@
 """
 import logging
 import warnings
-from typing import Optional
+from typing import Dict, Optional
+
+import numpy as np
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoCore.core_resampling import RawResampling, SincResampler, BilinearResampler, ResamplingEngine
-from geoCosiCorr3D.geoCore.constants import *
+from geoCosiCorr3D.geoCore.constants import SOFTWARE, Resampling_Methods
+from geoCosiCorr3D.geoCore.core_resampling import (BilinearResampler,
+                                                   RawResampling,
+                                                   ResamplingEngine,
+                                                   SincResampler)
 
 
 class Resampling(RawResampling):

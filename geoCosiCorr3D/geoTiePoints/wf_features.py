@@ -4,8 +4,10 @@
 # Copyright (C) 2022
 """
 
-from geoCosiCorr3D.geoCore.constants import *
-from typing import Optional, Dict
+from typing import Dict, Optional
+
+from geoCosiCorr3D.geoCore.constants import (ASIFT_TP_PARAMS, SOFTWARE,
+                                             TP_DETECTION_METHODS)
 
 method = None
 

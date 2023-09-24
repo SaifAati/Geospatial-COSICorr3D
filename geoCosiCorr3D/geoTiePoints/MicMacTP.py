@@ -4,13 +4,17 @@
 # Copyright (C) 2022
 """
 import logging
-import pandas
-from typing import Optional
+import os
 from pathlib import Path
+from typing import Dict, Optional
 
-from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
-from geoCosiCorr3D.geoCore.constants import *
+import pandas
+from osgeo import gdal
+
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
+from geoCosiCorr3D.geoCore.constants import (ASIFT_TP_PARAMS, RASTER_TYPE,
+                                             SOFTWARE)
+from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
@@ -68,7 +72,7 @@ class cMicMacTp(RawMMTP):
                                                              img_j=tmp_raw_img_path,
                                                              homol_dir=homol_path,
                                                              format_cosi_corr=self.cosi_corr_format,
-                                                             max_tps = self.max_pts)
+                                                             max_tps=self.max_pts)
             if self.tp_report_dic is not None:
                 self.tp: pandas.DataFrame = self.tp_report_dic["DataFrame"]
                 self.o_tp_path = fileRT.CopyFile(inputFilePath=self.tp_report_dic["TpFile"], outputFolder=self.o_dir)

@@ -5,13 +5,13 @@
 """
 
 import logging
-import pandas
+from abc import ABC, abstractmethod
 from pathlib import Path
-from abc import abstractmethod, ABC
 from typing import Optional
 
+import pandas
+
 from geoCosiCorr3D.georoutines.file_cmd_routines import FilesInDirectory
-from geoCosiCorr3D.geoCore.constants import *
 
 
 class RawGeoTP(ABC):
@@ -20,8 +20,8 @@ class RawGeoTP(ABC):
 
     @staticmethod
     def plot_matches(img_i, img_j, matches, tpPath, plot_matches: Optional[bool] = True):
-        import rasterio
         import matplotlib.pyplot as plt
+        import rasterio
         fig, axs = plt.subplots(1, 2, figsize=(16, 9))
         fig.suptitle("# Matches:" + str(matches.shape[0]))
         if img_i is not None:
@@ -50,8 +50,9 @@ class RawGeoTP(ABC):
     @staticmethod
     def plot_matches_v2(img_i, img_j, matches_file):  # , plot_matches: Optional[bool] = True):
         import matplotlib.pyplot as plt
-        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
         import numpy as np
+
+        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
         from geoCosiCorr3D.georoutines.utils.plt_utils import plot_matches
         fig, ax = plt.subplots(figsize=(10, 10))
 
