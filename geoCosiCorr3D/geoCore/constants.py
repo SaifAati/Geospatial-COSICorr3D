@@ -218,3 +218,41 @@ class TEST_CONFIG:
                        }
     GCP_OPT_CONFIG = {'nb_loops': 3, 'snr_th': 0.9, 'mean_error_th': 1 / 20,
                       'resampling_method': Resampling_Methods.SINC}
+
+
+@dataclass(frozen=True)
+class RsmAncKeys:
+    NB_COLS = 'nbCols'
+    NB_ROWS = 'nbRows'
+    NB_BANDS = 'nbBands'
+    PLATFORM = 'platform'
+    SUN_AZ = 'sunAZ'
+    SUN_ELEV = 'sunElev'
+    SAT_ELEV = 'satElev'
+    VIEW_ANGLE = 'viewAngle'
+    INCIDENCE_ANGLE = 'incidenceAngle'
+    AVG_LINE_RATE = 'avgLineRate'
+    SCAN_DIRECTION = 'sacnDirection'
+
+    GSD_MEAN = 'meanGSD'
+    GSD_aTRACK = 'gsd_ACT'
+    GSD_xTRACK = 'gsd_ACT'
+    GSD = 'gsd'
+
+    TIME = 'time'
+    START_TIME = 'startTime'
+    DATE_TIME_OBJ = 'date_time_obj'
+
+    FOCAL = 'focal'
+    COL_SZ = 'szCol'
+    ROW_SZ = 'szRow'
+
+    INTERP_SAT_POS = 'interpSatPosition'
+    INTERP_SAT_VEL = 'interpSatVelocity'
+    CCD_LOOK_ANG = 'CCDLookAngle'
+    INTERP_QUAT_Q0 = 'Q0interp'
+    INTERP_QUAT_Q1 = 'Q1interp'
+    INTERP_QUAT_Q2 = 'Q2interp'
+    INTERP_QUAT_Q3 = 'Q3interp'
+
+    SAT_TO_NAV_Mat = 'satToNavMat'
