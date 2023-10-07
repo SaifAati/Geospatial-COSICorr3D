@@ -3,14 +3,18 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import os
+import tempfile
+
+import numpy as np
 import pandas
 import pytest
-import tempfile
+
+from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
-from geoCosiCorr3D.geoCore.constants import *
 
-folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
+folder = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "tests/test_dataset")
 img1 = os.path.join(folder, "BASE_IMG.TIF")
 img2 = os.path.join(folder, "TARGET_IMG.TIF")
 match_file = os.path.join(folder, 'basemap_VS_SP2.pts')

@@ -3,13 +3,19 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import pytest
+import os
 import tempfile
+
+import numpy as np
+import pytest
+
+from geoCosiCorr3D.geoCore.constants import (GEOCOSICORR3D_RESAMLING_METHODS,
+                                             SATELLITE_MODELS, SENSOR,
+                                             SOFTWARE)
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
-from geoCosiCorr3D.geoCore.constants import *
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
-folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset/test_ortho_dataset")
+folder = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "tests/test_dataset/test_ortho_dataset")
 rawImg = os.path.join(folder, "RAW_SP2.TIF")
 demPath = os.path.join(folder, "DEM.tif")
 rfmFile = os.path.join(folder, "SP2_RPC.txt")
@@ -42,6 +48,7 @@ def test_ortho_rsm(o_gsd, resampling_method):
     np.testing.assert_allclose(temp_ortho, expec_ortho, rtol=1e-1)
 
     return
+
 
 @pytest.mark.parametrize('o_gsd', [15, 30])
 @pytest.mark.parametrize('resampling_method', GEOCOSICORR3D_RESAMLING_METHODS)

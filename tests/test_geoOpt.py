@@ -3,15 +3,19 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import os
+import tempfile
 
+import numpy as np
 import pandas
 import pytest
-import tempfile
-from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
-from geoCosiCorr3D.geoCore.constants import *
 
-folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
+from geoCosiCorr3D.geoCore.constants import (SATELLITE_MODELS, SENSOR,
+                                             SOFTWARE, TEST_CONFIG)
+from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
+
+folder = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "tests/test_dataset")
 gcp_file = os.path.join(folder, 'input_GCPs.csv')
 raw_img_path = os.path.join(folder, 'SP2.TIF')
 ref_img_path = os.path.join(folder, 'basemap.TIF')
