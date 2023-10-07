@@ -52,14 +52,16 @@ To update the `geoCosiCorr3D` env you can use the following cmd:
     conda env update --file geoCosiCorr3D.yml --prune
 
 ### Option 2: Docker
+
+
 1- Build the image:
 
-    docker-compose -f  docker-compose.yml buil geocosicorr3d
+    docker-compose -f  docker-compose.yml build geocosicorr3d
 2- Run a container:
 
     docker-compose -f  docker-compose.yml run geocosicorr3d
 
-
+Note: To install docker in your machine follow the instrubction in this link https://docs.docker.com/engine/install/
 # geoCosiCorr3D: CLI + GUI
 [CLI + GUI doc](Doc/GUI_DOC.md)
 
