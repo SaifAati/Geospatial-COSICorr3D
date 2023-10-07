@@ -4,17 +4,24 @@
 # Copyright (C) 2022
 """
 import logging
+import os
 import sys
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas
 
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarn
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
+from geoCosiCorr3D.geoCore.constants import (CORRELATION,
+                                             GEOCOSICORR3D_SATELLITE_MODELS,
+                                             GEOCOSICORR3D_SENSORS_LIST,
+                                             SATELLITE_MODELS, SOFTWARE,
+                                             Resampling_Methods)
 from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator,
                                                     SpatialCorrelator)
 from geoCosiCorr3D.geoCore.core_RSM import RSM

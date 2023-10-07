@@ -1,7 +1,8 @@
-import click
 import json
-from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import pow2
 
+import click
+
+from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import pow2
 
 # class Opt(click.Option):
 #     """Wrapper classes for options that provide default value filling from configuration file."""

@@ -3,12 +3,12 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-from abc import abstractmethod, ABC
-from typing import Dict, Optional, Type, List, Any
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
 
 
 class BaseInverseOrtho(ABC):
@@ -84,20 +84,6 @@ class BaseInverseOrtho(ABC):
 
     @abstractmethod
     def DEM_interpolation(self, demInfo, demDims, tileCurrent, eastArr, northArr, modelData):
-        """
-
-
-        Args:
-            demInfo:
-            demDims:
-            tileCurrent:
-            eastArr:
-            northArr:
-            modelData:
-
-        Returns:
-
-        """
         pass
 
     @abstractmethod

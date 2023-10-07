@@ -1,22 +1,28 @@
 import os
+import tkinter as tk
+import tkinter.filedialog as tkfile
+import tkinter.messagebox as tkmsg
+from collections import namedtuple
+from tkinter import BooleanVar, ttk
 
+import matplotlib as mpl
 import rasterio as rio
 import rasterio.plot as rplt
-import tkinter as tk
-import tkinter.messagebox as tkmsg
-import tkinter.filedialog as tkfile
-from tkinter import BooleanVar, ttk
-import matplotlib as mpl
 from matplotlib import backend_tools
-from matplotlib.figure import Figure
-from matplotlib.backend_bases import NavigationToolbar2, key_press_handler, _Mode, MouseButton
-from matplotlib.backends._backend_tk import logging, ImageTk
+from matplotlib.backend_bases import (MouseButton, NavigationToolbar2, _Mode,
+                                      key_press_handler)
+from matplotlib.backends._backend_tk import ImageTk, logging
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from collections import namedtuple
+from matplotlib.figure import Figure
 
-import geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.settings as settings
-from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import get_bands, project_path, setdefaultattr, splitcall
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import (Window, ToolTip, TimedToolTip)
+import geoCosiCorr3D_GUI.geoImageCorrelation_GUI.settings as settings
+from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import (get_bands,
+                                                             project_path,
+                                                             setdefaultattr,
+                                                             splitcall)
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import (TimedToolTip,
+                                                                ToolTip,
+                                                                Window)
 
 _log = logging.getLogger(__name__)
 

@@ -4,10 +4,11 @@
 # Copyright (C) 2022
 """
 
+from typing import List, Optional
+
 import numpy as np
 from scipy import interpolate
 from scipy.interpolate import *
-from typing import Optional, List
 
 from geoCosiCorr3D.geoCore.constants import INTERPOLATION_TYPES
 

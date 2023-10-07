@@ -2,9 +2,10 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 
-import yaml
 import json
+
 import click
+import yaml
 
 
 class ConfigReader:

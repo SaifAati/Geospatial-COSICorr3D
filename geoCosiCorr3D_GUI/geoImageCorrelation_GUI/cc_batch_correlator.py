@@ -1,8 +1,6 @@
 import time
 
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.batch_utils import BatchSelector
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_correlator import *
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.gui_utils import *
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.batch_utils import BatchSelector
 
 
 class BatchCorrelator(Window):

@@ -3,9 +3,10 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+from typing import List, Optional
+
 import numpy as np
 from scipy.optimize import least_squares
-from typing import Optional, List
 
 
 def Optimize(xy_obs_with_model, xy_error, method="lm", ini_sol: Optional[List] = None):

@@ -44,9 +44,9 @@ def ColorBar_(ax, mapobj, cmap, vmin, vmax, label="Disp.[m]", width="3%", height
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
     # fig, ax = plt.subplots(figsize=(6, 1))
     # fig.subplots_adjust(bottom=0.5)
-
     # cmap = mpl.cm.cool
     axins = inset_axes(ax,
                        width=width,  # width = 5% of parent_bbox width

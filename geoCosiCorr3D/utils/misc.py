@@ -4,9 +4,10 @@
 # Copyright (C) 2022
 """
 import json
-import numpy as np
 from decimal import *
 from typing import Dict
+
+import numpy as np
 
 
 class CosiCorr3DEncoder(json.JSONEncoder):

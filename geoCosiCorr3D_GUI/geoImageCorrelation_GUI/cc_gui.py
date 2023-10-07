@@ -1,9 +1,10 @@
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tkrioplt import *
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.gui_utils import Window
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_viewer import ImageHub
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_correlator import Correlator
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_batch_correlator import BatchCorrelator
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import run
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_batch_correlator import \
+    BatchCorrelator
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_correlator import Correlator
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_viewer import ImageHub
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.gui_utils import Window
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import run
+
 
 class geoCOSICORR3D(Window):
     def __init__(self, parent, top_level):

@@ -1,14 +1,16 @@
 import json
 import threading
-
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.filedialog as tkfile
+import tkinter.ttk as ttk
 
-from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import get_bands, pow2, trycatch
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import get_entries, project_path, SimpleContainer, \
-    TimedToolTip, findInFrame, removeInvalid, splitcall, open_local_image, addInvalid, reset_option_menu, Window
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_viewer import ImageHub
+from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import (get_bands, pow2,
+                                                             trycatch)
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.cc_viewer import ImageHub
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import (
+    SimpleContainer, TimedToolTip, Window, addInvalid, findInFrame,
+    get_entries, open_local_image, project_path, removeInvalid,
+    reset_option_menu, splitcall)
 
 
 def param_to_config(paramToConfig):

@@ -31,7 +31,6 @@ STAT_CORR_LIB = CORRELATION.STAT_CORR_LIB
 #  3- Support: Optical flow correlation, MicMac, ASP, Sckit-image, OpenCV corr, ....
 #  4- Data sets: geometry artifacts (PS, HiRISE,WV, GF), glacier , cloud detection, earthquake, landslide, dune
 
-# define Python user-defined exceptions
 class InvalidCorrLib(Exception):
     pass
 
@@ -101,7 +100,8 @@ class RawFreqCorr(BaseFreqCorr):
 
     # TODO: change to static method or adapt to class method
     @classmethod
-    def run_correlator(cls, base_array: np.ndarray,
+    def run_correlator(cls,
+                       base_array: np.ndarray,
                        target_array: np.ndarray,
                        window_size: List[int],
                        step: List[int],
@@ -513,8 +513,8 @@ class RawCorrelation(BaseCorrelation):
         Returns:
 
         """
-        win_area_x = np.int(window_sizes[0] + 2 * margins[0])
-        win_area_y = np.int(window_sizes[1] + 2 * margins[1])
+        win_area_x = int(window_sizes[0] + 2 * margins[0])
+        win_area_y = int(window_sizes[1] + 2 * margins[1])
 
         return win_area_x, win_area_y
 
@@ -678,14 +678,10 @@ class RawCorrelation(BaseCorrelation):
             # correlator
             self.border_col_left: int = int(np.ceil(
                 (self.base_dims_pix[1] - self.base_original_dims[1] + self.corr_engine.corr_params.window_size[0] / 2 +
-                 self.margins[
-                     0]) / np.float(
-                    self.corr_engine.corr_params.step[0])))
+                 self.margins[0]) / float(self.corr_engine.corr_params.step[0])))
             self.border_row_top: int = int(np.ceil(
                 (self.base_dims_pix[3] - self.base_original_dims[3] + self.corr_engine.corr_params.window_size[1] / 2 +
-                 self.margins[
-                     1]) / np.float(
-                    self.corr_engine.corr_params.step[1])))
+                 self.margins[1]) / float(self.corr_engine.corr_params.step[1])))
             if self.debug:
                 logging.info("borderColLeft:{}, borderRowTop:{}".format(self.border_col_left, self.border_row_top))
             # From the borders in col and row, compute the necessary cropping of the master and slave in row and col,
@@ -731,8 +727,6 @@ class RawCorrelation(BaseCorrelation):
             self.output_col_right_blank = self._blank_array_func(nbVals=self.border_col_right)
 
     def tiling(self):
-        # TODO refactor this function and create a base class to generate Tiles
-        #  see Tile from Jihao python code
         # Get number of pixel in column and row of the file subset to tile
         self.nb_col_img: int = int(self.base_dims_pix[2] - self.base_dims_pix[1] + 1)
         self.nb_row_img: int = int(self.base_dims_pix[4] - self.base_dims_pix[3] + 1)
@@ -820,7 +814,7 @@ class RawCorrelation(BaseCorrelation):
         return
 
     def write_blank_pixels(self):
-        ## In case of non-gridded correlation,write the top blank correlation lines
+        # In case of non-gridded correlation,write the top blank correlation lines
         # Define a "blank" (i.e., invalid) correlation line
         temp_add = np.empty((self.border_row_top, self.ew_output.shape[1]))
         temp_add[:] = np.nan

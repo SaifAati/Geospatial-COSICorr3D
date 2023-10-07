@@ -3,9 +3,13 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import math
 import os.path
-import pandas, warnings, math, affine6p
+import warnings
+
+import affine6p
 import numpy as np
+import pandas
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 
@@ -88,7 +92,7 @@ def DispOptReport(reportPath, snrTh=0.9, debug=False, plotError=True):
                                                                         np.min(avgErrorList)))
     if plotError:
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (AutoMinorLocator)
+        from matplotlib.ticker import AutoMinorLocator
         fig, ax = plt.subplots()
 
         ax.plot(loopList, rmseList, c="r", linestyle="--", marker="o", label="RMSE [pix]")

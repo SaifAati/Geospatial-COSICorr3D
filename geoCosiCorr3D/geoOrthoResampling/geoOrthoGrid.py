@@ -4,8 +4,9 @@
 # Copyright (C) 2022
 """
 import logging
-import numpy as np
 from typing import Optional
+
+import numpy as np
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS
@@ -62,7 +63,8 @@ class cGetSatMapGrid:
         yPixList = [self.rasterInfo.raster_height / 2, self.rasterInfo.raster_height / 2 + 1]
 
         if self.modelType == SATELLITE_MODELS.RSM:
-            from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
+            from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import \
+                cPix2GroundDirectModel
 
             geoCoordList = []
 
@@ -115,7 +117,8 @@ class cGetSatMapGrid:
         if self.debug:
             logging.info("... Computing Grid Extent ...")
         if self.modelType == SATELLITE_MODELS.RSM:
-            from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
+            from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import \
+                cPix2GroundDirectModel
 
             geoCoordList = []
 
@@ -168,7 +171,8 @@ class cGetSatMapGrid:
         return
 
     def __ComputeoMapGrid(self):
-        from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import ComputeoMapGrid
+        from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import \
+            ComputeoMapGrid
         ewBBox = [self.upLeftEW, self.upRightEW, self.botLeftEW, self.botRightEW]
         nsBBox = [self.upLeftNS, self.upRightNS, self.botLeftNS, self.botRightNS]
 

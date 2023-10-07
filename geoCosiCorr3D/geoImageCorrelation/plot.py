@@ -5,13 +5,12 @@ Most can handle a numpy array or `rasterio.Band()`.
 Primarily supports `$ rio insp`.
 """
 
-from collections import OrderedDict
-from itertools import zip_longest
 import logging
 import warnings
+from collections import OrderedDict
+from itertools import zip_longest
 
 import numpy as np
-
 import rasterio
 from rasterio.io import DatasetReader
 from rasterio.transform import guard_transform

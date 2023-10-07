@@ -1,10 +1,12 @@
 import click
-from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
+
 from geoCosiCorr3D.geoCore.constants import CORRELATION
+from geoCosiCorr3D.geoCore.core_cli import CorrOpt, Exclusive, Opt, OptArg
 from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import load_config
-from geoCosiCorr3D.geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import validatePath, validatePositives, validateWindowSizes, \
-    rangeValidator, call_with_conf
-from geoCosiCorr3D.geoCore.core_cli import Exclusive, Opt, CorrOpt, OptArg
+from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
+from geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import (
+    call_with_conf, rangeValidator, validatePath, validatePositives,
+    validateWindowSizes)
 
 
 # the cli entrypoint

@@ -7,10 +7,10 @@ import logging
 import numpy as np
 
 import geoCosiCorr3D.geoRSM.misc as geoRSMMisc
-from geoCosiCorr3D.geoRSM.Interpol import Interpol
-from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetDGMetadata
-from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
+from geoCosiCorr3D.geoCore.core_RSM import RSM
+from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetDGMetadata
+from geoCosiCorr3D.geoRSM.Interpol import Interpol
 
 
 class cDigitalGlobe(RSM):

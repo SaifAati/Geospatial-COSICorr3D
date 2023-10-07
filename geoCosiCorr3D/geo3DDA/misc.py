@@ -5,14 +5,14 @@
 """
 
 import os
-import numpy as np
-from itertools import permutations, combinations, groupby
+from itertools import combinations, groupby, permutations
 from typing import List
 
-from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo, Convert
-from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D, Interpoate1D
+import numpy as np
 
 from geoCosiCorr3D.geoCore.constants import INTERPOLATION_TYPES
+from geoCosiCorr3D.georoutines.geo_utils import Convert, cRasterInfo
+from geoCosiCorr3D.geoRSM.Interpol import Interpoate1D, Interpolate2D
 
 
 class ImgInfo():
@@ -123,7 +123,8 @@ class LOS:
 
 
 def merge_3dd_tiles(tiles_dir, o_dir):
-    from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extensions
+    from geoCosiCorr3D.georoutines.file_cmd_routines import \
+        get_files_based_on_extensions
     from geoCosiCorr3D.georoutines.geo_utils import merge_tiles
     tilesList = []
     for x in os.walk(tiles_dir):

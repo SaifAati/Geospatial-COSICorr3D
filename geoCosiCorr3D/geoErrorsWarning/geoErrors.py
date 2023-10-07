@@ -4,7 +4,8 @@
 # Copyright (C) 2022
 """
 
-import os, sys
+import os
+import sys
 
 
 def erReadTpFile():

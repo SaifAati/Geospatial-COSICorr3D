@@ -3,10 +3,13 @@
 # Copyright (C) 2022
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 import numpy as np
-from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import ConfigReader
+
 from geoCosiCorr3D.geoCore.constants import CORRELATION
+from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import \
+    ConfigReader
 
 
 class BaseFreqCorr(ABC):
@@ -39,9 +42,13 @@ class BaseFreqCorr(ABC):
 
     # TODO: change to static method or adapt to class method
     @classmethod
-    def run_correlator(cls, base_array: np.ndarray, target_array: np.ndarray, window_size: List[int],
+    def run_correlator(cls,
+                       base_array: np.ndarray,
+                       target_array: np.ndarray,
+                       window_size: List[int],
                        step: List[int],
-                       iterations: int, mask_th: float):
+                       iterations: int,
+                       mask_th: float):
         pass
 
 
@@ -67,7 +74,8 @@ class BaseSpatialCorr(ABC):
         pass
 
     @classmethod
-    def run_correlator(cls, base_array: np.ndarray,
+    def run_correlator(cls,
+                       base_array: np.ndarray,
                        target_array: np.ndarray,
                        window_size: List[int],
                        step: List[int],

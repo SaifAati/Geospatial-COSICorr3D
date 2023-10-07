@@ -4,15 +4,17 @@
 # Copyright (C) 2023
 """
 
-import numpy as np
 import os
 from pathlib import Path
-from osgeo import gdal
 from typing import List, Optional
 
+import numpy as np
+from osgeo import gdal
+
+from geoCosiCorr3D.geoCore.constants import RASTER_TYPE, SOFTWARE
+from geoCosiCorr3D.georoutines.file_cmd_routines import (
+    CreateDirectory, get_files_based_on_extensions)
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
-from geoCosiCorr3D.geoCore.constants import SOFTWARE, RASTER_TYPE
-from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extensions, CreateDirectory
 
 
 class TilingRaster:

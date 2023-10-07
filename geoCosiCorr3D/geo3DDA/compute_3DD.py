@@ -3,12 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2023
 """
-import numpy as np
 import os
 
-from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo, WriteRaster, Convert
+import numpy as np
+
 from geoCosiCorr3D.geo3DDA.misc import LOS
 from geoCosiCorr3D.geo3DDA.triangulation import triangulate
+from geoCosiCorr3D.georoutines.geo_utils import (Convert, WriteRaster,
+                                                 cRasterInfo)
 
 
 class cCompute3DD:

@@ -1,5 +1,6 @@
-from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 import numpy as np
+
+from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
 def normalize_uint8(data):

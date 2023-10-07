@@ -4,24 +4,36 @@
 # Copyright (C) 2022
 """
 import logging
-from typing import Dict, Optional, Type, List
-import gdal, osr
-import warnings, math
-import numpy as np
+import math
 import os
+import warnings
 from pathlib import Path
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
-from geoCosiCorr3D.geoCore.base.base_orthorectification import BaseInverseOrtho, BaseOrthoGrid, SatModel
-from geoCosiCorr3D.geoCore.constants import SOFTWARE, SATELLITE_MODELS
+from typing import Dict, List, Optional, Type
 
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
+import gdal
+import numpy as np
+import osr
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
+from geoCosiCorr3D.geoCore.base.base_orthorectification import (
+    BaseInverseOrtho, BaseOrthoGrid, SatModel)
+from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS, SOFTWARE
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
+
 
 class InvalidOutputOrthoPath(Exception):
     pass
+
+
 class RawInverseOrtho(BaseInverseOrtho):
-    def __init__(self, input_l1a_path: str, output_ortho_path: str, output_trans_path: Optional[str],
-                 ortho_params: Dict, dem_path: Optional[str], debug: bool = True):
+    def __init__(self,
+                 input_l1a_path: str,
+                 output_ortho_path: str,
+                 output_trans_path: Optional[str],
+                 ortho_params: Dict,
+                 dem_path: Optional[str],
+                 debug: bool = True):
         # self.ortho_grid = None
         super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
         self._ingest()

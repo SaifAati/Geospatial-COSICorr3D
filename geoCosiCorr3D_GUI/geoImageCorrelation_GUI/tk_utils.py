@@ -1,13 +1,15 @@
 import time
-
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.messagebox as tkmsg
-from ttkthemes import ThemedTk
-from PIL import ImageTk, Image
+import tkinter.ttk as ttk
 
-from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import splitcall, project_path, clamp
-import geoCosiCorr3D.geoImageCorrelation.geoCorr_utils as utils
+from PIL import Image, ImageTk
+from ttkthemes import ThemedTk
+
+import geoCosiCorr3D as utils
+from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import (clamp,
+                                                             project_path,
+                                                             splitcall)
 
 
 def run(window_constructor):

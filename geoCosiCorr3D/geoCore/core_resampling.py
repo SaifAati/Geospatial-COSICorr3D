@@ -3,19 +3,21 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import ctypes
+import ctypes.util
 import logging
-import ctypes, ctypes.util
-import math, warnings
+import math
+import warnings
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
 import numpy as np
-from typing import Optional, Dict, Any
 
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-from geoCosiCorr3D.geoConfig import cgeoCfg
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from dataclasses import dataclass
-from geoCosiCorr3D.geoCore.constants import GEOCOSICORR3D_RESAMLING_METHODS, Resampling_Methods
+from geoCosiCorr3D.geoCore.constants import (GEOCOSICORR3D_RESAMLING_METHODS,
+                                             SOFTWARE, Resampling_Methods)
 
-geoCfg = cgeoCfg()
 SINC_KERNEL_SZ: int = 15
 
 
@@ -182,10 +184,12 @@ class SincResampler:
 
         sz = matrix_x.shape
 
-        libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
+        # libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
+        libPath_ = ctypes.util.find_library(SOFTWARE.GEO_COSI_CORR3D_LIB)
 
         if not libPath_:
-            geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
+            # geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
+            geoErrors.erLibNotFound(libPath=SOFTWARE.GEO_COSI_CORR3D_LIB)
         try:
             sincLib = ctypes.CDLL(libPath_)
             matCol = np.array(matrix_y, dtype=np.float_)
@@ -195,7 +199,7 @@ class SincResampler:
 
             img = np.array(im1A, dtype=np.float_)
             width = ctypes.c_int(kernel_sz)
-            oImg = np.zeros(sz, dtype=np.float)
+            oImg = np.zeros(sz, dtype=float)
             weighting = ctypes.c_int(weigthing)
             nbColMat = ctypes.c_int(sz[0])
             nbRowMat = ctypes.c_int(sz[1])
@@ -217,7 +221,8 @@ class SincResampler:
 
             return oImg
         except OSError:
-            geoErrors.erLibLoading(geoCfg.geoCosiCorr3DLib)
+            # geoErrors.erLibLoading(geoCfg.geoCosiCorr3DLib)
+            geoErrors.erLibLoading(SOFTWARE.GEO_COSI_CORR3D_LIB)
 
     @staticmethod
     def compute_resampling_distance(matrix_x, matrix_y, sz, resampling_kernel_sz):
@@ -265,6 +270,7 @@ class BilinearResampler:
     def resampling(cls, matrix_x, matrix_y, im1A):
         # imgL3b_fl = interpRT.Interpolate2D(inArray=im1A, x=matrix_y.flatten(), y=matrix_x.flatten(), kind="linear")
         from scipy.interpolate import interpolate
+
         # print("Resampling ....")
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]

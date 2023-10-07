@@ -3,8 +3,9 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
 from typing import Optional
+
+import numpy as np
 
 
 # TODO: add type notation for rasterInfo class

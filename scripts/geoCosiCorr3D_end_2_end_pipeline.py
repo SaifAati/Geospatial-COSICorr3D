@@ -1,19 +1,21 @@
-"""
-# Author : Saif Aati
-# Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
-# Copyright (C) 2023
-"""
-import os.path
-import pandas, shutil
-import warnings
 
-from tqdm import tqdm
 import logging
+import os.path
+import shutil
+import warnings
 from pathlib import Path
 from typing import List, Optional
-from geoCosiCorr3D.geoCore.constants import *
+
+import numpy as np
+import pandas
+from tqdm import tqdm
+
+from geoCosiCorr3D.geoCore.constants import (GEOCOSICORR3D_SENSOR_DG,
+                                             GEOCOSICORR3D_SENSOR_SPOT_15,
+                                             SATELLITE_MODELS, SOFTWARE)
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
-from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extension
+from geoCosiCorr3D.georoutines.file_cmd_routines import \
+    get_files_based_on_extension
 
 
 class GeoCosiCorr3DPipeline:
@@ -46,7 +48,8 @@ class GeoCosiCorr3DPipeline:
         logging.info(f'{self.__class__.__name__}:: configuration:{self.config}')
 
     def _ingest(self):
-        from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import ConfigReader
+        from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import \
+            ConfigReader
         self.pre_post_pairs_file = os.path.join(self.workspace_dir, "PrePost_Pairs_overlap.csv")
         self.o_3DD_folder = os.path.join(self.workspace_dir, 'o3DDA')
         self.sets_path = os.path.join(self.workspace_dir, "Sets_3DDA.csv")
@@ -222,7 +225,8 @@ class GeoCosiCorr3DPipeline:
         return
 
     def rsm_refinement(self, data_file, recompute=False):
-        from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
+        from geoCosiCorr3D.geoOptimization.gcpOptimization import \
+            cGCPOptimization
 
         Path(self.rsm_refinement_folder).mkdir(parents=True, exist_ok=True)
 
@@ -324,8 +328,8 @@ class GeoCosiCorr3DPipeline:
     @staticmethod
     def compute_pre_post_overlap(pre_event_df, post_event_df, overlap_th: Optional[int] = None):
         import geopandas
-        import shapely.geometry
         import rasterio
+        import shapely.geometry
 
         preList = [pair for index, pair in pre_event_df.iterrows()]
         postList = [pair for index, pair in post_event_df.iterrows()]
@@ -434,9 +438,10 @@ class GeoCosiCorr3DPipeline:
     @staticmethod
     def compute_pairs(dataDf, overlap_th: Optional[float] = None):
         from itertools import combinations
+
         import geopandas
-        import shapely.geometry
         import rasterio
+        import shapely.geometry
         fp_polygon = []
 
         for img_ in dataDf["Orthos"]:
@@ -543,9 +548,9 @@ class GeoCosiCorr3DPipeline:
     def plot_pairs_distribution(corrPair, oFolder=None, save=True):
 
         import matplotlib.gridspec as gridspec
-        import seaborn as sns
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (AutoMinorLocator)
+        import seaborn as sns
+        from matplotlib.ticker import AutoMinorLocator
         fig = plt.figure()
         fontSize = 14
         gs = gridspec.GridSpec(1, 1)
@@ -578,10 +583,12 @@ class GeoCosiCorr3DPipeline:
         return
 
     def compute_3DD(self, data_file):
-        import pandas
         import datetime
-        from geoCosiCorr3D.geo3DDA.misc import generate_3DD_set_combination
+
+        import pandas
+
         from geoCosiCorr3D.geo3DDA.main_geo3DDA import cCombination3DD
+        from geoCosiCorr3D.geo3DDA.misc import generate_3DD_set_combination
         Path(self.o_3DD_folder).mkdir(parents=True, exist_ok=True)
         set_data = pandas.read_csv(self.sets_path)
 

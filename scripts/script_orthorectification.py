@@ -7,16 +7,17 @@
 import logging
 import shutil
 import uuid
-import click
 from pathlib import Path
 
+import click
+import os
 import geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig as rcfg
-from geoCosiCorr3D.geoCore.constants import *
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
-from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
 from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
-from geoCosiCorr3D.geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import validatePath
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
+from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
+from geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import validatePath
+from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS
 
 
 def single_ortho(ortho_inputs, ortho_config):

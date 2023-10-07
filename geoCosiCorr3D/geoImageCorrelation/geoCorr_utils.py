@@ -5,6 +5,7 @@
 """
 import os
 import sys
+
 from osgeo import gdal
 
 gdal.UseExceptions()

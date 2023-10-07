@@ -2,13 +2,14 @@
 Author: Saif Aati (saif@caltech.edu)
 Read QuickBird/WorldView1-2-3-4 Image MetaData ASCII and XML files
 """
+import datetime
 import logging
-
-import numpy as np
-import datetime, os
+import os
 import xml.etree.ElementTree as ET
 from decimal import *
 from pathlib import Path
+
+import numpy as np
 
 from geoCosiCorr3D.georoutines.file_cmd_routines import FilesInDirectory
 from geoCosiCorr3D.geoRSM.misc import ConvertTime2Second

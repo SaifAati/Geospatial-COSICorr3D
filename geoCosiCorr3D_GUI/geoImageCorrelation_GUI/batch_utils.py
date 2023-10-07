@@ -1,17 +1,16 @@
 import os
-from copy import copy
-
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.messagebox as tkmsg
+import tkinter.ttk as ttk
 
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.gui_utils import *
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tkrioplt import ImageHub
-import geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.settings as settings
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import get_entries, TimedToolTip, splitcall, \
-    open_local_image, VerticalScrolledFrame
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.dnd_lib import dnd_start
-from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import get_bands, project_path, setdefaultattr, splitcall
+import geoCosiCorr3D_GUI.geoImageCorrelation_GUI.settings as settings
+from geoCosiCorr3D.geoImageCorrelation.geoCorr_utils import (get_bands,
+                                                             setdefaultattr,
+                                                             splitcall)
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.dnd_lib import dnd_start
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import (
+    TimedToolTip, VerticalScrolledFrame, get_entries, open_local_image)
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tkrioplt import ImageHub
 
 
 class BatchItem:

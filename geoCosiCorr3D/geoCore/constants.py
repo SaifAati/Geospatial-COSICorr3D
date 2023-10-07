@@ -194,7 +194,7 @@ class ASIFT_TP_PARAMS:
     SCALE_FACTOR = 1 / 8
     MODE = 'All'
     IMG_SIZE = 1000
-    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/mmlibs/bin/mm3d")
+    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/mmlibs/bin/mm3d")
 
 
 class TEST_CONFIG:

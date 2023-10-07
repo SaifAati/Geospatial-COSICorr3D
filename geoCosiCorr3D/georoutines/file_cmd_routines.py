@@ -6,9 +6,9 @@
 
 import fnmatch
 import os
-from shutil import rmtree, copyfile
 import shutil
-from typing import Optional, List
+from shutil import copyfile, rmtree
+from typing import List, Optional
 
 
 def get_files_based_on_extension(dir, filter="*.tif", disp=False):

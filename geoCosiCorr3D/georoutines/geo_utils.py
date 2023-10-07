@@ -3,24 +3,25 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import logging
+import os
+import warnings
+from pathlib import Path
+from typing import Any, List, Optional, Union
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pyproj
 import rasterio
 import rasterio.crs
-import numpy as np
-import warnings
-import os
-import pyproj
-import logging
-from shapely.geometry import Polygon
-from osgeo import osr, gdal
-from typing import Any, List, Optional, Union
 from astropy.time import Time
-from scipy.stats import norm
+from osgeo import gdal, osr
 from scipy import stats
+from scipy.stats import norm
+from shapely.geometry import Polygon
 
-from pathlib import Path
 from geoCosiCorr3D.geoCore.base.base_georoutines import BaseRasterInfo
-from geoCosiCorr3D.geoCore.constants import WRITERASTER, SOFTWARE
+from geoCosiCorr3D.geoCore.constants import SOFTWARE, WRITERASTER
 
 warnings.filterwarnings("ignore", category=rasterio.errors.NotGeoreferencedWarning)
 

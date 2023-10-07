@@ -1,7 +1,6 @@
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.gui_utils import *
-from geoCosiCorr3D.geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import run
-from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 from geoCosiCorr3D.geoCore.constants import CORRELATION
+from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
+from geoCosiCorr3D_GUI.geoImageCorrelation_GUI.tk_utils import run
 
 #see param_to_config() in gui_utils
 corrParamToConfig= {
