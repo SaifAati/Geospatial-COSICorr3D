@@ -1,14 +1,17 @@
 version: '3.4'
 services:
   geocosicorr3d:
-    image: geocosicorr3d
+    # Use a more descriptive image name with a tag
+    image: geocosicorr3d:latest
     platform: linux/amd64
     build:
       context: .
     volumes:
+      # Bind the current directory to the app directory inside the container
       - type: bind
         source: ${PWD}
         target: /usr/src/app/geoCosiCorr3D
+      # Bind the /home/cosicorr directory on the host to the same directory inside the container
       - type: bind
-        source: /home/cosicorr
-        target: /home/cosicorr
+        source: ${HOME}
+        target: /home/user
