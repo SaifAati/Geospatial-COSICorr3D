@@ -213,6 +213,7 @@ class cDigitalGlobe(RSM):
 
         for i in range(self.nbRows):
             rotMatSatToECF[i, :, :] = geoRSMMisc.Qaut2Rot(self.att_quat[i, :], axis=0, order=2)
+        # print("\n",rotMatSatToECF)
         # Orient the satellite reference frame rotation matrix into the COSI-corr orientation
         for i in range(self.nbRows):
             rotMatSatToECF[i, :, :] = np.dot(self.__cosiCorrOrientation, rotMatSatToECF[i, :, :])
@@ -225,10 +226,12 @@ class cDigitalGlobe(RSM):
             temp = np.array([self.orbitalPos_X[i, :], self.orbitalPos_Y[i, :], self.orbitalPos_Z[i, :]])
             invTemp = np.linalg.inv(temp.T)
             self.satToNavMat[i, :, :] = np.dot(invTemp, rotMatSatToECF[i, :, :].T)  ##
+
         return
 
     def ComputeAttitude(self):
         pass
+
     def __repr__(self):
         pass
 

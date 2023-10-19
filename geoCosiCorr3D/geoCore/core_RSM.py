@@ -114,3 +114,5 @@ class RSM(BaseRSM):
         with open(pkl_file, "rb") as output:
             geocosicorr3d_rsm_model = pickle.load(output)
         return geocosicorr3d_rsm_model
+
+

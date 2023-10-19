@@ -28,7 +28,7 @@ class RawPix2GroundDirectModel(BasePix2GroundDirectModel):
         angle_y = LinearIterpolation(array=rsm_model.CCDLookAngle[:, 1], location=xPix)
         angle_z = LinearIterpolation(array=rsm_model.CCDLookAngle[:, 2], location=xPix)
         u1 = np.array([angle_x, angle_y, angle_z]).T
-
+        # print(rsm_model.CCDLookAngle)
         return u1
 
     @staticmethod

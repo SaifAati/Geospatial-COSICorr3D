@@ -43,6 +43,12 @@ class SATELLITE_MODELS:
     RFM: str = 'RFM'
 
 
+@dataclass(frozen=True)
+class SatScanDirection:
+    FORWARD = 'FORWARD'
+    BACKWARD = 'BACKWARD'
+
+
 class ResamplingMethods(Enum):
     SINC = 'sinc'
     BILINEAR = 'bilinear'

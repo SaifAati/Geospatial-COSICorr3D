@@ -13,6 +13,99 @@ from scipy.interpolate import *
 from geoCosiCorr3D.geoCore.constants import INTERPOLATION_TYPES
 
 
+def is_monotonic(A, tol=1e-9):
+    """
+    Determine if the array `A` is monotonically increasing, decreasing, or neither.
+
+    Args:
+        A (array-like): Input array to be checked.
+        tol (float): Tolerance level for floating-point comparisons.
+
+    Returns:
+        str: "monotonically increasing" if A is increasing,
+             "monotonically decreasing" if A is decreasing,
+             "not monotonic" otherwise.
+    """
+    # Check for small arrays
+    if len(A) < 2:
+        raise ValueError("Input array must have at least 2 elements.")
+
+    # Check for NaN or infinite values
+    if np.any(np.isnan(A)) or np.any(np.isinf(A)):
+        raise ValueError("Input array must not contain NaN or infinite values.")
+
+    # Check monotonicity
+    diff = np.diff(A)
+    if np.all(diff > -tol) and np.any(diff > tol):
+        return "monotonically increasing"
+    elif np.all(diff < tol) and np.any(diff < -tol):
+        return "monotonically decreasing"
+    else:
+        return "not monotonic"
+
+
+def custom_linear_interpolation(VV, XX, x_out=None):
+    """
+    Linear interpolation of values.
+
+    Args:
+        VV (array-like): Y-coordinates of data points.
+        XX (array-like): X-coordinates of data points.
+        xOut (list, optional): X-coordinates at which to evaluate the interpolated function.
+
+    Returns:
+        array: Interpolated values at `xOut`.
+    """
+    if x_out is None:
+        x_out = []
+
+    v = np.copy(VV)
+    x = np.copy(XX)
+    m = np.size(v)
+
+    if np.size(x) != m:
+        raise ValueError("VV and XX must have the same number of elements.")
+
+    if np.size(x_out) > 0:
+        s = locate_values(vector=x, values=x_out)
+        diff = v[s + 1] - v[s]
+        p = (x_out - x[s]) * diff / (x[s + 1] - x[s]) + v[s]
+        return p
+    else:
+        raise NotImplementedError("Interpolation on a regular grid is not implemented.")
+
+
+def locate_values(vector, values):
+    """
+    Finds the indices of `vector` that bracket `values`.
+
+    Args:
+        vector (array-like): A monotonic array.
+        values (array-like): Array of values to locate within `vector`.
+
+    Returns:
+        np.array: Indices of `vector` that bracket `values`.
+
+    Notes:
+        The function finds the intervals within a given monotonic `vector`
+        that bracket a set of `values`.
+    """
+    if is_monotonic(vector) not in ["monotonically increasing", "monotonically decreasing"]:
+        raise ValueError("Input vector must be monotonic.")
+
+    inds = np.digitize(values, vector)
+    adjust = 1 if is_monotonic(vector) == "monotonically increasing" else -1
+
+    for i, vec_ in enumerate(values):
+        tmp = inds[i]
+        if tmp == len(vector):
+            tmp = len(vector) - 1
+        if adjust * (vec_ - vector[tmp]) < 0:
+            inds[i] = inds[i] - 1
+        inds[i] = max(0, min(inds[i], len(vector) - 2))
+
+    return inds
+#######################################################
 def isMonotonic(A):
     """
 

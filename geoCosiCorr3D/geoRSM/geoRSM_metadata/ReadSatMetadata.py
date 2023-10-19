@@ -6,7 +6,7 @@ import datetime
 import logging
 import os
 import xml.etree.ElementTree as ET
-from decimal import *
+from decimal import Decimal
 from pathlib import Path
 
 import numpy as np
