@@ -37,6 +37,7 @@ dependencies:
     - mypy==0.910
     - regex
     - requests
+    - ipp
     - -e .
 
 
