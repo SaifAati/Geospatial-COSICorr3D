@@ -1,0 +1,80 @@
+Correlation_2D.txt
+
+
+--------------------A.Preliminaries-----------------------------------------------------------------------
+
+
+This document is a user’s guide to creating a 2D correlation map from examples in different fields of geology with differents kinds of image:
+- dune_saudi_arabia (sand dune migration), Sentinel 2 images,
+- earthquake_ridgecrest (coseismic deformation), NAIP images,
+- glacier_jakobshavn (ice flow), Landsat 8 and 9 images.
+With the 2D correlation map, COSI-Corr gets the horizontal ground surface deformation, East/West and North/South and the SNR (Signal Noise Ratio). These examples use the same code with different input parameters. 
+For the three examples, all the input parameters and the results are presented by following this link: https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "correlation_2D_examples". 
+
+PS: This code is also adapted to measure the ground surface deformation of a slow landslide.
+
+
+--------------------B.Structure of the examples-----------------------------------------------------------
+
+
+Correlation_2D_example contains three folders: dune_saudi_arabia, earthquake_ridgecrest and glacier_jakobshavn.
+In each folder, there is one file:
+- correlation.py: the code.
+
+To add the examples of input parameters, go on https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "correlation_2D_examples", download corr_sample folders (contains the input parameters: the two images to be correlated) in dune_saudi_arabia, earthquake_ridgecrest and glacier_jakobshavn folders, and add them in your code by following the paths below:
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/dune_saudi_arabia/Corr_sample
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/earthquake_ridgecrest/Corr_sample
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/glacier_jakobshavn/Corr_sample
+
+
+--------------------C.Code operation----------------------------------------------------------------------
+
+
+correlation.py is the code to get the 2D correlation map:
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/dune_saudi_arabia/correlation.py
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/earthquake_ridgecrest/correlation.py
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_2D_examples/glacier_jakobshavn/correlation.py
+
+Depending on the input parameter, the code changes: between frequency and spatial correlator. glacier_jakobshavn and dune_saudi_arabia use frequency correlator and earthquake_ridgecrest uses spatial correlator.
+
+The code is organized into different parts:
+- Import classes and functions
+- Folders
+- Parameters
+- Running the code
+
+
+--------------------D.Results-----------------------------------------------------------------------------
+
+
+After running the code the results appear directly in Corr_sample folder.To compare your results with the right results follow the link:https://drive.google.com/drive/folders
+/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing:
+geoCosiCorr3D_examples/correlation_2D_examples/dune_saudi_arabia/result
+geoCosiCorr3D_examples/correlation_2D_examples/earthquake_ridgecrest/result
+geoCosiCorr3D_examples/correlation_2D_examples/glacier_jakobshavn/result
+
+The results are composed of three documents :
+
+1. namebaseimage_vs_nametargetimage_correlatorname_ws_#_step_#.png: 
+This is the 2D correlation file in png format. The document is composed of two maps: East-West (left) and North-South (right) displacement. The displacement scale is in meters. For the East-West and North-South maps, the blue color matches respectively with the East and North displacement and the red color, with the West and South displacement. The axis X is the latitude and the axis Y is the longitude in the EPSG 4326 geographic coordinate system.
+
+2. namebaseimage_vs_nametargetimage_correlatorname_ws_#_step_#.tif: 
+This is the 2D correlation map in the tif format. Open this file by using QGIS software to see the image with the three bands: East/West (Gray), North/South and SNR (Signal Noise Ratio).
+
+
+3. namebaseimage_vs_nametargetimage_correlatorname_ws_#_step_#_projection.vrt:
+Document containing all the information about the coding process.
+
+
+--------------------E.GUI correlation---------------------------------------------------------------------
+
+
+To get the 2D correlation map, it is possible to use the GUI (Graphical User Interface): Geospatial-COSICorr3D/geoCosiCorr3D/geoCosiCorr3D_GUI/correlate_GUI. The GUI uses the same code as in this example, but it is a different way to enter the input parameters. In the GUI, there is one more option “Batch Correlator” which allows to perform multiple correlations between multiple images. To get more information about the GUI, refer to GUI_DOC.md in Geospatial-COSICorr3D/Doc.
+
+
+
+--------------------F.References--------------------------------------------------------------------------
+
+
+Ayoub, F., Leprince, S., Avouac, J.-P., 2017. User’s Guide to COSI-CORR Co-registration of Optically Sensed Images and Correlation. California Institute of Technology, Pasadena, CA. Leprince, S., Barbot, S., Ayoub, F., Avouac, J.-P., 2007. Automatic and Precise Ortho-rectification, Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements.
+

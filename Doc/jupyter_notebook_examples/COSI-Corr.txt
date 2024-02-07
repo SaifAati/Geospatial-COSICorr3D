@@ -1,0 +1,128 @@
+COSI-Corr.txt
+
+
+--------------------A.Preliminaries----------------------------------------------------------------------
+
+This document presents quickly COSI-Corr, the different steps used by code: the orthorectification and the correlation, the artifacts which appear on the result, and the data available, to understand geoCosiCorr3D_examples, a folder containing examples of COSI-Corr Python code.
+
+
+
+--------------------B.Introduction-----------------------------------------------------------------------
+
+GeoCosiCorr3D_examples is a folder containing examples of COSI-Corr Python code:
+- correlation_2D_examples,
+- correlation_3D_example,
+- orthorectifcation.
+
+These examples show all the possibilities that we can do with the code and are a help for the first uses.
+All the input parameters and results are present by following this link: https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, to help the user. Documentation of each example is also available. 
+To understand each example, the choice of the input parameters and the result, this document presents quickly COSI-Corr, the data available, the different steps used by code: the orthorectification and the correlation, and the artifacts which appear on the result. To get more information about COSI-Corr, the orthorectification, the correlation and the artifacts refer to (Avouac and Leprince, 2015) and
+(Aati et al., 2022).
+
+
+--------------------C.Presentation COSI-Corr-------------------------------------------------------------
+
+
+COSI-Corr is a software developed to measure the ground surface displacements in 2D (horizontal displacements) and 3D (horizontal and vertical displacements) by using satellites or aerial images. This
+software computes the displacement of each common subpixel between images captured at different times. In the end, COSI-Corr creates a displacement map (correlation map).
+
+Thanks to COSI-Corr we can measure the ground surface displacements of the coseismic deformations, the sand dune migrations, the ice flows, and the slow landslides.
+
+Today there are two versions of COSI-Corr: a Python code and a plug-in on ENVI software. We focus on Python code. We advise you to use the Pycharm interface which allows you to download easily the last updates of the code by creating an account on GitHub. QGIS is also a good software to study the results.
+
+To get the displacement maps, COSI-Corr orthorectifies and correlates images, two important steps, explained below.
+
+
+--------------------D.Orthorectification-----------------------------------------------------------------
+
+
+Orthorectification is the first step to get a correlation map, it corrects the geometric distortions on
+an image.
+
+An image is captured from a satellite or a plane with an angle, called an off-nadir angle. Because of this
+angle, stereoscopic effects (geometric distortions) appear in the image. Orthorectification is a process
+that resamples the image, called raw image, in a UTM grid, to correct the stereoscopic effects.
+
+During the resampling, the code will determine for each grid element the pixel coordinates in the raw image (Aati et al., 2022). To realize that step the code needs to have information about the imaging system (metadata) like the positions, velocities, attitudes variations, pointing directions...
+
+It is possible to add the elevation coordinate for each pixel, during the resampling. To achieve this, we
+must use a DEM in addition to the raw image. Often, we use a DEM to add the topography information and get a 3D displacement map thereafter.
+
+We can also use a reference image, so an already orthorectified image to resample the raw image. We use a reference image when we want to orthorectify several raw images in the same condition, to later, use these images to get a displacement map. To orthorectify a raw image with a reference image, COSI-Corr will select GCPs (Ground Control Points) between the raw image and the reference image. GCPs are similar points between these 2 images. To reduce the error location of GCPs and get a better orthorectified image, we can use a correction model file or create it. A correction model file optimizes the information about the metadata of the raw image to reduce the error location of each GCP.
+
+
+--------------------E.Correlation------------------------------------------------------------------------
+
+
+Now the images are orthorectified, it is possible to correlate them, to get a displacement map.
+
+The correlation consists in computing the displacement of each common subpixel between images orthorectified and captured at different times. The images must have the same resolution and the same
+geographic coordinate system. The result is a 2D or 3D displacement map. Because COSI-Corr computes the displacement of subpixels we can get, in the end, a displacement map smaller than the resolution of images (up to 1/20 of the image resolution).
+
+To get a 3D displacement map, the code needs to have, at least, four raw no orthorectified images (or a
+multiple of 4), two images before the event (displacement of the ground) and two images after the event, with their metadata, a reference image and a DEM. It is necessary to orthorectify these raw images with the reference image,to orthorectify in the same condition and the DEM to add the elevation information. Once the images are orthorectified with the code, they must be correlated to get the 3D displacement map. By taking into account the elevation and so topography, the topographic artifacts on the final 3D displacement map are reduced.
+
+To get a 2D displacement map, the code only needs one image before the event and one image after the event, already orthorectified, with the same resolution and geographic coordinate system. In that case, the topography is not taken into account, the final 2D displacement map could have more topographic artifacts.
+
+
+--------------------F.Artifacts--------------------------------------------------------------------------
+
+
+On the final map of displacement, some artifacts appear. It is important to know these artifacts to
+interpret well the result. The origin of the artifacts is different, they can be due to:
+- Geometric error (linear stripes on the final map),
+- Topographic error,
+- Location of GCPs (wavelength on the final map),
+- Shadowing effects,
+- Image matching failure.
+
+
+
+--------------------G.Data-------------------------------------------------------------------------------
+
+
+Today we can download images that come from different satellites or planes. Two kinds of images are available:
+- Images already orthorectified (Landsat, Sentinel...): to get a displacement map, COSI-Corr has just to correlate these images. Because the orthorectification step is not required, the code can’t add a DEM and the elevation information. So we can only get the 2D displacement map.
+- Images not orthorectified (SPOT, WorldView...): to get a displacement map, COSI-Corr must orthorectify and correlate the images. Because the code uses the orthorectification step, it can add a DEM and the elevation information. So we can get a 3D displacement map.
+
+Images not orthorectified are downloaded automatically with their metadata (essential for the orthorectification step).
+
+Some images are free on the internet (Sentinel, Landsat, Spot...), other images need a grant to be downloaded (WorldView, PlanetScope...).
+
+Here are some examples of websites to download free images:
+
+
+Imaging System   | Date  |Ortho|Resolution| Link                                      |COSI-Corr
+                 |       |     |          |                                           |
+Sentinel2        |2015 to|Yes  |10m       |https://scihub.copernicus.eu/dhus/#/home   |2D correlation map
+(band 2, 3, 4, 8)|today  |     |          |                                           |
+                 |       |     |          |                                           |
+SPOT 1 to 4 (band|2003 to|No   |10m       |https://regards.cnes.fr/user/swh/modules/58|Orthorectification
+panchromatic)    |2013   |     |          |                                           |2D correlation map
+                 |       |     |          |                                           |3D correlation map
+                 |       |     |          |                                           |
+SPOT 5 (band     |2002 to|No   |2,5 and   |https://regards.cnes.fr/user/swh/modules/58|Orthorectification
+panchromatic)    |2015   |     |5m        |                                           |2D correlation map
+                 |       |     |          |                                           |3D correlation map
+                 |       |     |          |                                           |
+Landsat 7, 8, 9  |1999 to|Yes  |15m       |https://earthexplorer.usgs.gov/            |2D correlation map
+(band            |today  |     |          |                                           |
+panchromatic)    |       |     |          |                                           |
+                 |       |     |          |                                           |
+NAIP             |2003 to|Yes  |1m        |https://earthexplorer.usgs.gov/            |2D correlation map
+                 |today  |     |          |                                           |
+
+
+Here is an example of a website to download freely different kinds of DEM:
+https://portal.opentopography.org/datasets
+
+
+--------------------H.References-------------------------------------------------------------------------
+
+
+Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of
+ground deformation from optimized registration and correlation of optical images and ICA-ased filtering of image geometry artifacts. California Institute of Technology, Pasadena, CA.
+Avouac, J.-P., Leprince, S., 2015. Geodetic Imaging Using Optical Systems. California Institute of Technology, Pasadena.
+
+
+                 

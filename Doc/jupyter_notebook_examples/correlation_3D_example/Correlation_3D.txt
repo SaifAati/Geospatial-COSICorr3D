@@ -1,0 +1,56 @@
+Correlation_3D.txt
+
+
+--------------------A.Preliminaries-----------------------------------------------------------------------
+
+
+Correlation_3D_example is a file containing an example of code allowing us to get a 3D correlation map, in a field of geology: a coseismic deformation (Izmit Earthquake). This code is also adapted to treat a sand dune migration, a slow landslide and an ice flow. With the 3D correlation map, we get the horizontal ground surface deformation, East/West and North/South and the vertical ground surface deformation. For this example, all the input parameters and the results are present by following this link: https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "correlation_3D_example". The goal of this folder is to help the user with the first uses of the code.
+To get a 3D correlation map it is necessary to follow the workflow written by (Aati et al., 2022).
+
+Four no orthorectified images (raw images) in minimum (or a multiple of 4) that come from the same kind of sensor (Spot, Sentinel, Landsat...) with their metadata (information about the imaging system), a reference orthorectified image and a DEM are required. To reduce the artifacts, we advise using a reference image with the same resolution as the raw images or a reference image that comes from the same sensor as the raw images.
+
+
+--------------------B.Structure of the examples-----------------------------------------------------------
+
+
+Correlation_ 3D_example contains two files:
+- example_izmit: izmit_end_to_end_workflow (code) and geo_3DDA_configs.yaml (input parameters for each function used to run the code),
+- Correlation_3D: explanation about the code
+
+To add the examples of input parameters, go on https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "correlation_3D_examples", download input parameters:
+- REF_DATA: folder containing the reference image called rOrtho_1999-07-Spot4.tif and the DEM called    SRTM_DEM.tif,
+- Spot_Data: folder containing the four SPOT images (three Spot_4 and one Spot_2) called IMAGERY.TIF with their metadata called METADATA.DIM (METADA.pkl is created after running the code).
+Add the input parameters by flollowing the paths below:
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_3D_example/example_izmit/REF_DATA
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/correlation_3D_example/example_izmit/Spot_Data
+
+
+--------------------C.Code operation----------------------------------------------------------------------
+
+
+izmit_end_to_end_workflow.py is the code that enables us to get the 3D correlation map. The code
+is organized into different parts:
+- Import classes and functions,
+- Parameters,
+- Assignment of parameters,
+- Workflow.
+
+
+--------------------D.Results-----------------------------------------------------------------------------
+
+
+All the results for each function that follows the workflow are stocked GEO_COSI_CORR_3D_WD/3DDA_WS_IZMIT. To compare your results with the right results follow the link:https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing:
+geoCosiCorr3D_examples/correlation_3D_example/GEO_COSI_CORR_3D_WD/3DDA_WS_IZMIT
+The details of the results are explained in "izmit_end_to_end_workflow" file.
+
+Each time the code is run, all the workflow, several or one functions, a GeoCosiCorr3DPipeline_mth_d_yyyy_h_min_s.log is created in "3DDA_WS_IZMIT". This document stocks all the
+information about the coding process.
+
+
+--------------------E.References--------------------------------------------------------------------------
+
+
+Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of
+ground deformation from optimized registration and correlation of optical images and ICA-ased
+filtering of image geometry artifacts. California Institute of Technology, Pasadena, CA.
+

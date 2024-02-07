@@ -1,0 +1,269 @@
+Orthorectification.txt
+
+
+--------------------A.Preliminaries----------------------------------------------------------------------
+
+
+Orthorectification_example is a file containing one example of orthorectification of three SPOT 2 images at Izmit. As a reminder, orthorectification allows to correct of the stereoscopic effects (geometric distortions) on an image called “raw image” by resampling it in a UTM grid.
+All the input parameters and results are present in this example by following this link: https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "orthorectification_example". By changing the input parameters, four different results are available: output, output_correction_model_file, output_DEM and output_GCPs. The goal of this folder is to help the user with the first uses of the code.
+
+
+--------------------B.Structure of the examples----------------------------------------------------------
+
+
+orthorectification_example contains different files:
+- input_izmit.json, input_izmit_correction_model_file.json, input_izmit_DEM.json and input_izmit_GCPs.json: documents containing the input parameters,
+ortho_example.py: code.
+
+To add the examples of input parameters, go on https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing, in the folder "orthorectification_example", download the input parameters:
+- REF_DATA: folder containing the reference image called rOrtho_1999-07-Spot4.tif and the DEM called    SRTM_DEM.tif (rOrtho_1999-07-Spot4_fp.geojson, Rupture_ROI.geojson, SRTM_DEM_32635.vrt and SRTM_DEM_32636;vrt are created after running the code),
+- SP2_DS: folder containing the three SPOT 2 images called IMAGERY.TIF with their metadata called METADATA.DIM (METADA.pkl is created after running the code).
+Add the input parameters by flollowing the paths below:
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/REF_DATA
+Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS
+
+
+--------------------C.Code operation---------------------------------------------------------------------
+
+
+ortho_example.py is the code allowing to orthorectify images. The code is organized into different parts:
+- Import classes and functions,
+- Paths input parameters,
+- Documents with the input parameters,
+- Running the code.
+
+
+--------------------D.Documents with the input parameters------------------------------------------------
+
+
+After writing the paths to access the different documents containing the input parameters and the
+configuration of the code, it is necessary to complete it.
+For the input parameters, four documents, with different input parameters but the same code are
+available in this example: input_izmit.json, input_izmit_correction_model_file.json, input_izmit_DEM.json, and input_izmit_GCPs.
+
+------------------------------------------------------
+1. input_izmit_correction_model_file.json: 
+
+This file allows getting orthorectified image(s) with a correction model file. As a reminder, a correction model file optimizes the information about the imaging system of the raw image to reduce the error location of each GCPs between the raw image(s) and the reference image, by using the method RSM or RFM refinement.
+
+(a) “raw_image_path”: “...”: write the path of the raw image(s). You can write several paths. In this example, we have three SPOT 2 raw images so three paths: one path for each image.
+
+(b) “metadata_file_path”: “...”: write the path of the document containing information about the imaging system(s) of the raw image. In this example, we have three SPOT 2 raw images so three paths of the document containing information about the imaging systems:one path for each image.
+
+(c) “dem_path”: “...”: write the path of the DEM. To get orthorectified image(s) with a correction model file, it is necessary to write the path of the DEM. Thanks to a DEM the code can assign the elevation coordinate for each pixel in the raw image. Either it is not mandatory.
+
+(d) “ref_ortho_path”: “...”: write the path of the reference image (image already orthorectify). To get orthorectified image(s) with a correction model file, it is necessary to write the path of the reference image. Thanks to a reference image the code will select GCPs between the raw image(s) and the reference image to orthorectify the raw image in the same condition as the reference image. Either it is not mandatory.
+
+(e) “log_name”: “RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW”: affects the name of the document, in the log format, that contains the coding process. This document is located in the path written in the “workpsace_folder” (h). We can change the name of this document.
+
+(f) “metadata_type”: RSM: write the refinement method to orthorectify. There are two options: RSM (Rigorous Sensor Modeling) and RFM (Rational Function Model). The choice of the method depends on the sensor. In this example, this is SPOT 2 sensor and the refinement method adapted for this sensor is RSM.
+
+(g) “sensor”: “Spot2”: write the name of the sensor that captured the raw image(s). In this example, the three raw images come from SPOT 2 sensor. The list of sensors that we can use is available in constants.py code (Geospatial-COSICorr3D/GeoCosiCorr3D/geoCore/constants.py).
+
+(h) “workspace_folder”: “.../geoCosiCorr3D_examples/orthorectification_example/results/output_correction_
+model_file”: write the path of the folder where we want to stock the results. In this example, the folder containing the results is called “output_correction_model_file”.
+
+(i) “ortho_gsd”: 10: write the GSD (Ground Sampling Distance). It is possible to choose a GSD inferior to the resolution of the raw images but the orthorectified images got, will have more artifacts. In this example, Spot 2 images have a resolution of 10m so we can choose at least the GSD of 10 to get orthorectified images without adding artifacts.
+
+(j) “correction_model_file”:””: write the path of the correction model file (txt format) if we have it. A correct model file allows to get better orthorectification by optimizing the information about the imaging system(s). In this example, we don’t have this file.
+
+(k) “optimize”: true: creates a correction model file, by writing “true”, if we don’t have it in (j). The code will select GCPs between the raw image(s) and the reference image to
+orthorectify the raw image(s). After, the code optimizes the information about the imaging system(s) of raw image(s). Thanks to the optimization COSI-Corr reduces the error location of each GCPs to get a better orthorectification. By default, the code does three loops to optimize. It is possible to change the number of loops in geo_ortho_config.yaml. To write “true” and get a correction model file, we must have a DEM and a reference image. Either we must write “false”.
+
+------------------------------------------------------
+2. input_izmit_GCPS.json: 
+
+This file allows getting folder(s) that contain the tie points and GCPs (without the elevation coordinate) between the raw image(s) and a reference image. Tie points are common points between raw image(s) and a reference image but the coordinates are just the pixel location. GCPs are common points between raw image(s) and a reference image with the coordinates in a geographic system.
+
+(a) “raw_image_path”:“...”: write the path of the raw image(s).
+
+(b) “metadata_file_path”: “...”: write the path of the document(s) containing information about the imaging system(s) of the raw image(s).
+
+(c) “dem_path”: “”: to get the folder(s) containing the tie points and the GCPs (without the elevation coordinate), don’t use a DEM and write nothing between the quotation marks.
+
+(d) “ref_ortho_path”: “...”: write the path of the reference image. To get the folder(s) containing the tie points and the GCPs (without the altitude coordinate), it is necessary to write the path of the reference image. Thanks to a reference image the code will select GCPs between the raw image(s) and the reference image. Either it is not mandatory.
+
+(e) “log_name”: “RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW”: affects the name of the document, in the log format containing the coding process. This document is located in the path written in the “workpsace_folder” (h).
+
+(f) “metadata_type”: RSM: write the refinement method to orthorectify. There are two options: RSM (Rigorous Sensor Modeling) and RFM (Rational Function Model).
+
+(g) “sensor”: “Spot2”: write the name of the sensor that captured the raw images.
+
+(h) “workspace_folder”: “.../geoCosiCorr3D_examples/orthorectification_example/results/output_GCPs”:
+write the path of the folder where we want to stock the results. In this example, the folder containing the results is called “output_GCPs”.
+
+(i) “ortho_gsd”: 10: write the GSD (Ground Sampling Distance).
+
+(j) “correction_model_file”:””: write the path of the correction model file (txt format) if we have it. In this example, we don’t have this file.
+
+(k) “optimize”: true: by writing “true”, the code will create file(s) that contain the tie points and GCPs (without the altitude coordinate) between the raw image(s) and a reference image. To write “true” and get the file(s) containing only the tie points and GCPs (without the elevation coordinate), the code must have a reference image. Either you can write
+“false”.
+
+------------------------------------------------------
+3. input_izmit_DEM.json: 
+
+This file allows getting orthorectified image(s) by adding elevation coordinates without a correction model file and a reference image.
+
+(a) “raw_image_path”:“...”: write the path of the raw image(s).
+
+(b) “metadata_file_path”: “...”: write the path of the document(s) containing information about the imaging system(s) of the raw image(s).
+
+(c) “dem_path”: “”: write the path of the DEM. To get orthorectified image(s) by adding the elevation coordinates, it is necessary to write the path of the DEM. Thanks to a DEM the code can assign the elevation coordinate for each pixel in the raw image. Either it is not mandatory.
+
+(d) “ref_ortho_path”: “”: to orthorectify without a reference image, write nothing between the quotation marks.
+
+(e) “log_name”: “RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW”: affects the name of the document, in the log format, containing the coding process. This document is located in the path written in the “workpsace_folder” (h).
+
+(f) “metadata_type”: RSM: write the refinement method to orthorectify. There are two options: RSM (Rigorous Sensor Modeling) and RFM (Rational Function Model).
+
+(g) “sensor”: “Spot2”: write the name of the sensor that captured the raw images.
+
+(h) “workspace_folder”: “.../geoCosiCorr3D_examples/orthorectification_example/results/output_DEM”:
+write the path of the folder where we want to stock the results. In this example, the folder containing the results is called “output”.
+
+(i) “ortho_gsd”: 10: write the GSD (Ground Sampling Distance).
+
+(j) “correction_model_file”:””: because we don’t have a reference image, we can’t write a path for the correction model file to orthorectify raw image(s).
+
+(k) “optimize”: false: because we don’t have a reference image, we can’t create a correction model file to orthorectify raw image(s). If we write “true”, the code will not work.
+
+------------------------------------------------------
+4. input_izmit.json: 
+
+This file allows getting orthorectified images without a correction model file, reference image and without adding elevation coordinates.
+
+(a) “raw_image_path”:“...”: write the path of the raw image(s).
+
+(b) “metadata_file_path”: “...”: write the path of the document(s) containing information about the imaging system(s) of the raw image(s).
+
+(c) “dem_path”: “”: to orthorectify without adding the elevation coordinates, don’t use a DEM and write nothing between the quotation marks.
+
+(d) “ref_ortho_path”: “”: to orthorectify without a reference image, write nothing between the quotation marks.
+
+(e) “log_name”: “RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW”: affects the name of the document, in the log format, containing the coding process. This document is located in the path written in the “workpsace_folder” (h).
+
+(f) “metadata_type”: RSM: write the refinement method to orthorectify. There are two options: RSM (Rigorous Sensor Modeling) and RFM (Rational Function Model).
+
+(g) “sensor”: “Spot2”: write the name of the sensor that captured the raw images.
+
+(h) “workspace_folder”: “.../geoCosiCorr3D_examples/orthorectification_example/results/output”: write the
+path of the folder where we want to stock the results. In this example, the folder containing the results is called “output”.
+
+(i) “ortho_gsd”: 10: write the GSD (Ground Sampling Distance).
+
+(j) “correction_model_file”:””: because we don’t have DEM and a reference image, we can’t write a path for the correction model file to orthorectify raw image(s).
+
+(k) “optimize”: false: because we don’t have DEM and a reference image, we can’t create a correction model file to orthorectify raw image(s). If we write “true”, the code will not work.
+
+
+------------------------------------------------------
+5. geo_ortho_config.yaml: 
+
+File presenting all the functions with the different input parameters used to orthorectify raw image(s). We can modify the parameters of the different functions in this file.
+
+
+--------------------E.Results----------------------------------------------------------------------------
+
+
+After running the code the results appear in the path we have written in “workspace_folder” (h) in the document that contains the input parameters (.json format). To compare your results with the right results follow the link:https://drive.google.com/drive/folders/1B_F617vAf3bmRr746X2Nwg2KEhsdGI5e?usp=sharing:
+correlation_3D_example/orthorectification_example/results
+
+The results are composed of four documents :
+
+------------------------------------------------------
+1. output: 
+
+Folder containing the results from input parameters written in input_izmit.json. In output we can find:
+
+(a) 635ef8da-eabd-11ed-b16b-4cd98f389017_IMAGERY: this folder contains:
+- IMAGERY_ORTHO.tif: orthorectified image that comes from the SPOT 2 image 003-
+008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT,
+- IMAGERY_TRX.tif: this is the transformation matrice used for the orthorectification.
+This matrice contains Band-1 and Band-2 which correspond respectively to the 2D matrices of X(Xpix, Ypix) and Y(Xpix, Ypix ) coordinates of the pixel p(Xpix, Ypix) in the raw image to be projected (Aati et al., 2022).
+
+(b) 4160d6b8-eabd-11ed-b16b-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT.
+
+(c) 8841bbba-eabd-11ed-b16b-4cd98f389017_IMAGERY: this folder presents the same kind of results as (a) but that comes from the SPOT 2 image 003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT.
+
+(d) geo_ortho_config.yaml: this file presents all the functions with the different input parameters used to orthorectify image(s). This is the same file mentioned in 3.3.
+
+(e) input_izmit.json: this file contains the input parameters to get orthorectified images without a correction model file. This is the same file mentioned in 3.3.
+
+(f) RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW_date_hour.log: this file presents the coding process. We have written the name of this file in input_izmit.json, line “log_name”, 3.3.
+
+------------------------------------------------------
+2. output_correction_model_file: 
+
+Folder containing the results from input parameters written in input_izmit_correction_model_file.json. In output_correction_model_file we can find:
+
+(a) 571bcc44-eaca-11ed-a937-4cd98f389017_IMAGERY: this folder contains:
+- CoregistrationError.png: graph that shows the coregistration error with the number of iterations (number of the loops) for the axis X and the error (location error of GCPs between the raw image and the reference image, it is measured in the number of pixels) for the axis Y. The red curve is the average of the dispersion of the error distribution of each GCP from the origin of the error_distribution_loop_#.png graph. The green curve is the distance of the red point from the origin of the error_distribution_loop_#.png graph.The best is to have the two curves close to 0 at the last loop. 
+- error_distribution_loop_#.png: graphs that show the error distribution loop by loop. The blue points are the error distribution of each GCP. The red point is the average of the error distribution of all GCP.
+- IMAGERY_ORTHO.tif: orthorectified image that comes from the SPOT 2 image 003- 008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT,
+- IMAGERY_TRX.tif: this is the transformation matrice used for the orthorectification. This matrice contains Band-1 and Band-2 which correspond respectively to the 2D matrices of X(Xpix, Ypix) and Y(Xpix, Ypix) coordinates of the pixel p(Xpix, Ypix) in the raw image to be projected (Aati et al., 2022),
+- rOrtho_1999-07-Spot4_VS_IMAGERY.pts: file that contains the list of the coordinates (X, Y) of tie points (common points) between the reference image (called “Base Image” in the file) and the raw image (called “Wrap Image” in the file). Each line corresponds to a tie point. The first column is the list of the X coordinates of the Base Image, the second column is the list of the Y coordinates of the Base Image, the third column is the list of the X coordinates of the Wrap Image and the fourth column is the list of the Y coordinates of the Wrap image. The Base Image coordinates and the Wrap Image coordinates are the position of the pixel with as origin in the upper left part of the image. COSI-Corr uses
+MicMac software to find automatically the tie points between the reference image and the raw image,
+- rOrtho_1999-07-Spot4_VS_IMAGERY_GCP.csv: file that contains information about each GCP. After getting the list of tie points the code will transform the tie points in GCPs. The difference between the tie points and GCPs is the coordinates. The GCPs have (X, Y, Z) projected in a geographic system. GCPs are used to orthorectify raw image(s) from a reference image and a DEM,
+- rOrtho_1999-07-Spot4_VS_IMAGERY_GCP.csv.png: graph which locates each GCP in relation to the DEM and the reference image. The elements are projected in EPSG: 4326 (WGS),
+- rOrtho_1999-07-Spot4_VS_IMAGERY_GCP_opt.opt_report.csv: file containing the new coordinates corrected of each GCP, by loop with the error distribution. The coordinates are corrected thanks to the RSM or RFM refinement,
+- rOrtho_1999-07-Spot4_VS_IMAGERY_GCP_opt_loop_#.csv: files containing the new coordinates corrected of each GCP and information used by the RSM or RFM refinement, by loop,
+- rOrtho_1999-07-Spot4_VS_IMAGERY_GCP_optloop_#_correction.txt: files containing the correction for each loop,
+- RSM_gcp_patches: folder presenting all the patches for each GCP for each loop in the
+png and tif format,
+- SRTM_DEM_32636.vrt and SRTM_DEM_32636_32635.vrt: files containing information on the DEM projected in a UTM grid.
+
+(b) 851a6814-ead2-11ed-a937-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT.
+
+(c) e5d7b1b0-eabf-11ed-a937-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT.
+
+(d) geo_ortho_config.yaml: this file presents all the functions with the different input parameters used to orthorectify image(s).
+
+(e) input_izmit_correction_model_file.json: this file presents the input parameters to get orthorectified images with a correction model file. 
+
+(f) RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW_date_hour.log: this file presents the coding process. We have written the name of this file in input_izmit.json.
+
+------------------------------------------------------
+3. output_DEM: 
+
+Folder containing the results from input parameters written in input_izmit_DEM.json. In output_DEM we can find:
+
+(a) 6d8a8a6a-03d4-11ee-869f-4cd98f389017_IMAGERY: this folder contains:
+- IMAGERY_ORTHO.tif: orthorectified image that comes from the SPOT 2 image 003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT,
+- IMAGERY_TRX.tif: this is the transformation matrice used for the orthorectification. This matrice contains Band-1 and Band-2 which correspond respectively to the 2D matrices of X(Xpix, Ypix) and Y(Xpix, Ypix) coordinates of the pixel p(Xpix, Ypix) in the raw image to be projected (Aati et al., 2022),
+- SRTM_DEM_32635.vrt: information about the DEM.
+
+(b) 33bcc6c2-03d4-11ee-869f-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT,
+
+(c) fd5c8cc-03d3-11ee-869f-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT,
+
+(d) geo_ortho_config.yaml: this file presents all the functions with the different input parameters used to orthorectify image(s).
+
+(e) input_izmit_DEM.json: this file presents the input parameters to get orthorectified images by adding the elevation coordinates and without a reference image and a correction model file. 
+
+(f) RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW_date_hour.log: this file presents the coding process. We have written the name of this file in input_izmit.json.
+
+------------------------------------------------------
+4. output_GCPs: 
+
+Folder containing the results from input parameters written in input_izmit_GCPs.json. In output_GCPs we can find:
+
+(a) 0b758192-eabe-11ed-a127-4cd98f389017_IMAGERY: this folder contains:
+- rOrtho_1999-07-Spot4_VS_IMAGERY.pts: coordinates of each tie point (pixel location)
+between the raw image (Wrap Image) 003-008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT and the reference image (Base Image),
+- rOrtho_1999-07-Spot4_VS_IMAGER_GCP.csv: coordinates of each GCP (projected in a geographic system) between the raw image 003-008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT and the reference image.
+
+(b) 4dad8f82-eabe-11ed-a127-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT.
+
+(c) C65b8b24- eabd-11ed-a127-4cd98f389017_IMAGERY: this folder contains the same kind of results as (a) but that comes from the SPOT 2 image 003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT.
+
+(d) geo_ortho_config.yaml: this file presents all the functions with the different input parameters used to orthorectify image(s).
+
+(e) input_izmit_GCPs.json: this file presents the input parameters to get the tie points and GCPs (without the altitude coordinate) between the raw image(s) and a reference image.
+
+(f) RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW_date_hour.log: this file presents the coding process. We have written the name of this file in input_izmit.json.
+
+
+--------------------F.References-------------------------------------------------------------------------
+
+
+Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of ground deformation from optimized registration and correlation of optical images and ICA-ased filtering of image geometry artifacts. California Institute of Technology, Pasadena, CA.

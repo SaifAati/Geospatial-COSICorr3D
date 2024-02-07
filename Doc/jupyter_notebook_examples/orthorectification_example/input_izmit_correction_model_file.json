@@ -1,0 +1,28 @@
+{
+  "raw_img_path": [
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT/IMAGERY.TIF",
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT/SCENE01/IMAGERY.TIF",
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT/SCENE01/IMAGERY.TIF"
+
+  ],
+
+
+  "metadata_file_path": [
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-006_S2_103-268-0_1998-06-10-09-01-06_HRV-1_P_DT_TT/METADATA.DIM",
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-008_S2_103-268-0_1998-03-03-09-05-04_HRV-1_P_DT_TT/SCENE01/METADATA.DIM",
+    "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/SP2_DS/003-008_S2_103-268-0_1998-04-03-09-08-28_HRV-1_P_DT_TT/SCENE01/METADATA.DIM"
+
+  ],
+
+
+  "dem_path": "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/REF_DATA/SRTM_DEM.tif",
+  "ref_ortho_path": "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/REF_DATA/rOrtho_1999-07-Spot4.tif",
+  "log_name": "RSM_ORTHO_SYSTEMATIC_SP2_WORKFLOW",
+  "metadata_type": "RSM",
+  "sensor": "Spot2",
+  "workspace_folder": "/home/mcadoux/PycharmProjects/Geospatial-COSICorr3D/geoCosiCorr3D_examples/orthorectification_example/results/output_correction_model_file",
+  "ortho_gsd": 10,
+  "correction_model_file": "",
+  "optimize": true
+}
+
