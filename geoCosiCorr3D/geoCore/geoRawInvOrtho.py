@@ -5,7 +5,7 @@
 """
 import logging
 from typing import Dict, Optional, Type, List
-import gdal, osr
+from osgeo import gdal, osr
 import warnings, math
 import numpy as np
 import os
