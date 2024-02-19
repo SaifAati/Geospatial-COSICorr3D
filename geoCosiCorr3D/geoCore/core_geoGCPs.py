@@ -3,15 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
-
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
 from typing import Optional
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
 
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import numpy as np
 from geoCosiCorr3D.geoCore.base.base_geoGCPs import BaseTP2GCP
 
 

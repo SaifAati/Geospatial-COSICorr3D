@@ -4,14 +4,18 @@
 # Copyright (C) 2022
 """
 
-import pytest
+import os
 import tempfile
+from typing import Dict
 
+import numpy as np
+import pytest
+
+import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
-from geoCosiCorr3D.geoCore.constants import *
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
-folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
+folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
 img1 = os.path.join(folder, "BASE_IMG.TIF")
 img2 = os.path.join(folder, "TARGET_IMG.TIF")
 
@@ -19,11 +23,12 @@ img2 = os.path.join(folder, "TARGET_IMG.TIF")
 # TODO:
 # Correlation between patches
 
-@pytest.mark.parametrize('test_corr_config,expec_corr_path', [(TEST_CONFIG.FREQ_CORR_CONFIG, 'expec_freq_corr.TIF'),
-                                                              (TEST_CONFIG.SPA_CORR_CONFIG, 'expec_spa_corr.tif')])
+@pytest.mark.parametrize('test_corr_config,expec_corr_path',
+                         [(C.TEST_CONFIG.FREQ_CORR_CONFIG, 'expec_freq_corr.TIF'),
+                          (C.TEST_CONFIG.SPA_CORR_CONFIG, 'expec_spa_corr.tif')])
 def test_corr(test_corr_config: Dict, expec_corr_path: str):
     expec_corr = cRasterInfo(os.path.join(folder, expec_corr_path)).raster_array
-    with tempfile.TemporaryDirectory(dir=SOFTWARE.WKDIR, suffix='test_corr') as tmp_dir:
+    with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='test_corr') as tmp_dir:
         corr_obj = Correlate(base_image_path=img1,
                              target_image_path=img2,
                              output_corr_path=tmp_dir,

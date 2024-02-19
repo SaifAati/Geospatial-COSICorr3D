@@ -4,13 +4,18 @@
 # Copyright (C) 2022
 """
 
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d, splrep, splev
+import datetime
 import logging
+import os
+
+import geoCosiCorr3D.geoRSM.misc as misc
+import matplotlib.pyplot as plt
+import numpy as np
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
-from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetSpot15Metadata, cGetSpot67Metadata
-from geoCosiCorr3D.geoRSM.misc import *
 from geoCosiCorr3D.geoCore.core_RSM import RSM
+from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import (
+    cGetSpot15Metadata, cGetSpot67Metadata)
+from scipy.interpolate import interp1d, splev, splrep
 
 geoCosiCorr3DOrientation = SOFTWARE.geoCosiCorr3DOrientation
 
@@ -170,8 +175,8 @@ class cSpot67(RSM):
         # orbitalPos_z = self.interpSatPosition/np.linalg.norm(self.interpSatPosition,axis=0,ord=2)
         # print(orbitalPos_z)
 
-        self.orbitalPos_Z = NormalizeArray(self.interpSatPosition)
-        self.orbitalPos_X = NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
+        self.orbitalPos_Z = misc.NormalizeArray(self.interpSatPosition)
+        self.orbitalPos_X = misc.NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
         self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
         return
 
@@ -202,7 +207,7 @@ class cSpot67(RSM):
         self.CCDLookAngle[:, 0] = -(self.lineOfSight[0] + np.arange(self.nbCols) * self.lineOfSight[1])
         self.CCDLookAngle[:, 1] = (self.lineOfSight[2] + np.arange(self.nbCols) * self.lineOfSight[3])
         self.CCDLookAngle[:, 2] = -1
-        self.CCDLookAngle = NormalizeArray(inputArray=self.CCDLookAngle)
+        self.CCDLookAngle = misc.NormalizeArray(inputArray=self.CCDLookAngle)
 
         return
 
@@ -438,8 +443,8 @@ class cSpot15(RSM):
         # plt.show()
 
         ###Compute for each scan line the coordinates in Orbital coordinate system
-        self.orbitalPos_Z = NormalizeArray(self.interpSatPosition)
-        self.orbitalPos_X = NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
+        self.orbitalPos_Z = misc.NormalizeArray(self.interpSatPosition)
+        self.orbitalPos_X = misc.NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
         self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
         # plt.plot(self.linesDates,self.orbitalPos_Y)
         # plt.show()
@@ -460,7 +465,7 @@ class cSpot15(RSM):
         CCDLookAngle[:, 0] = -1 * np.tan(lookAngles[:, 1])  # PsyX
         CCDLookAngle[:, 1] = np.tan(lookAngles[:, 0])  # PsyY
         CCDLookAngle[:, 2] = -1  # the Z direction
-        CCDLookAngle = NormalizeArray(inputArray=CCDLookAngle)
+        CCDLookAngle = misc.NormalizeArray(inputArray=CCDLookAngle)
 
         if self.spotMetadata.mission == 5:
             self.CCDLookAngle = CCDLookAngle
@@ -734,7 +739,7 @@ class cSpot15(RSM):
 
         oArray = np.empty((self.nbRows, 3, 3))
         for i in range(nb):
-            oArray[i, :, :] = cSpatialRotations().R_opk_xyz(omg=-pitch[i], phi=-roll[i], kpp=yaw[i])
+            oArray[i, :, :] = misc.cSpatialRotations().R_opk_xyz(omg=-pitch[i], phi=-roll[i], kpp=yaw[i])
 
         return oArray
 

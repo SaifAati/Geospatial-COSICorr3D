@@ -3,14 +3,18 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import os
+import tempfile
+
+import numpy as np
 import pandas
 import pytest
-import tempfile
+
+import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
-from geoCosiCorr3D.geoCore.constants import *
 
-folder = os.path.join(SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
+folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
 img1 = os.path.join(folder, "BASE_IMG.TIF")
 img2 = os.path.join(folder, "TARGET_IMG.TIF")
 match_file = os.path.join(folder, 'basemap_VS_SP2.pts')
@@ -21,7 +25,7 @@ dem_path = os.path.join(folder, 'DEM.TIF')
 
 @pytest.mark.functional
 def test_tp_to_gcps():
-    with tempfile.TemporaryDirectory(dir=SOFTWARE.WKDIR, suffix='_test_gcp') as tmp_dir:
+    with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_gcp') as tmp_dir:
         tp_2_gcp = TPsTOGCPS(in_tp_file=match_file,
                              base_img_path=raw_img_path,
                              ref_img_path=ref_img_path,
@@ -43,7 +47,7 @@ def test_tp_to_gcps():
 
 @pytest.mark.functional
 def test_asift_tps():
-    with tempfile.TemporaryDirectory(dir=SOFTWARE.WKDIR, suffix='_test_asift') as tmp_dir:
+    with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_asift') as tmp_dir:
         tp_obj = cMicMacTp(ref_img_path=img1,
                            raw_img_path=img2,
                            scale_factor=1 / 6,

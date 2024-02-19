@@ -4,12 +4,12 @@
 # Copyright (C) 2022
 """
 
-import numpy as np
-from scipy import interpolate
-from scipy.interpolate import *
-from typing import Optional, List
+from typing import List, Optional
 
+import numpy as np
 from geoCosiCorr3D.geoCore.constants import INTERPOLATION_TYPES
+from scipy.interpolate import (RectBivariateSpline, RegularGridInterpolator,
+                               interp1d, interp2d)
 
 
 def isMonotonic(A):
@@ -77,7 +77,6 @@ def Value_Locate(vector, values):
 
 
 def Interpol(VV, XX, xOut: Optional[List] = None):
-
     if xOut is None:
         xOut = []
     # print(np.size(xOut))
@@ -91,7 +90,6 @@ def Interpol(VV, XX, xOut: Optional[List] = None):
     v = np.copy(VV)
     x = np.copy(XX)
     m = np.size(v)  ## Nbr of inputs points
-
 
     if regular == 1:
         raise NotImplementedError
@@ -185,11 +183,11 @@ def Interpolate2D(inArray, x, y, kind=INTERPOLATION_TYPES.CUBIC):
         # 'linear in 1d = binlinear in 2D'
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html
 
-        f = interpolate.RegularGridInterpolator(points=(np.arange(0, lin, 1), np.arange(0, col, 1)),
-                                                values=inArray,
-                                                method=kind,
-                                                bounds_error=False,
-                                                fill_value=np.nan)
+        f = RegularGridInterpolator(points=(np.arange(0, lin, 1), np.arange(0, col, 1)),
+                                    values=inArray,
+                                    method=kind,
+                                    bounds_error=False,
+                                    fill_value=np.nan)
 
         return f(np.array([x, y]).T)
 

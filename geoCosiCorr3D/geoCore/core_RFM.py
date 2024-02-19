@@ -4,11 +4,13 @@
 # Copyright (C) 2022
 """
 import logging
-import numpy as np
 import warnings
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+import numpy as np
 from geoCosiCorr3D.geoCore.base.base_RFM import BaseRFM
+from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+
 
 class RawRFM(BaseRFM):
     __delta = 2

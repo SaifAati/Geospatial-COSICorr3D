@@ -5,11 +5,14 @@
 """
 import logging
 import warnings
-from typing import Optional
-
+from typing import Optional, Dict
+import numpy as np
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoCore.core_resampling import RawResampling, SincResampler, BilinearResampler, ResamplingEngine
-from geoCosiCorr3D.geoCore.constants import *
+import geoCosiCorr3D.geoCore.constants as C
+from geoCosiCorr3D.geoCore.core_resampling import (BilinearResampler,
+                                                   RawResampling,
+                                                   ResamplingEngine,
+                                                   SincResampler)
 
 
 class Resampling(RawResampling):
@@ -38,7 +41,7 @@ class Resampling(RawResampling):
         else:
             # geoErrors.erNotImplemented(routineName="This version does not support multi-band ortho-rectification")
             logging.warning(
-                f'Multi-band orthorectification is not supported in {SOFTWARE.SOFTWARE_NAME}_v_{SOFTWARE.VERSION}')
+                f'Multi-band orthorectification is not supported in {C.SOFTWARE.SOFTWARE_NAME}_v_{C.SOFTWARE.VERSION}')
 
         matrix_x = self.trans_matx[0, :, :]
         matrix_y = self.trans_matx[1, :, :]
@@ -63,10 +66,10 @@ class Resampling(RawResampling):
         matrix_x = matrix_x - dims[0]
         matrix_y = matrix_y - dims[2]
 
-        if self.method == Resampling_Methods.SINC:
+        if self.method == C.Resampling_Methods.SINC:
             return SincResampler.f_sinc_resampler(matrix_x, matrix_y, im1A, self.resampling_cfg.kernel_sz)
 
-        if self.method == Resampling_Methods.BILINEAR:
+        if self.method == C.Resampling_Methods.BILINEAR:
             return BilinearResampler.resampling(matrix_x, matrix_y, im1A)
 
 

@@ -193,7 +193,7 @@ class RFM(ReadRFM):
     def Img2Ground_RFM(self, col, lin,
                        altIni: Optional[List] = None,
                        demInfo: Optional[geoRT.cRasterInfo] = None,
-                       corrModel=np.zeros((3, 3)),
+                       corrModel=None,
                        normalized=False):
         """
         Apply direct RFM model to convert image coordinates to ground coordinates
@@ -206,6 +206,8 @@ class RFM(ReadRFM):
 
         Returns: float or list: longitude(s) && float or list: latitude(s)
         """
+        if corrModel is None:
+            corrModel = np.zeros((3, 3))
         if altIni is None:
             altIni = []
         if isinstance(altIni, list):
@@ -343,6 +345,7 @@ class RFM(ReadRFM):
         ## Estimate the UTM
         epsgCode = geoRT.ComputeEpsg(lon=prjCenter[0], lat=prjCenter[1])
         ## Convert tot UTM projection
+        # TODO switch to converter
         centerCoords = geoRT.ConvCoordMap1ToMap2_Batch(X=[prjCenter[1], prjCenter_plus[1]],
                                                        Y=[prjCenter[0], prjCenter_plus[0]],
                                                        targetEPSG=epsgCode)

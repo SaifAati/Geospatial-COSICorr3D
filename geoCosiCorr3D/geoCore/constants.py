@@ -4,12 +4,13 @@
 # Copyright (C) 2022
 """
 
-import numpy as np
-import os
 import configparser
-from enum import Enum
+import os
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict
+
+import numpy as np
 from osgeo import gdal
 
 GEOCOSICORR3D_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -24,7 +25,7 @@ class SOFTWARE:
     AUTHOR = 'saif@caltech.edu||saifaati@gmail.com'
     SOFTWARE_NAME = config['metadata']['name']
     VERSION = config['metadata']['version']
-    TILE_SIZE_MB = 128
+    TILE_SIZE_MB = 64
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
     WKDIR = os.path.join(os.path.dirname(GEOCOSICORR3D_PACKAGE_DIR), 'GEO_COSI_CORR_3D_WD/')
     geoCosiCorr3DOrientation = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])

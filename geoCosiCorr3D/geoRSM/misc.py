@@ -3,15 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import os, pickle
-import datetime
-import numpy as np
-from pathlib import Path
-from typing import List
-import warnings
 
-from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+import datetime
+import warnings
+from typing import List
+
+import numpy as np
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
+from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
 
 
 class HeightInterpolation:
@@ -68,9 +67,9 @@ class HeightInterpolation:
         Returns:
 
         """
-        from geoCosiCorr3D.georoutines.geo_utils import Convert
+        from geoCosiCorr3D.georoutines.geo_utils import (Convert,
+                                                         cRasterInfoGDAL)
         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
-        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfoGDAL
         demInfo = cRasterInfoGDAL(dem_path)
         demCoord = Convert.coord_map1_2_map2(X=geo_coords[0],
                                              Y=geo_coords[1],
@@ -99,8 +98,8 @@ class HeightInterpolation:
 
     @staticmethod
     def check_DEM_subset(xdemPix, ydemPix, demInfo, step=3):
-        if np.int(xdemPix) - step > 0:
-            temp = np.int(xdemPix) - step
+        if int(xdemPix) - step > 0:
+            temp = int(xdemPix) - step
         else:
             temp = 0
         if temp < demInfo.raster_width - step:
@@ -117,8 +116,8 @@ class HeightInterpolation:
         else:
             XdemMax = step
 
-        if np.int(ydemPix) - step > 0:
-            temp = np.int(ydemPix) - step
+        if int(ydemPix) - step > 0:
+            temp = int(ydemPix) - step
         else:
             temp = 0
 

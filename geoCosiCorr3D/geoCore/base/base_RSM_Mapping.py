@@ -3,9 +3,10 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
-from typing import Optional
 from abc import ABC, abstractmethod
+from typing import Optional
+
+import numpy as np
 from geoCosiCorr3D.geoConfig import cgeoCfg
 from geoCosiCorr3D.geoCore.constants import EARTH
 

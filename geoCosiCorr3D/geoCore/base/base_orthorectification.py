@@ -3,12 +3,11 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-from abc import abstractmethod, ABC
-from typing import Dict, Optional, Type, List, Any
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
-
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 
 
 class BaseInverseOrtho(ABC):
@@ -19,7 +18,6 @@ class BaseInverseOrtho(ABC):
                  ortho_params: Dict,
                  dem_path: Optional[str],
                  debug: bool = True):
-        # self.ortho_grid = None
         self.ortho_geo_transform: List[float] = []
         self.input_l1a_path = input_l1a_path
         self.output_ortho_path = output_ortho_path
@@ -27,7 +25,10 @@ class BaseInverseOrtho(ABC):
         self.debug = debug
         self.ortho_params = ortho_params
         self.dem_path = dem_path
-        self.ortho_grid: cGetSatMapGrid = Any
+        self.ortho_grid: SatMapGrid = Any
+        self.model = None
+        self.corr_model = None
+        self.mean_h = None
 
     @abstractmethod
     def orthorectify(self):
@@ -47,7 +48,7 @@ class BaseInverseOrtho(ABC):
         pass
 
     @abstractmethod
-    def compute_tiles(self):
+    def compute_num_tiles(self):
         """
         Compute the required number of tiles.
         Returns:
@@ -79,29 +80,15 @@ class BaseInverseOrtho(ABC):
         pass
 
     @abstractmethod
-    def _set_ortho_grid(self) -> cGetSatMapGrid:
+    def _set_ortho_grid(self) -> SatMapGrid:
         pass
 
     @abstractmethod
-    def DEM_interpolation(self, demInfo, demDims, tileCurrent, eastArr, northArr, modelData):
-        """
-
-
-        Args:
-            demInfo:
-            demDims:
-            tileCurrent:
-            eastArr:
-            northArr:
-            modelData:
-
-        Returns:
-
-        """
+    def elev_interpolation(self, demDims, tileCurrent, eastArr, northArr):
         pass
 
     @abstractmethod
-    def compute_transformation_matrix(self, need_loop, init_data):
+    def compute_transformation_matrix(self, ortho_data):
         """
 
         Args:
