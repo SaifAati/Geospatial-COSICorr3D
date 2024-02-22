@@ -1,13 +1,13 @@
 import os
 
-import geoCosiCorr3D.geoCore.constants as const
+import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
 
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
 
 geoCosiCorr3DLog("set_tests")
 
-folder = os.path.join(const.SOFTWARE.PARENT_FOLDER, "tests/test_dataset/test_ortho_dataset")
+folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset/test_ortho_dataset")
 test_raw_img_fn = os.path.join(folder, "RAW_SP2.TIF")
 test_dem_fn = os.path.join(folder, "DEM.tif")
 test_rfm_fn = os.path.join(folder, "SP2_RPC.txt")
@@ -16,13 +16,13 @@ dmpFile = os.path.join(folder, "SP2_METADATA.DIM")
 
 def correlation():
     from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
-    folder = os.path.join(const.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
+    folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
     img1 = os.path.join(folder, "BASE_IMG.TIF")
     img2 = os.path.join(folder, "TARGET_IMG.TIF")
     corr_obj = Correlate(base_image_path=img1,
                          target_image_path=img2,
                          # output_corr_path=tmp_dir,
-                         corr_config=const.TEST_CONFIG.FREQ_CORR_CONFIG,
+                         corr_config=C.TEST_CONFIG.FREQ_CORR_CONFIG,
                          corr_show=False)
     return
 
@@ -33,10 +33,10 @@ def ortho():
     output_ortho_path = "temp_rfm_ortho.tif"
     ortho_params = {
         "method":
-            {"method_type": const.SATELLITE_MODELS.RFM, "metadata": test_rfm_fn, "corr_model": None,
+            {"method_type": C.SATELLITE_MODELS.RFM, "metadata": test_rfm_fn, "corr_model": None,
              },
         "GSD": 20,
-        "resampling_method": const.Resampling_Methods.SINC}
+        "resampling_method": C.Resampling_Methods.SINC}
     orthorectify(input_l1a_path=test_raw_img_fn,
                  output_ortho_path=output_ortho_path,
                  ortho_params=ortho_params,
@@ -45,11 +45,11 @@ def ortho():
 
     ortho_params = {
         "method":
-            {"method_type": const.SATELLITE_MODELS.RSM, "metadata": dmpFile, "corr_model": None,
-             "sensor": const.SENSOR.SPOT1_5,
+            {"method_type": C.SATELLITE_MODELS.RSM, "metadata": dmpFile, "corr_model": None,
+             "sensor": C.SENSOR.SPOT1_5,
              },
         "GSD": 20,
-        "resampling_method": const.Resampling_Methods.SINC}
+        "resampling_method": C.Resampling_Methods.SINC}
     output_ortho_path = "temp_rsm_ortho.tif"
     orthorectify(input_l1a_path=test_raw_img_fn,
                  output_ortho_path=output_ortho_path,
@@ -67,7 +67,7 @@ def transformer():
     geoCoordList = []
     cols = [0, 5999, 0, 5999, 3000, 3001]
     lins = [0, 0, 5999, 5999, 3000, 3001]
-    model_data = RSM.build_RSM(metadata_file=dmpFile, sensor_name=const.SENSOR.SPOT1_5, debug=debug)
+    model_data = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5, debug=debug)
     for xVal, yVal in zip(cols, lins):
         pix2Ground_obj = cPix2GroundDirectModel(rsmModel=model_data,
                                                 xPix=xVal,
@@ -96,14 +96,17 @@ def set_grid():
     from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
     import geoCosiCorr3D.georoutines.geo_utils as geoRT
     from geoCosiCorr3D.geoRFM.RFM import RFM
+    from geoCosiCorr3D.geoCore.core_RSM import RSM
 
     o_res = 20
-    rfm_model = RFM(test_rfm_fn, debug=True)
+    model = RFM(test_rfm_fn, debug=True)
+    model = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5,
+                  debug=True)
 
     l1a_raster_info = geoRT.cRasterInfo(test_raw_img_fn)
     ortho_grid = SatMapGrid(raster_info=l1a_raster_info,
-                            model_data=rfm_model,
-                            model_type=const.SATELLITE_MODELS.RFM,
+                            model_data=model,
+                            model_type=C.SATELLITE_MODELS.RFM,
                             dem_fn=test_dem_fn,
                             new_res=o_res,
                             corr_model=np.zeros((3, 3)),
@@ -116,7 +119,7 @@ def set_grid():
 
 if __name__ == '__main__':
     # correlation()
-    ortho()
-    # transformer()
+    # ortho()
+    transformer()
     # set_grid()
     pass

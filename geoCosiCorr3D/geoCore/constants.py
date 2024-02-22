@@ -197,6 +197,15 @@ class ASIFT_TP_PARAMS:
     MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/mmlibs/bin/mm3d")
 
 
+@dataclass(frozen=True)
+class SatModelParams:
+    SAT_MODEL: str
+    METADATA: str
+    SENSOR: str
+
+
+
+
 class TEST_CONFIG:
     FREQ_CORR_PARAMS = {
         "window_size": [64, 64, 64, 64],

@@ -267,13 +267,13 @@ class BilinearResampler:
     @classmethod
     def resampling(cls, matrix_x, matrix_y, im1A):
         # imgL3b_fl = interpRT.Interpolate2D(inArray=im1A, x=matrix_y.flatten(), y=matrix_x.flatten(), kind="linear")
-        from scipy.interpolate import interpolate
+        from scipy.interpolate import RegularGridInterpolator
 
         # print("Resampling ....")
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]
         ## Note: since we have corrected matrix_x nad matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
-        f = interpolate.RegularGridInterpolator(
+        f = RegularGridInterpolator(
             # (np.arange(dims[2], dims[3] + 1, 1), np.arange(dims[0], dims[1] + 1, 1)),
             (np.arange(0, nbRows, 1), np.arange(0, nbCols, 1)),
             im1A,

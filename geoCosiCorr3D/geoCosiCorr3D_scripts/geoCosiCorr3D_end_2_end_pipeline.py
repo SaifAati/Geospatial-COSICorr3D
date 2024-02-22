@@ -6,12 +6,12 @@
 import os.path
 import pandas, shutil
 import warnings
-
+import numpy as np
 from tqdm import tqdm
 import logging
 from pathlib import Path
 from typing import List, Optional
-from geoCosiCorr3D.geoCore.constants import *
+import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
 from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extension
 
@@ -33,7 +33,7 @@ class GeoCosiCorr3DPipeline:
         self.sensor = sensor
         self.dem_file = dem_file
         self.ref_ortho = ref_ortho
-        self.workspace_dir = os.path.join(SOFTWARE.WKDIR,
+        self.workspace_dir = os.path.join(C.SOFTWARE.WKDIR,
                                           self.__class__.__name__) if workspace_dir is None else workspace_dir
         Path(self.workspace_dir).mkdir(parents=True, exist_ok=True)
         geoCosiCorr3DLog(self.__class__.__name__, self.workspace_dir)
@@ -61,7 +61,7 @@ class GeoCosiCorr3DPipeline:
         self.data_dic = {"Name": [], "Date": [], "Time": [], "Platform": [], "GSD": [], "ImgPath": [], "DIM": [],
                          "RSM": [], "Fp": [], "Tp": [], "MatchFile": [], "GCPs": [], 'RSM_Refinement': []}
         if self.config_file is None:
-            self.config_file = os.path.join(SOFTWARE.PARENT_FOLDER,
+            self.config_file = os.path.join(C.SOFTWARE.PARENT_FOLDER,
                                             'geoCosiCorr3D/geoCore/geoCosiCorrBaseCfg/geo_ortho_config.yaml')
         shutil.copy(self.config_file, os.path.join(self.workspace_dir, os.path.basename(self.config_file)))
         logging.info(f'config file:{self.config_file}')
@@ -106,9 +106,9 @@ class GeoCosiCorr3DPipeline:
         errorList = []
         for raw_img in tqdm(self.img_list, desc="Computing RSM model"):
 
-            if self.sensor in GEOCOSICORR3D_SENSOR_SPOT_15:
+            if self.sensor in C.GEOCOSICORR3D_SENSOR_SPOT_15:
                 dmp_file = get_files_based_on_extension(os.path.dirname(raw_img), "*.DIM")[0]
-            elif self.sensor in GEOCOSICORR3D_SENSOR_DG:
+            elif self.sensor in C.GEOCOSICORR3D_SENSOR_DG:
                 dmp_file = get_files_based_on_extension(os.path.dirname(raw_img), "*.XML")[0]
             else:
                 dmp_file = None
@@ -238,12 +238,13 @@ class GeoCosiCorr3DPipeline:
             logging.info(
                 f'{self.__class__.__name__}: -- RSM refinement --[{item + 1}]/[{len(validIndexList)}]:{gcp_file}')
             if isNaN(gcp_file) == False and str(gcp_file) is not None:
-                sat_model_params = {'sat_model': SATELLITE_MODELS.RSM, 'metadata': dataDf.loc[validIndex, "DIM"],
-                                    'sensor': self.sensor}
+                # sat_model_params = {'sat_model': C.SATELLITE_MODELS.RSM, 'metadata': dataDf.loc[validIndex, "DIM"],
+                #                     'sensor': self.sensor}
+                sat_model_params = C.SatModelParams(C.SATELLITE_MODELS.RSM, dataDf.loc[validIndex, "DIM"], self.sensor)
                 logging.info(
-                    f"{self.__class__.__name__}:RSM refinement:{sat_model_params['metadata']}")
+                    f"{self.__class__.__name__}:RSM refinement:{sat_model_params.METADATA}")
                 rsm_refinement_dir = os.path.join(self.rsm_refinement_folder,
-                                                  f"{dataDf.loc[validIndex, 'Name']}_{Path(sat_model_params['metadata']).stem}")
+                                                  f"{dataDf.loc[validIndex, 'Name']}_{Path(sat_model_params.METADATA).stem}")
                 Path(rsm_refinement_dir).mkdir(parents=True, exist_ok=True)
                 opt = cGCPOptimization(gcp_file_path=gcp_file,
                                        raw_img_path=dataDf.loc[validIndex, "ImgPath"],
@@ -586,7 +587,7 @@ class GeoCosiCorr3DPipeline:
         set_data = pandas.read_csv(self.sets_path)
 
         for set_idx, row in set_data.iterrows():
-            logging.info("_________________SET:{}/{}_____________".format(set_idx + 1, set_data.shape[0]))
+            logging.info(f"_________________SET:{set_idx + 1}/{set_data.shape[0]}_____________")
             set_dir = os.path.join(self.o_3DD_folder, f'3DDA_Set_{set_idx + 1}')
             Path(set_dir).mkdir(parents=True, exist_ok=True)
             set = [row["pre_i"], row["pre_j"], row["post_i"], row["post_j"]]

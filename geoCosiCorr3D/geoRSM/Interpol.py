@@ -182,7 +182,6 @@ def Interpolate2D(inArray, x, y, kind=INTERPOLATION_TYPES.CUBIC):
     if kind == "linear" or kind == "nearest":
         # 'linear in 1d = binlinear in 2D'
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RegularGridInterpolator.html
-
         f = RegularGridInterpolator(points=(np.arange(0, lin, 1), np.arange(0, col, 1)),
                                     values=inArray,
                                     method=kind,
