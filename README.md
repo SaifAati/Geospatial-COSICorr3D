@@ -54,7 +54,7 @@ To update the `geoCosiCorr3D` env you can use the following cmd:
 ### Option 2: Docker
 1- Build the image:
 
-    docker-compose -f  docker-compose.yml buil geocosicorr3d
+    docker-compose -f docker-compose.yml build geocosicorr3d
 2- Run a container:
 
     docker-compose -f  docker-compose.yml run geocosicorr3d

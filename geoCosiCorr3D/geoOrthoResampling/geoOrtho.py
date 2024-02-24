@@ -4,7 +4,7 @@
 # Copyright (C) 2022
 """
 import ctypes
-import ctypes.util
+# import ctypes.util
 import logging
 import os
 import sys
@@ -280,12 +280,12 @@ class RSMOrtho(RawInverseOrtho):
         outX = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
         outY = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
 
-        libPath_ = ctypes.util.find_library(G2P_LIB_Path)
-        if not libPath_:
-            msg = "Unable to find the specified library:" + G2P_LIB_Path
-            sys.exit(msg)
+        # libPath_ = ctypes.util.find_library(G2P_LIB_Path)
+        # if not libPath_:
+        #     msg = "Unable to find the specified library:" + G2P_LIB_Path
+        #     sys.exit(msg)
         try:
-            fLib = ctypes.CDLL(libPath_)
+            fLib = ctypes.CDLL(G2P_LIB_Path)
         except OSError:
             sys.exit("Unable to load the system C library")
         if debug:

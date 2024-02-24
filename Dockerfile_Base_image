@@ -1,0 +1,56 @@
+ARG BASE_IMAGE=ubuntu:22.04
+FROM $BASE_IMAGE as builder
+
+
+ENV DEBIAN_FRONTEND="noninteractive"
+LABEL maintainer="Saif Aati <saifaati@gmail.com>"
+USER root
+RUN date
+
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y vim tree wget nano wget
+RUN apt-get update --fix-missing
+RUN apt-get install -y --no-install-recommends build-essential curl g++ gcc gfortran
+RUN apt-get install -y make imagemagick libimage-exiftool-perl exiv2 proj-bin #qt5-default
+RUN apt-get install -y libx11-6
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends
+RUN apt-get install -y software-properties-common
+
+RUN apt-get update
+RUN add-apt-repository -y ppa:ubuntugis/ppa
+
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends \
+       python3-dev${APT_ARCH_SUFFIX} python3-numpy${APT_ARCH_SUFFIX} python3-setuptools${APT_ARCH_SUFFIX} \
+       libjpeg-dev${APT_ARCH_SUFFIX} libgeos-dev${APT_ARCH_SUFFIX} \
+       libexpat-dev${APT_ARCH_SUFFIX} libxerces-c-dev${APT_ARCH_SUFFIX} \
+       libwebp-dev${APT_ARCH_SUFFIX} libpng-dev${APT_ARCH_SUFFIX} \
+       libzstd-dev${APT_ARCH_SUFFIX} bash zip curl \
+       libpq-dev${APT_ARCH_SUFFIX} libssl-dev${APT_ARCH_SUFFIX} libopenjp2-7-dev${APT_ARCH_SUFFIX} \
+       libspatialite-dev${APT_ARCH_SUFFIX} \
+       autoconf automake sqlite3 bash-completion swig \
+    && rm -rf /var/lib/apt/lists/*
+
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py && \
+    rm get-pip.py
+
+
+RUN apt-get update
+RUN apt-get install -y gdal-bin
+RUN apt-get install -y libgdal-dev
+RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
+RUN export C_INCLUDE_PATH=/usr/include/gdal
+RUN pip install GDAL
+
+RUN pip install pyproj
+RUN pip install --no-cache-dir affine6p==1.0.0 astropy==6.0.0 click==8.1.7 click-plugins==1.1.1 geojson==3.1.0
+RUN pip install geopandas==0.14.3 jupyter==1.0.0 matplotlib==3.8.3 mypy==1.8.0 opencv-contrib-python==4.9.0.80 p-tqdm==1.4.0
+RUN pip install Pillow==10.2.0 psutil==5.9.8 pytest==8.0.1 pytest-cov==4.1.0 PyYAML==6.0.1 rasterio==1.3.9 regex==2023.12.25
+RUN pip install requests==2.31.0  scipy==1.12.0
+RUN pip install scikit-image==0.22.0 scikit-learn==1.4.1.post1
+RUN pip install seaborn==0.13.2
+RUN pip install tk==0.1.0

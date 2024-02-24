@@ -36,7 +36,6 @@ class SOFTWARE:
 
     GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "geoCosiCorr3D/lib/lfgeoCosiCorr3D.so")
 
-
 @dataclass(frozen=True)
 class SATELLITE_MODELS:
     RSM: str = 'RSM'
