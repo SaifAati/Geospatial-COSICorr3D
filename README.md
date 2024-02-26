@@ -1,5 +1,5 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
-
+![Conda Tests Status](https://github.com/SaifAati/geospatial-cosicorr3d/actions/workflows/[geocosicorr3d_conda_env_and_tests.yaml](.github%2Fworkflows%2Fgeocosicorr3d_conda_env_and_tests.yaml)/badge.svg)
 # geoCosiCorr3D
 
 Free and open source tools & libraries for processing satellite images (push-broom, frame and push-frame), including rigorous sensor model (RSM) refinement, rational function model (RFM) refinement, orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
