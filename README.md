@@ -1,7 +1,8 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 
-![Conda Tests Status](https://github.com/SaifAati/geospatial-cosicorr3d/actions/workflows/[geocosicorr3d_conda_env_and_tests.yaml](.github%2Fworkflows%2Fgeocosicorr3d_conda_env_and_tests.yaml)/badge.svg)
+![Integration Tests Status](https://github.com/SaifAati/geospatial-cosicorr3d/actions/workflows/eocosicorr3d_conda_env_and_tests.yaml/badge.svg)
+
 
 # geoCosiCorr3D
 
