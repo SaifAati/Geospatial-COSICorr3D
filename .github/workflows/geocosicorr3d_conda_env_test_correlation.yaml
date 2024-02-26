@@ -1,4 +1,4 @@
-name: Setup Conda Environment and Run Tests
+name: Conda correlation test (CI-GHA)
 
 on:
   push:

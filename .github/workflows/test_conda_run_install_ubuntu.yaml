@@ -1,4 +1,4 @@
-name: Docker Image CI fro GHCT
+name: Conda install Ubuntu (CI- GHA)
 on:
   push
 

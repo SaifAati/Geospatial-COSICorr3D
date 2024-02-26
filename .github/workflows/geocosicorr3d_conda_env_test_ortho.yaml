@@ -1,4 +1,4 @@
-name: Setup Conda Environment and Run Tests
+name: Conda ortho test (CI-GHA)
 
 on:
   push:
