@@ -54,7 +54,7 @@ def test_asift_tps():
                            plot_tps=False,
                            o_dir=tmp_dir
                            )
-        # expec_tps = np.loadtxt(os.path.join(folder, 'expec_mmtps.pts'))
-
-        # assert np.allclose(np.loadtxt(tp_obj.o_tp_path, comments=';'), expec_tps)
+        expec_tps = np.loadtxt(os.path.join(folder, 'expec_mmtps.pts'))
+        #
+        assert np.allclose(np.loadtxt(tp_obj.o_tp_path, comments=';'), expec_tps)
     return
