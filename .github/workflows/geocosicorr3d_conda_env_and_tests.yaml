@@ -41,6 +41,8 @@ jobs:
         conda activate geoCosiCorr3D
 #    - name: Activate geoCosiCorr3D environment
 #      run: conda activate geoCosiCorr3D
+    - name: Check
+      run: conda env list
 
     - name : Run Tests
-      run: pytest test
+      run: conda run -n geoCosiCorr3D pytest tests/
