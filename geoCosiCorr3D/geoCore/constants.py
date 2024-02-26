@@ -34,7 +34,7 @@ class SOFTWARE:
     CORR_PARAMS_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                       'geoCosiCorrBaseCfg/corr_params.json')
 
-    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "geoCosiCorr3D/lib/lfgeoCosiCorr3D.so")
+    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "lib/lfgeoCosiCorr3D.so")
 
 @dataclass(frozen=True)
 class SATELLITE_MODELS:
@@ -153,8 +153,8 @@ class CORR_METHODS(Enum):
 
 
 class CORR_LIBS(Enum):
-    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/lgeoFreqCorr_v1.so")
-    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/libgeoStatCorr.so.1")
+    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/lgeoFreqCorr_v1.so")
+    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/libgeoStatCorr.so.1")
 
 
 @dataclass(frozen=True)

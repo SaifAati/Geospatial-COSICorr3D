@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 
-
 if __name__ == '__main__':
     # setup()
     setup(
@@ -17,7 +16,7 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.8',
         ],
         license='GNU General Public License v3 (GPLv3)',
-        license_files=('LICENSE',),
+        license_files=('LICENSE'),
         packages=find_packages(include=['geoCosiCorr3D', 'geoCosiCorr3D.*']),
         python_requires='>=3.8',
         zip_safe=False,
