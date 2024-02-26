@@ -1,9 +1,16 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
+[![Build Status](https://github.com/SaifAati/Geospatial-COSICorr3D/.github/workflows/[conda_setup_linux.yaml](.github%2Fworkflows%2Fconda_setup_linux.yaml)/badge.svg)
 
 # geoCosiCorr3D
 
-Free and open source tools & libraries for processing satellite images (push-broom, frame and push-frame), including rigorous sensor model (RSM) refinement, rational function model (RFM) refinement, orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
+Free, and open-source software tailored for satellite image processing.
+geoCosiCorr3D is adept at handling various types of satellite imagery, including push-broom, frame, and push-frame sensors.
+geoCoiCorr3D excels in rigorous sensor model (RSM) refinement, rational function model (RFM) refinement,
+and offers advanced features like orthorectification,
+sub-pixel image correlation, and 3D surface displacement extraction.
+Designed for professionals and researchers in geospatial analysis,
+geoCoiCorr3D bridges the gap between complex data processing needs and practical applications.
 
 See the [NEWS](NEWS.md) for the most recent additions and upgrades.
 
