@@ -39,10 +39,15 @@ jobs:
         
         source $CONDA_DIR/etc/profile.d/conda.sh
         conda activate geoCosiCorr3D
-#    - name: Activate geoCosiCorr3D environment
-#      run: conda activate geoCosiCorr3D
-    - name: Check
+
+    - name: Check conda env
       run: conda env list
 
+    - name: Check Env
+      run: echo $LD_LIBRARY_PATH
+
     - name : Run Tests
-      run: conda run -n geoCosiCorr3D pytest tests/test_geoRSM.py
+      run: |
+        conda run -n geoCosiCorr3D pytest tests/test_geoRSM.py
+        conda run -n geoCosiCorr3D pytest tests/test_geoSatGrid.py
+        
