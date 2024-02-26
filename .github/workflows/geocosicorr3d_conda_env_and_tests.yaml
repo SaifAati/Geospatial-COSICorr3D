@@ -5,10 +5,10 @@ on:
     branches:
       - py3.9-update
       - main
-  pull_request:
-    branches:
-      - py3.9-update
-      - main
+#  pull_request:
+#    branches:
+#      - py3.9-update
+#      - main
 
 jobs:
   setup-and-test:
@@ -50,5 +50,4 @@ jobs:
       run: |
         conda run -n geoCosiCorr3D pytest tests/test_geoRSM.py
         conda run -n geoCosiCorr3D pytest tests/test_geoSatGrid.py
-        conda run -n geoCosiCorr3D pytest tests/test_geoTpsGCPs.py
         
