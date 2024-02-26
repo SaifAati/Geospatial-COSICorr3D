@@ -13,8 +13,6 @@ on:
 jobs:
   setup-and-test:
     runs-on: ubuntu-latest
-    env:
-      OVERWRITE: true
     steps:
     - uses: actions/checkout@v2
 
@@ -22,34 +20,16 @@ jobs:
       uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: 3.9
+        python-version: 3.9  # Updated to Python 3.9 as per your branch name
         activate-environment: geoCosiCorr3D
+        environment-file: geoCosiCorr3D.yml
+        auto-activate-base: false
 
-    - name: Configure environment variables
-      run: |
-        echo "LD_LIBRARY_PATH=$(pwd)/lib/:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-        echo $LD_LIBRARY_PATH
+    - name: Configure LD_LIBRARY_PATH
+      run: echo "LD_LIBRARY_PATH=$(pwd)/lib/:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-    - name: Install/Update geoCosiCorr3D environment
-      run: |
-        if conda env list | grep -q 'geoCosiCorr3D'; then
-            if [ "$OVERWRITE" = true ]; then
-                echo "The geoCosiCorr3D environment exists but will be deleted and recreated."
-                conda remove --name geoCosiCorr3D --all
-                conda env update --file geoCosiCorr3D.yml --prune
-            else
-                echo "The geoCosiCorr3D environment is already installed. Activating..."
-            fi
-        else
-            echo "Creating the geoCosiCorr3D environment..."
-            conda env update --file geoCosiCorr3D.yml --prune
-        fi
-      shell: bash
-
-    - name: Activate geoCosiCorr3D environment
-      run: echo "Conda activate geoCosiCorr3D" >> $GITHUB_ENV
-
-    - name: Run Tests
+    - name: Activate geoCosiCorr3D environment and Run Tests
       run: |
         conda activate geoCosiCorr3D
-        pytest tests/
+        pytest test/
+      shell: bash
