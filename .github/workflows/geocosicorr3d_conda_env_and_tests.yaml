@@ -28,8 +28,8 @@ jobs:
     - name: Configure LD_LIBRARY_PATH
       run: echo "LD_LIBRARY_PATH=$(pwd)/lib/:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-    - name: Activate geoCosiCorr3D environment and Run Tests
-      run: |
-        conda activate geoCosiCorr3D
-        pytest test/
-      shell: bash
+    - name: Activate geoCosiCorr3D environment
+      run: conda activate geoCosiCorr3D
+
+    - name : Run Tests
+      run: pytest test
