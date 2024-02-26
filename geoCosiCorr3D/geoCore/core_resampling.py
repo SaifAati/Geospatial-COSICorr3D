@@ -252,8 +252,7 @@ class SincResampler:
             # 10 =max variability of the resampling distance,
             # 1.15= oversampling for kernel edge response
         borderY = int(np.ceil(np.max(np.abs([dy1, dy2, dy3])) * resampling_kernel_sz * 10 * 1.15))
-        # print("dy1:{},dy2:{},dy3:{}".format(dy1, dy2, dy3))
-        # print("borderY:", borderY)
+
         return borderX, borderY
 
     @classmethod
@@ -264,15 +263,10 @@ class SincResampler:
 class BilinearResampler:
     @classmethod
     def resampling(cls, matrix_x, matrix_y, im1A):
-        # imgL3b_fl = interpRT.Interpolate2D(inArray=im1A, x=matrix_y.flatten(), y=matrix_x.flatten(), kind="linear")
-
-
-        # print("Resampling ....")
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]
         ## Note: since we have corrected matrix_x nad matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
         f = RegularGridInterpolator(
-            # (np.arange(dims[2], dims[3] + 1, 1), np.arange(dims[0], dims[1] + 1, 1)),
             (np.arange(0, nbRows, 1), np.arange(0, nbCols, 1)),
             im1A,
             method="linear",
@@ -280,8 +274,5 @@ class BilinearResampler:
             fill_value=np.nan)
         imgL3b_fl = f(list(zip(matrix_y.flatten(), matrix_x.flatten())))
         imgL3b = np.reshape(imgL3b_fl, sz)
-        # # print(imgL3b.shape)
-        # plt.imshow(imgL3b, cmap="gray")
-        # plt.show()
-        # print("__________________________________ END Resampling _________________________________________")
+
         return imgL3b

@@ -4,15 +4,17 @@
 # Copyright (C) 2022
 """
 import logging
+import os
+import uuid
+from pathlib import Path
+from typing import Dict, List, Optional
+
 import numpy as np
 import pandas
-import uuid
+
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import os
-from pathlib import Path
-from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
-from typing import Optional, List, Dict
+from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 
 
 class TPsTOGCPS(RawTP2GCP):
@@ -152,9 +154,10 @@ class TPsTOGCPS(RawTP2GCP):
         """
 
         # TODO add RAW img ground extent
-        import rasterio
         import matplotlib.pyplot as plt
+        import rasterio
         import shapely.geometry
+
         from geoCosiCorr3D.geoCore.constants import RENDERING
         from geoCosiCorr3D.georoutines.geo_utils import Convert
         fig, ax = plt.subplots(1, 1)
@@ -188,6 +191,7 @@ class TPsTOGCPS(RawTP2GCP):
         import matplotlib.pyplot as plt
         import rasterio
         from rasterio.plot import show
+
         from geoCosiCorr3D.geoCore.constants import RENDERING
         fig2, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 10))
         fig2.suptitle('GCPs + DEM + Ref_Ortho')
