@@ -1,0 +1,13 @@
+name: Conda install Ubuntu (CI- GHA)
+on:
+  push
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Conda env
+        run: |
+          ./install_cosicorr.sh --docker
+          docker images
