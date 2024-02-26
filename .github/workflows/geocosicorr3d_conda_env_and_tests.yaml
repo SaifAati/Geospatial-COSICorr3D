@@ -50,4 +50,5 @@ jobs:
       run: |
         conda run -n geoCosiCorr3D pytest tests/test_geoRSM.py
         conda run -n geoCosiCorr3D pytest tests/test_geoSatGrid.py
+        conda run -n geoCosiCorr3D pytest tests/test_geoTpsGCPs.py
         
