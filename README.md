@@ -1,6 +1,5 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
-[![Build Status](https://github.com/SaifAati/Geospatial-COSICorr3D/.github/workflows/[conda_setup_linux.yaml](.github%2Fworkflows%2Fconda_setup_linux.yaml)/badge.svg)
 
 # geoCosiCorr3D
 
