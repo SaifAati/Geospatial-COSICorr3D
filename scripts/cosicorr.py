@@ -109,7 +109,7 @@ def correlate_subparser(subparsers):
 
 
 def cosicorr():
-    parser = argparse.ArgumentParser(prog='cosicorr', description='GeoCosiCorr3D CLI',
+    parser = argparse.ArgumentParser(prog='cosicorr3d', description='GeoCosiCorr3D CLI',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparsers = parser.add_subparsers(title='modules', dest='module', metavar='<module>')
