@@ -5,6 +5,8 @@
 """
 import numpy as np
 
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+
 
 class cRSMOptimization:
     def __init__(self, rsmModel, gcps, debug=True):
@@ -134,8 +136,7 @@ class cRSMOptimization:
     def Plot_Error(self):
         import geoCosiCorr3D.georoutines.georoutines as geoRT
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                                       AutoMinorLocator)
+        from matplotlib.ticker import (AutoMinorLocator)
         dU_est = np.dot(self.cartCoordPlaneCoefs.T,
                         np.array([self.gcps[:, 3], self.gcps[:, 4], self.gcps.shape[0] * [1]])).T
         dU_res = self.dU - dU_est
@@ -193,7 +194,7 @@ class cRSMOptimization:
         for pixCoord, gcpItem in zip(list(self.gcpPixCoords), list(self.gcps)):
             # print(gcpItem)
             gcpInitLookDirection = self.ComputeLookDirection(self.rsmModel, pixCoord)
-            gcpCartCoords = geoRT.ConvertGeo2Cartesian(Lon=[gcpItem[0]], Lat=[gcpItem[1]], Alt=[gcpItem[2]])
+            gcpCartCoords = geoRT.Convert.geo_2_cartesian(Lon=[gcpItem[0]], Lat=[gcpItem[1]], Alt=[gcpItem[2]])
 
             gcpLookDirection = self.ComputeLookDirectionofGCPs(rsmModel=self.rsmModel,
                                                                gcpPixCoords=pixCoord,

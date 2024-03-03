@@ -1,24 +1,44 @@
 #!/usr/bin/env python3
 """
 Move the Script to a Bin Directory: For the cosicorr command to be recognized globally,
- move it to a directory that's in your system's PATH.
- A common choice is /usr/local/bin/.
- You may rename cosicorr.py to cosicorr for convenience.
-
+move it to a directory that's in your system's PATH.
+A common choice is /usr/local/bin/.
+You may rename cosicorr.py to cosicorr for convenience.
 >> sudo mv cosicorr.py /usr/local/bin/cosicorr
 """
 import argparse
+
+import numpy as np
 
 import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
 
+def parse_list(value):
+    return [float(item) for item in value.split(',')]
+
+
 def ortho_func(args):
-    print("Executing ortho function with input:", args.input, "and output:", args.output)
+    raise NotImplementedError
 
 
 def transform_func(args):
-    print("Executing transform function with input:", args.input, "and output:", args.output)
+    print("Transform function for model:", args)
+
+    if args.model_name == C.SATELLITE_MODELS.RFM:
+        from geoCosiCorr3D.geoRFM.RFM import RFM
+        model_data = RFM(args.rfm_fn, dem_fn=args.dem_fn, debug=True)
+        if not args.inv:
+            res = np.asarray(model_data.i2g(args.x, args.y)).T
+            print(f'lons:{res[:, 0]}')
+            print(f'lat:{res[:, 1]}')
+            print(f'alt:{res[:, 2]}')
+        else:
+            res = np.asarray(model_data.g2i(args.x, args.y, )).T
+            print(f'cols:{res[:, 0]}')
+            print(f'lines:{res[:, 1]}')
+    if args.model_name == C.SATELLITE_MODELS.RSM:
+        raise NotImplementedError
 
 
 def correlate_func(args):
@@ -68,10 +88,27 @@ def ortho_subparser(subparsers):
 
 
 def transform_subparser(subparsers):
-    transform_parser = subparsers.add_parser('transform', help='Transfromation')
-    transform_parser.add_argument('--input', help='Input file for transform', required=True)
-    transform_parser.add_argument('--output', help='Output file for transform', required=True)
-    transform_parser.set_defaults(func=transform_func)
+    transform_parser = subparsers.add_parser('transform', help='Transformation')
+
+    transform_parser.add_argument('x', type=parse_list, help="list: x=cols and if with invert flag: lon")
+    transform_parser.add_argument('y', type=parse_list, help="list: y=lines and if with invert flag: lat")
+    transform_parser.add_argument("--inv", action="store_true", help="Transform form ground to image space.")
+    transform_parser.add_argument('--dem_fn', type=int, default=None, help="DEM file name (None)")
+
+    model_subparsers = transform_parser.add_subparsers(title='model', dest='model_name', metavar='<model_name>',
+                                                       required=True)
+
+    rfm_parser = model_subparsers.add_parser(C.SATELLITE_MODELS.RFM, help="RFM model specific arguments")
+    rfm_parser.add_argument('rfm_fn', type=str, help="RFM file name (.tiff or .TXT)")
+    rfm_parser.set_defaults(func=transform_func)
+
+    # RSM model specific parser setup
+    rsm_parser = model_subparsers.add_parser(C.SATELLITE_MODELS.RSM, help="RSM model specific arguments")
+    rsm_parser.add_argument('sat_id', type=str, help="Sat-name")
+    rsm_parser.add_argument('rsm_fn', type=str, help="Specifies the path to the .xml DMP file. Additional formats "
+                                                     "are supported in GeoCosiCorr3D.pro."
+)
+    rsm_parser.set_defaults(func=transform_func)
 
 
 def correlate_subparser(subparsers):
