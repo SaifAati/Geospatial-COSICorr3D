@@ -4,12 +4,13 @@
 # Copyright (C) 2022
 """
 
-import numpy as np
-import os
 import configparser
-from enum import Enum
+import os
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict
+
+import numpy as np
 from osgeo import gdal
 
 GEOCOSICORR3D_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -24,7 +25,7 @@ class SOFTWARE:
     AUTHOR = 'saif@caltech.edu||saifaati@gmail.com'
     SOFTWARE_NAME = config['metadata']['name']
     VERSION = config['metadata']['version']
-    TILE_SIZE_MB = 128
+    TILE_SIZE_MB = 64
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
     WKDIR = os.path.join(os.path.dirname(GEOCOSICORR3D_PACKAGE_DIR), 'GEO_COSI_CORR_3D_WD/')
     geoCosiCorr3DOrientation = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
@@ -33,13 +34,20 @@ class SOFTWARE:
     CORR_PARAMS_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                       'geoCosiCorrBaseCfg/corr_params.json')
 
-    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "geoCosiCorr3D/lib/lfgeoCosiCorr3D.so")
+    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "lib/lfgeoCosiCorr3D.so")
 
 
 @dataclass(frozen=True)
 class SATELLITE_MODELS:
     RSM: str = 'RSM'
     RFM: str = 'RFM'
+
+
+@dataclass(frozen=True)
+class TransformationMethods:
+    RSM: str = SATELLITE_MODELS.RSM
+    RFM: str = SATELLITE_MODELS.RFM
+    IDENTITY: str = 'identity'
 
 
 class ResamplingMethods(Enum):
@@ -55,6 +63,33 @@ class Resampling_Methods:
 
 GEOCOSICORR3D_SATELLITE_MODELS = [SATELLITE_MODELS.RFM, SATELLITE_MODELS.RSM]
 GEOCOSICORR3D_RESAMLING_METHODS = [ResamplingMethods.SINC.value, ResamplingMethods.BILINEAR.value]
+
+
+@dataclass(frozen=True)
+class RfmKeys:
+    LINE_OFF = 'LINE_OFF'
+    SAMP_OFF = 'SAMP_OFF'
+
+    LAT_OFF = 'LAT_OFF'
+    LONG_OFF = 'LONG_OFF'
+
+    HEIGHT_SCALE = 'HEIGHT_SCALE'
+    HEIGHT_OFF = 'HEIGHT_OFF'
+
+    LINE_SCALE = 'LINE_SCALE'
+    SAMP_SCALE = 'SAMP_SCALE'
+    LAT_SCALE = 'LAT_SCALE'
+    LONG_SCALE = 'LONG_SCALE'
+
+    LINE_NUM_COEFF = 'LINE_NUM_COEFF'
+    LINE_DEN_COEFF = 'LINE_DEN_COEFF'
+    SAMP_NUM_COEFF = 'SAMP_NUM_COEFF'
+    SAMP_DEN_COEFF = 'SAMP_DEN_COEFF'
+
+    LON_NUM_COEFF = 'LON_NUM_COEFF'
+    LON_DEN_COEFF = 'LON_DEN_COEFF'
+    LAT_NUM_COEFF = 'LAT_NUM_COEFF'
+    LAT_DEN_COEFF = 'LAT_DEN_COEFF'
 
 
 @dataclass(frozen=True)
@@ -153,8 +188,8 @@ class CORR_METHODS(Enum):
 
 
 class CORR_LIBS(Enum):
-    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/lgeoFreqCorr_v1.so")
-    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/libgeoStatCorr.so.1")
+    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/lgeoFreqCorr_v1.so")
+    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/libgeoStatCorr.so.1")
 
 
 @dataclass(frozen=True)
@@ -193,7 +228,14 @@ class ASIFT_TP_PARAMS:
     SCALE_FACTOR = 1 / 8
     MODE = 'All'
     IMG_SIZE = 1000
-    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/mmlibs/bin/mm3d")
+    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/mmlibs/bin/mm3d")
+
+
+@dataclass(frozen=True)
+class SatModelParams:
+    SAT_MODEL: str
+    METADATA: str
+    SENSOR: str
 
 
 class TEST_CONFIG:

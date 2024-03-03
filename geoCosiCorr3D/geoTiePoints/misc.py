@@ -4,8 +4,9 @@
 # Copyright (C) 2022
 """
 import os.path
-import pandas
+
 import numpy as np
+import pandas
 
 
 def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
@@ -63,7 +64,7 @@ def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
                                                                         np.min(avgErrorList)))
     if plotError:
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (AutoMinorLocator)
+        from matplotlib.ticker import AutoMinorLocator
         fig, ax = plt.subplots()
 
         ax.plot(loopList, rmseList, c="r", linestyle="--", marker="o", label="RMSE [pix]")

@@ -57,7 +57,7 @@ class cRasterInfo(BaseRasterInfo):
         self.rpcs = self.raster.tags(ns='RPC')
         self.bbox_map = self.raster.bounds
         self.raster_array = self.raster.read()  # all bands
-        self.raster = None
+        # self.raster = None
 
     def image_as_array_subset(self,
                               col_off_min: int,
@@ -78,7 +78,10 @@ class cRasterInfo(BaseRasterInfo):
         width = (col_off_max - col_off_min) + 1
         height = (row_off_max - row_off_min) + 1
         array = raster.read(band_number,
-                            window=Window(col_off=col_off_min, row_off=row_off_min, width=width, height=height))
+                            window=Window(col_off=col_off_min,
+                                          row_off=row_off_min,
+                                          width=width,
+                                          height=height))
         raster = None
         return array
 
@@ -253,7 +256,7 @@ class cRasterInfo(BaseRasterInfo):
             y: yMap coordinate: int or float
 
         Returns: coordinate in image space : tuple in pix
-
+            in case of WGS84: x=lon,y=lat --> x,y <--> col,lin
         """
 
         ## Apply inverse affine transformation
@@ -272,7 +275,8 @@ class cRasterInfo(BaseRasterInfo):
             warnings.warn("xPix outside the image dimension", DeprecationWarning, stacklevel=2)
         if yPx < 0 or yPx > self.raster_height:
             warnings.warn("yPix outside the image dimension", DeprecationWarning, stacklevel=2)
-        # NOTE using RASTERIO         print(rasterio.transform.rowcol(info_rasterio.transform, map_coord[0], map_coord[1])) --> we dont have the sub-pixel info
+        # NOTE using RASTERIO
+        # print(rasterio.transform.rowcol(info_rasterio.transform, map_coord[0], map_coord[1])) --> we dont have the sub-pixel info
         return (xPx, yPx)
 
     def Map2Pixel_Batch(self, X: List, Y: List):
@@ -709,7 +713,7 @@ class Convert:
 
 
 def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data: Optional[float] = None,
-                                   mask_vls: Optional[List] = None, band_idx=1, dtype = 'uint16') -> str:
+                                   mask_vls: Optional[List] = None, band_idx=1, dtype='uint16') -> str:
     """
     Notes: we assume the input raster have the same resolution and projection system
     """
@@ -731,7 +735,7 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data:
         band_description.append("Band" + str(index + 1) + "_" + Path(img_).stem)
 
     cRasterInfo.write_raster(output_raster_path=output_path, array_list=array_list, geo_transform=info.geo_transform,
-                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data, dtype= dtype)
+                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data, dtype=dtype)
     return output_path
 
 

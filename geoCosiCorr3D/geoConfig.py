@@ -26,9 +26,9 @@ geoCfg['geoFreqCorrLib'] = CORRELATION.FREQ_CORR_LIB
 geoCfg["geoCosiCorr3DLib"] = SOFTWARE.GEO_COSI_CORR3D_LIB
 
 # path to MicMac
-geoCfg["MicMacLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/lib/mmlibs/bin/mm3d")
+geoCfg["MicMacLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/mmlibs/bin/mm3d")
 # path to ASP
-geoCfg["ASPLib"] = "/home/cosicorr/anaconda3/envs/asp/bin"
+# geoCfg["ASPLib"] = "/home/cosicorr/anaconda3/envs/asp/bin"
 # define tile size
 geoCfg['tileSize'] = SOFTWARE.TILE_SIZE_MB  # Mb
 
@@ -36,8 +36,8 @@ geoCfg['tileSize'] = SOFTWARE.TILE_SIZE_MB  # Mb
 geoCfg["semiMajor"] = EARTH.SEMIMAJOR
 geoCfg["semiMinor"] = EARTH.SEMIMINOR
 
-geoCfg["geoSIFTLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, 'geoCosiCorr3D/lib/libSIFT_v0.1.1.so')
-geoCfg["geoRANSACLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, 'geoCosiCorr3D/lib/libransac.so')
+geoCfg["geoSIFTLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, 'lib/libSIFT_v0.1.1.so')
+geoCfg["geoRANSACLib"] = os.path.join(SOFTWARE.PARENT_FOLDER, 'lib/libransac.so')
 
 
 class cgeoCfg:
@@ -46,7 +46,7 @@ class cgeoCfg:
         self.geoFreqCorrLib = geoCfg['geoFreqCorrLib']
         self.geoStatCorrLib = geoCfg['geoStatCorrLib']
         self.mmLib = geoCfg["MicMacLib"]
-        self.aspLib = geoCfg["ASPLib"]
+        # self.aspLib = geoCfg["ASPLib"]
 
         self.geoCosiCorr3DLib = geoCfg["geoCosiCorr3DLib"]
         self.semiMajor = geoCfg["semiMajor"]

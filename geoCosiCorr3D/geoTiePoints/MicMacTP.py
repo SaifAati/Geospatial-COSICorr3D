@@ -4,20 +4,23 @@
 # Copyright (C) 2022
 """
 import logging
-import pandas
-from typing import Optional
+import os
 from pathlib import Path
+from typing import Dict, Optional
 
-from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
-from geoCosiCorr3D.geoCore.constants import *
+import pandas
+from osgeo import gdal
+
+import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
+from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
 class cMicMacTp(RawMMTP):
 
     def __init__(self, ref_img_path: str, raw_img_path: str, o_dir: Optional[str] = None,
-                 mode: str = ASIFT_TP_PARAMS.MODE, scale_factor: Optional[float] = None,
+                 mode: str = C.ASIFT_TP_PARAMS.MODE, scale_factor: Optional[float] = None,
                  tmp_dir: Optional[str] = None,
                  plot_tps: bool = False, tp_format: str = "COSI-Corr",
                  max_pts: Optional[int] = None):
@@ -40,7 +43,7 @@ class cMicMacTp(RawMMTP):
 
         if self.tmp_dir is None:
             import tempfile
-            with tempfile.TemporaryDirectory(dir=SOFTWARE.WKDIR, suffix='mm_temp_tp') as tmp_dir:
+            with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='mm_temp_tp') as tmp_dir:
                 self.tmp_dir = tmp_dir
                 self.run_mm_tp()
         else:
@@ -48,8 +51,8 @@ class cMicMacTp(RawMMTP):
 
     def generate_tmp_raster(self, input_raster_path):
         tmp_raster_path = os.path.join(self.tmp_dir, f"{Path(input_raster_path).stem}.tif")
-        gdal.Translate(destName=tmp_raster_path, srcDS=input_raster_path, options=ASIFT_TP_PARAMS.CONV_PARAMS,
-                       outputType=RASTER_TYPE.GDAL_UINT16)
+        gdal.Translate(destName=tmp_raster_path, srcDS=input_raster_path, options=C.ASIFT_TP_PARAMS.CONV_PARAMS,
+                       outputType=C.RASTER_TYPE.GDAL_UINT16)
 
         return tmp_raster_path
 

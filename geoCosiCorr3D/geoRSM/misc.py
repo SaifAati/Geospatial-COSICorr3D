@@ -3,169 +3,168 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import os, pickle
+
 import datetime
-import numpy as np
-from pathlib import Path
-from typing import List
 import warnings
+from typing import List
 
-from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+import numpy as np
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
+from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
 
 
-class HeightInterpolation:
-    @staticmethod
-    def get_h_from_DEM(geo_coords: List, demInfo, h: float = None, step=3):
-        """
-
-        Args:
-            geo_coords: [lon, lat]
-            demInfo:
-            h:
-            step:
-
-        Returns:
-
-        """
-        from geoCosiCorr3D.georoutines.geo_utils import Convert
-        from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
-
-        demCoord = Convert.coord_map1_2_map2(X=geo_coords[1],  # LAT
-                                             Y=geo_coords[0],  # LON
-                                             Z=h,
-                                             targetEPSG=demInfo.epsg_code,
-                                             sourceEPSG=4326)
-
-        xdemCoord = demCoord[0]
-        ydemCoord = demCoord[1]
-        xdemPix = (xdemCoord - demInfo.x_map_origin) / np.abs(demInfo.pixel_width)
-        ydemPix = (demInfo.y_map_origin - ydemCoord) / np.abs(demInfo.pixel_height)
-        XdemMin, XdemMax, YdemMin, YdemMax = HeightInterpolation.check_DEM_subset(xdemPix=xdemPix,
-                                                                                  ydemPix=ydemPix,
-                                                                                  demInfo=demInfo,
-                                                                                  step=step)
-
-        demSubset = demInfo.image_as_array_subset(col_off_min=int(XdemMin),
-                                                  col_off_max=int(XdemMax),
-                                                  row_off_min=int(YdemMin),
-                                                  row_off_max=int(YdemMax))
-
-        # print(dem_subset, dem_subset.shape)
-        return Interpolate2D(inArray=demSubset, x=[ydemPix - YdemMin], y=[xdemPix - XdemMin],
-                             kind="RectBivariateSpline")
-
-    @staticmethod
-    def get_h_from_DEM_v2(geo_coords: List, dem_path: str, h: float = None, step=3):
-        """
-
-        Args:
-            geo_coords: [lat,lon]
-            demInfo:
-            h:
-            step:
-
-        Returns:
-
-        """
-        from geoCosiCorr3D.georoutines.geo_utils import Convert
-        from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
-        from geoCosiCorr3D.georoutines.geo_utils import cRasterInfoGDAL
-        demInfo = cRasterInfoGDAL(dem_path)
-        demCoord = Convert.coord_map1_2_map2(X=geo_coords[0],
-                                             Y=geo_coords[1],
-                                             Z=h,
-                                             targetEPSG=demInfo.epsg_code,
-                                             sourceEPSG=4326)
-        xdemCoord = demCoord[0]
-        ydemCoord = demCoord[1]
-        xdemPix = (xdemCoord - demInfo.x_map_origin) / np.abs(demInfo.pixel_width)
-        ydemPix = (demInfo.y_map_origin - ydemCoord) / np.abs(demInfo.pixel_height)
-
-        XdemMin, XdemMax, YdemMin, YdemMax = HeightInterpolation.check_DEM_subset(xdemPix=xdemPix,
-                                                                                  ydemPix=ydemPix,
-                                                                                  demInfo=demInfo,
-                                                                                  step=step)
-
-        demSubset = demInfo.image_as_array_subset(input_raster_path=dem_path
-                                                  , col_off_min=int(XdemMin),
-                                                  col_off_max=int(XdemMax),
-                                                  row_off_min=int(YdemMin),
-                                                  row_off_max=int(YdemMax))
-
-        # print(dem_subset, dem_subset.shape)
-        return Interpolate2D(inArray=demSubset, x=[ydemPix - YdemMin], y=[xdemPix - XdemMin],
-                             kind="RectBivariateSpline")
-
-    @staticmethod
-    def check_DEM_subset(xdemPix, ydemPix, demInfo, step=3):
-        if np.int(xdemPix) - step > 0:
-            temp = np.int(xdemPix) - step
-        else:
-            temp = 0
-        if temp < demInfo.raster_width - step:
-            XdemMin = temp
-        else:
-            XdemMin = (demInfo.raster_width - 1) - step
-
-        if np.ceil(xdemPix) + step < demInfo.raster_width:
-            temp = np.ceil(np.max(xdemPix)) + step
-        else:
-            temp = demInfo.raster_width - 1
-        if temp > step:
-            XdemMax = temp
-        else:
-            XdemMax = step
-
-        if np.int(ydemPix) - step > 0:
-            temp = np.int(ydemPix) - step
-        else:
-            temp = 0
-
-        if temp < demInfo.raster_height - step:
-            YdemMin = temp
-        else:
-            YdemMin = demInfo.raster_height - step
-
-        if np.ceil(ydemPix) + step < demInfo.raster_height:
-            temp = np.ceil(ydemPix) + step
-        else:
-            temp = demInfo.raster_height - 1
-        if temp > step:
-            YdemMax = temp
-        else:
-            YdemMax = step
-        return int(XdemMin), int(XdemMax), int(YdemMin), int(YdemMax)
-
-    @staticmethod
-    def DEM_interpolation(demInfo: cRasterInfo, demDims, eastArr, northArr, tileCurrent=None):
-        h_new = None
-        try:
-            if tileCurrent is not None:
-                tempWindow = demDims[tileCurrent, :]
-                demCol = (eastArr - demInfo.x_map_origin) / np.abs(demInfo.pixel_width) - demDims[tileCurrent, 0]
-                demRow = (demInfo.y_map_origin - northArr) / np.abs(demInfo.pixel_height) - demDims[tileCurrent, 2]
-            else:
-                demCol = (eastArr - demInfo.x_map_origin) / np.abs(demInfo.pixel_width) - demDims[0]
-                demRow = (demInfo.y_map_origin - northArr) / np.abs(demInfo.pixel_height) - demDims[2]
-                tempWindow = demDims
-
-            demSubset = demInfo.image_as_array_subset(int(tempWindow[0]),
-                                                      int(tempWindow[1]) + 1,
-                                                      int(tempWindow[2]),
-                                                      int(tempWindow[3]) + 1)
-
-            hNew_flatten = Interpolate2D(inArray=demSubset,
-                                         x=demRow.flatten(),
-                                         y=demCol.flatten(),
-                                         kind="linear")  # TODO: --> user-choice
-            h_new = np.reshape(hNew_flatten, demCol.shape)
-
-        except:
-            warnings.warn("Enable to interpolate H form the input DEM ")
-
-        return h_new
-
+# class HeightInterpolation:
+#     @staticmethod
+#     def get_h_from_DEM(geo_coords: List, demInfo, h: float = None, step=3):
+#         """
+#
+#         Args:
+#             geo_coords: [lon, lat]
+#             demInfo:
+#             h:
+#             step:
+#
+#         Returns:
+#
+#         """
+#         from geoCosiCorr3D.georoutines.geo_utils import Convert
+#         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+#
+#         demCoord = Convert.coord_map1_2_map2(X=geo_coords[1],  # LAT
+#                                              Y=geo_coords[0],  # LON
+#                                              Z=h,
+#                                              targetEPSG=demInfo.epsg_code,
+#                                              sourceEPSG=4326)
+#
+#         xdemCoord = demCoord[0]
+#         ydemCoord = demCoord[1]
+#         xdemPix = (xdemCoord - demInfo.x_map_origin) / np.abs(demInfo.pixel_width)
+#         ydemPix = (demInfo.y_map_origin - ydemCoord) / np.abs(demInfo.pixel_height)
+#         XdemMin, XdemMax, YdemMin, YdemMax = HeightInterpolation.check_DEM_subset(xdemPix=xdemPix,
+#                                                                                   ydemPix=ydemPix,
+#                                                                                   demInfo=demInfo,
+#                                                                                   step=step)
+#
+#         demSubset = demInfo.image_as_array_subset(col_off_min=int(XdemMin),
+#                                                   col_off_max=int(XdemMax),
+#                                                   row_off_min=int(YdemMin),
+#                                                   row_off_max=int(YdemMax))
+#
+#         # print(dem_subset, dem_subset.shape)
+#         return Interpolate2D(inArray=demSubset, x=[ydemPix - YdemMin], y=[xdemPix - XdemMin],
+#                              kind="RectBivariateSpline")
+#
+#     @staticmethod
+#     def get_h_from_DEM_v2(geo_coords: List, dem_path: str, h: float = None, step=3):
+#         """
+#
+#         Args:
+#             geo_coords: [lat,lon]
+#             demInfo:
+#             h:
+#             step:
+#
+#         Returns:
+#
+#         """
+#         from geoCosiCorr3D.georoutines.geo_utils import (Convert,
+#                                                          cRasterInfoGDAL)
+#         from geoCosiCorr3D.geoRSM.Interpol import Interpolate2D
+#         demInfo = cRasterInfoGDAL(dem_path)
+#         demCoord = Convert.coord_map1_2_map2(X=geo_coords[0],
+#                                              Y=geo_coords[1],
+#                                              Z=h,
+#                                              targetEPSG=demInfo.epsg_code,
+#                                              sourceEPSG=4326)
+#         xdemCoord = demCoord[0]
+#         ydemCoord = demCoord[1]
+#         xdemPix = (xdemCoord - demInfo.x_map_origin) / np.abs(demInfo.pixel_width)
+#         ydemPix = (demInfo.y_map_origin - ydemCoord) / np.abs(demInfo.pixel_height)
+#
+#         XdemMin, XdemMax, YdemMin, YdemMax = HeightInterpolation.check_DEM_subset(xdemPix=xdemPix,
+#                                                                                   ydemPix=ydemPix,
+#                                                                                   demInfo=demInfo,
+#                                                                                   step=step)
+#
+#         demSubset = demInfo.image_as_array_subset(input_raster_path=dem_path
+#                                                   , col_off_min=int(XdemMin),
+#                                                   col_off_max=int(XdemMax),
+#                                                   row_off_min=int(YdemMin),
+#                                                   row_off_max=int(YdemMax))
+#
+#         # print(dem_subset, dem_subset.shape)
+#         return Interpolate2D(inArray=demSubset, x=[ydemPix - YdemMin], y=[xdemPix - XdemMin],
+#                              kind="RectBivariateSpline")
+#
+#     @staticmethod
+#     def check_DEM_subset(xdemPix, ydemPix, demInfo, step=3):
+#         if int(xdemPix) - step > 0:
+#             temp = int(xdemPix) - step
+#         else:
+#             temp = 0
+#         if temp < demInfo.raster_width - step:
+#             XdemMin = temp
+#         else:
+#             XdemMin = (demInfo.raster_width - 1) - step
+#
+#         if np.ceil(xdemPix) + step < demInfo.raster_width:
+#             temp = np.ceil(np.max(xdemPix)) + step
+#         else:
+#             temp = demInfo.raster_width - 1
+#         if temp > step:
+#             XdemMax = temp
+#         else:
+#             XdemMax = step
+#
+#         if int(ydemPix) - step > 0:
+#             temp = int(ydemPix) - step
+#         else:
+#             temp = 0
+#
+#         if temp < demInfo.raster_height - step:
+#             YdemMin = temp
+#         else:
+#             YdemMin = demInfo.raster_height - step
+#
+#         if np.ceil(ydemPix) + step < demInfo.raster_height:
+#             temp = np.ceil(ydemPix) + step
+#         else:
+#             temp = demInfo.raster_height - 1
+#         if temp > step:
+#             YdemMax = temp
+#         else:
+#             YdemMax = step
+#         return int(XdemMin), int(XdemMax), int(YdemMin), int(YdemMax)
+#
+#     @staticmethod
+#     def DEM_interpolation(demInfo: cRasterInfo, demDims, eastArr, northArr, tileCurrent=None):
+#         h_new = None
+#         try:
+#             if tileCurrent is not None:
+#                 tempWindow = demDims[tileCurrent, :]
+#                 demCol = (eastArr - demInfo.x_map_origin) / np.abs(demInfo.pixel_width) - demDims[tileCurrent, 0]
+#                 demRow = (demInfo.y_map_origin - northArr) / np.abs(demInfo.pixel_height) - demDims[tileCurrent, 2]
+#             else:
+#                 demCol = (eastArr - demInfo.x_map_origin) / np.abs(demInfo.pixel_width) - demDims[0]
+#                 demRow = (demInfo.y_map_origin - northArr) / np.abs(demInfo.pixel_height) - demDims[2]
+#                 tempWindow = demDims
+#
+#             demSubset = demInfo.image_as_array_subset(int(tempWindow[0]),
+#                                                       int(tempWindow[1]) + 1,
+#                                                       int(tempWindow[2]),
+#                                                       int(tempWindow[3]) + 1)
+#
+#             hNew_flatten = Interpolate2D(inArray=demSubset,
+#                                          x=demRow.flatten(),
+#                                          y=demCol.flatten(),
+#                                          kind="linear")  # TODO: --> user-choice
+#             h_new = np.reshape(hNew_flatten, demCol.shape)
+#
+#         except:
+#             warnings.warn("Enable to interpolate H form the input DEM ")
+#
+#         return h_new
+#
 
 def ConvertTime2Second(timeIn, yearOrigin=1950):
     date_time_origin = datetime.datetime.strptime(str(yearOrigin), '%Y')

@@ -4,14 +4,15 @@
 # Copyright (C) 2022
 """
 
-import numpy as np
 import logging
 from typing import Optional
 
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import EstimateGeoTransformation, get_dem_dims
+import numpy as np
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RSMOrtho
-from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo, Convert
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import (
+    EstimateGeoTransformation, get_dem_dims)
+from geoCosiCorr3D.georoutines.geo_utils import Convert, cRasterInfo
 
 
 class RSMG2P:
@@ -76,7 +77,8 @@ class RSMG2P:
         self.oArray = self.compute_pix_coords()
 
     def DEM_interpolation(self, demDims):
-        from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+        # from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+        from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
         self.h_new = HeightInterpolation.DEM_interpolation(demInfo=self.demInfo,
                                                            demDims=demDims,

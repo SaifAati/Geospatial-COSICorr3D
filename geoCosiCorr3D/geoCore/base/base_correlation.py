@@ -3,10 +3,12 @@
 # Copyright (C) 2022
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 import numpy as np
-from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import ConfigReader
 from geoCosiCorr3D.geoCore.constants import CORRELATION
+from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import \
+    ConfigReader
 
 
 class BaseFreqCorr(ABC):

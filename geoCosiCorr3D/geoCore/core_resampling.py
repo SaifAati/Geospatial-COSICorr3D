@@ -3,19 +3,20 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import ctypes
+import ctypes.util
 import logging
-import ctypes, ctypes.util
-import math, warnings
-import numpy as np
-from typing import Optional, Dict, Any
-
-import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-from geoCosiCorr3D.geoConfig import cgeoCfg
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import math
+import warnings
 from dataclasses import dataclass
-from geoCosiCorr3D.geoCore.constants import GEOCOSICORR3D_RESAMLING_METHODS, Resampling_Methods
+from typing import Any, Dict, Optional
+from scipy.interpolate import RegularGridInterpolator
+import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import numpy as np
 
-geoCfg = cgeoCfg()
+import geoCosiCorr3D.geoCore.constants as C
+
 SINC_KERNEL_SZ: int = 15
 
 
@@ -41,10 +42,10 @@ class ResamplingEngine:
         self.get_resampling_config()
 
     def get_resampling_config(self):
-        self.method = self.resampling_params.get('method', Resampling_Methods.SINC)
+        self.method = self.resampling_params.get('method', C.Resampling_Methods.SINC)
 
-        if self.method in GEOCOSICORR3D_RESAMLING_METHODS:
-            if self.method == Resampling_Methods.SINC:
+        if self.method in C.GEOCOSICORR3D_RESAMLING_METHODS:
+            if self.method == C.Resampling_Methods.SINC:
                 kernel_sz = self.resampling_params.get("kernel_sz", SincResamlingConfig.kernel_sz)
                 if kernel_sz < 0 or kernel_sz % 2 == 0:
                     logging.warning(f'RESAMPLING::Kernel size must be positive odd number')
@@ -54,13 +55,13 @@ class ResamplingEngine:
                     logging.info(f'RESAMPLING:: Resampling method:{self.method}, kz:{SincResamlingConfig.kernel_sz}')
                 self.resampling_cfg = SincResamlingConfig
 
-            elif self.method == Resampling_Methods.BILINEAR:
+            elif self.method == C.Resampling_Methods.BILINEAR:
                 self.resampling_cfg = BilinearResamlingConfig
         else:
             # TODO write a warning and set as default SINC
             logging.warning(
-                f'RESAMPLING::Resampling method <<{self.method}>> not recognized by geoCosiCorr3D --> set to <<{Resampling_Methods.SINC}>>')
-            self.method = Resampling_Methods.SINC
+                f'RESAMPLING::Resampling method <<{self.method}>> not recognized by geoCosiCorr3D --> set to <<{C.Resampling_Methods.SINC}>>')
+            self.method = C.Resampling_Methods.SINC
             self.resampling_cfg = SincResamlingConfig
 
 
@@ -126,7 +127,7 @@ class RawResampling(ResamplingEngine):
         if (maxY + margin) < raw_img_pix_extent['row_pix_max']:
             raw_img_pix_extent['row_pix_max'] = maxY + margin
 
-        if self.method == Resampling_Methods.SINC:
+        if self.method == C.Resampling_Methods.SINC:
             borderX, borderY = SincResampler.compute_resampling_distance(matrix_x, matrix_y, matrix_x.shape,
                                                                          self.resampling_cfg.kernel_sz)
             if (minX - borderX) > raw_img_pix_extent['col_pix_min']:
@@ -182,12 +183,12 @@ class SincResampler:
 
         sz = matrix_x.shape
 
-        libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
-
-        if not libPath_:
-            geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
+        # libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
+        #
+        # if not libPath_:
+        #     geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
         try:
-            sincLib = ctypes.CDLL(libPath_)
+            sincLib = ctypes.CDLL(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
             matCol = np.array(matrix_y, dtype=np.float_)
             matRow = np.array(matrix_x, dtype=np.float_)
 
@@ -195,7 +196,7 @@ class SincResampler:
 
             img = np.array(im1A, dtype=np.float_)
             width = ctypes.c_int(kernel_sz)
-            oImg = np.zeros(sz, dtype=np.float)
+            oImg = np.zeros(sz, dtype=float)
             weighting = ctypes.c_int(weigthing)
             nbColMat = ctypes.c_int(sz[0])
             nbRowMat = ctypes.c_int(sz[1])
@@ -217,7 +218,7 @@ class SincResampler:
 
             return oImg
         except OSError:
-            geoErrors.erLibLoading(geoCfg.geoCosiCorr3DLib)
+            geoErrors.erLibLoading(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
 
     @staticmethod
     def compute_resampling_distance(matrix_x, matrix_y, sz, resampling_kernel_sz):
@@ -251,8 +252,7 @@ class SincResampler:
             # 10 =max variability of the resampling distance,
             # 1.15= oversampling for kernel edge response
         borderY = int(np.ceil(np.max(np.abs([dy1, dy2, dy3])) * resampling_kernel_sz * 10 * 1.15))
-        # print("dy1:{},dy2:{},dy3:{}".format(dy1, dy2, dy3))
-        # print("borderY:", borderY)
+
         return borderX, borderY
 
     @classmethod
@@ -263,14 +263,10 @@ class SincResampler:
 class BilinearResampler:
     @classmethod
     def resampling(cls, matrix_x, matrix_y, im1A):
-        # imgL3b_fl = interpRT.Interpolate2D(inArray=im1A, x=matrix_y.flatten(), y=matrix_x.flatten(), kind="linear")
-        from scipy.interpolate import interpolate
-        # print("Resampling ....")
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]
         ## Note: since we have corrected matrix_x nad matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
-        f = interpolate.RegularGridInterpolator(
-            # (np.arange(dims[2], dims[3] + 1, 1), np.arange(dims[0], dims[1] + 1, 1)),
+        f = RegularGridInterpolator(
             (np.arange(0, nbRows, 1), np.arange(0, nbCols, 1)),
             im1A,
             method="linear",
@@ -278,8 +274,5 @@ class BilinearResampler:
             fill_value=np.nan)
         imgL3b_fl = f(list(zip(matrix_y.flatten(), matrix_x.flatten())))
         imgL3b = np.reshape(imgL3b_fl, sz)
-        # # print(imgL3b.shape)
-        # plt.imshow(imgL3b, cmap="gray")
-        # plt.show()
-        # print("__________________________________ END Resampling _________________________________________")
+
         return imgL3b
