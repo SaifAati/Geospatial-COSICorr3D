@@ -1,4 +1,4 @@
-name: Linux-Docker-install (CI- GHA)
+name: Linux-Docker-install (CI-GHA)
 on:
   push
 
