@@ -8,7 +8,7 @@ Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 # geoCosiCorr3D
 
-GeoCosiCorr3D is an innovative,free and open-source software tailored for 
+GeoCosiCorr3D is an innovative,free and open-source software tailored for
 satellite image processing.
 geoCosiCorr3D is adept at handling various types of satellite imagery,
 including push-broom, frame, and push-frame sensors.
@@ -16,24 +16,27 @@ At its core, `geoCoiCorr3D` excels in rigorous sensor model (RSM) refinement,
 rational function model (RFM) refinement, and offers advanced processing features: including
 orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
 
-Designed for researchers in remote sensing. 
-`geoCosiCorr3D` serves as a critical bridge linking complex data processing requirements 
-with real-world applicability. 
+Designed for researchers in remote sensing.
+`geoCosiCorr3D` serves as a critical bridge linking complex data processing requirements
+with real-world applicability.
 It is particularly beneficial for projects focused on change detection, time series analysis,
 and applications in diverse scientific fields such as geology, geomorphology,
 glaciology, planetology, as well as in the assessment and mitigation of natural disasters.
 
 See the [NEWS](NEWS.md) for the most recent additions and upgrades.
 
-Contact Information
+Contact Information, Support & Contributions
 -------------------
+We welcome your questions, comments, and reports of any issues you encounter! Here's how you can reach out to us or
+contribute to the project.
+For direct inquiries or specific questions, feel free to reach out to [Saif Aati](mailto:saif@caltech.edu): (
+saif@caltech.edu (Preferred) || saifaati@gmail.com)
 
-Questions, comments, and bug reports can be sent to:
-[Saif Aati](mailto:saif@caltech.edu)
-
-    - saif@caltech.edu
-    - saifaati@gmail.com
-
+If you encounter any problems or bugs, please report them
+by [submitting an issue](https://github.com/SaifAati/Geospatial-COSICorr3D/issues)
+on our GitHub project page.
+This helps us track and address issues efficiently.
+Your feedback and contributions are invaluable to us, and we look forward to hearing from you!
 
 # Workflow
 
@@ -81,7 +84,159 @@ If you encounter any issues or need further assistance,
 refer to the documentation (the documentation is still under construction 🚧) or submit an issue on the project's GitHub
 page.
 
+### Important Note on Environment Variables
+
+Sometimes, environment variables are not automatically picked up and set during the installation process. To ensure the software operates correctly, it is recommended to manually set these variables. For example, to set the `LD_LIBRARY_PATH` environment variable, you can use the following command in your terminal:
+
+```bash
+export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatial-COSICorr3D/lib/:$LD_LIBRARY_PATH
+```
+Add this line to your .bashrc or .bash_profile (depending on your shell and OS) to make the change permanent:
+```bash
+echo 'export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatial-COSICorr3D/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
+```
+
 # geoCosiCorr3D: CLI
+
+
+The primary entry point for the GeoCosiCorr3D command line interface (CLI) is accessible through the Python script
+located at `scripts/cosicorr.py`. 
+To explore the available commands and their options, you can use the `-h` or `--help` flag.
+Below is a brief overview of how to use the GeoCosiCorr3D CLI:
+
+
+```bash
+python3 scripts/cosicorr.py -h
+usage: cosicorr3d [-h] <module> ...
+
+GeoCosiCorr3D CLI
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+modules:
+  <module>
+    ortho      Orthorectification
+    transform  Transformation
+    correlate  Correlation
+```
+### Correlation
+
+For detailed usage of the `correlate` module, execute the following command:
+
+```bash
+python3 scripts/cosicorr.py correlate -h
+```
+
+<details>
+<summary>Correlate Module Usage</summary>
+
+```bash
+usage: cosicorr3d correlate [-h] [--base_band BASE_BAND] [--target_band TARGET_BAND] [--output_path OUTPUT_PATH] [--method {frequency,spatial}] [--window_size WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE]
+                            [--step STEP STEP] [--grid] [--show] [--pixel_based] [--vmin VMIN] [--vmax VMAX] [--mask_th MASK_TH] [--nb_iters NB_ITERS] [--search_range SEARCH_RANGE SEARCH_RANGE]
+                            base_image target_image
+
+positional arguments:
+  base_image            Path to the base image.
+  target_image          Path to the target image.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --base_band BASE_BAND
+                        Base image band.
+  --target_band TARGET_BAND
+                        Target image band.
+  --output_path OUTPUT_PATH
+                        Output correlation path.
+  --method {frequency,spatial}
+                        Correlation method to use.
+  --window_size WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE
+                        Window size. (Default [64])
+  --step STEP STEP      Step size. (Default [8,8])
+  --grid                Use grid.
+  --show                Show correlation. (Default False)
+  --pixel_based         Enable pixel-based correlation.
+  --vmin VMIN           Minimum value for correlation plot. (Default -1)
+  --vmax VMAX           Maximum value for correlation plot. (Default 1)
+
+Frequency method arguments:
+  --mask_th MASK_TH     Mask threshold (only for frequency method).
+  --nb_iters NB_ITERS   Number of iterations (only for frequency method).
+
+Spatial method arguments:
+  --search_range SEARCH_RANGE SEARCH_RANGE
+                        Search range (only for spatial method).
+```
+Example:
+```bash
+python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test_dataset/TARGET_IMG.TIF --show  --vmin -3 --vmax 3
+```
+![Alt text](Figs/BASE_IMG_VS_TARGET_IMG_frequency_wz_64_step_8.png?raw=true "Title")
+</details>
+
+### Transform
+
+For detailed usage of the `transfrom` module, execute the following command:
+
+```bash
+python3 scripts/cosicorr.py transform -h
+```
+
+<details>
+<summary>Transform Module Usage</summary>
+### Example Usage of the `transform` Command
+
+This section demonstrates how to use the `transform` command within the GeoCosiCorr3D CLI to perform coordinate transformations. 
+The examples show how to convert pixel coordinates to geographic coordinates (longitude, latitude, and altitude) and vice versa.
+
+```bash
+usage: cosicorr3d transform [-h] [--inv] [--dem_fn DEM_FN] x y <model_name> ...
+
+positional arguments:
+  x                list: x=cols and if with invert flag: lon
+  y                list: y=lines and if with invert flag: lat
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --inv            Transform form ground to image space.
+  --dem_fn DEM_FN  DEM file name (None)
+
+model:
+  <model_name>
+    RFM            RFM model specific arguments
+    RSM            RSM model specific arguments
+
+```
+#### Converting Pixel Coordinates to Geographic Coordinates
+
+To convert pixel coordinates to geographic coordinates using a Rational Function Model (RFM), use the following command:
+
+```bash
+python3 scripts/cosicorr.py transform 0,1000 0,500 RFM tests/test_dataset/test_ortho_dataset/SP2_RPC.txt
+```
+
+**Output:**
+
+- `lons`: [30.52895296 30.65688292]
+- `lat`: [41.24090926 41.16826844]
+- `alt`: [1102.49239388 1102.49239388]
+
+
+#### Inverse Transformation: Converting Geographic Coordinates to Pixel Coordinates
+
+For the inverse operation: converting geographic coordinates back to pixel coordinates, use the `--inv` flag:
+
+```bash
+python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.16826844 --inv RFM tests/test_dataset/test_ortho_dataset/SP2_RPC.txt
+```
+
+**Output:**
+
+- `cols`: [9.70195697e-06 999.999998e+02]
+- `lines`: [5.07104141e-06 500.000045e+02]
+
+
+</details>
 
 # geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
@@ -105,6 +260,7 @@ Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, Ju
 
 <a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography
 Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12,
+
 3418. https://doi.org/10.3390/rs12203418
 
 
