@@ -260,7 +260,7 @@ class RawInverseOrtho(BaseInverseOrtho):
         return demDims, easting, northing, n_tiles, tiles
 
     def elev_interpolation(self, demDims, tileCurrent, eastArr, northArr):
-        from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+        from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
         if self.debug:
             logging.info(f"{self.__class__.__name__}: Elev interpolation ...")
         h_new = HeightInterpolation.DEM_interpolation(demInfo=self.dem_raster_info,

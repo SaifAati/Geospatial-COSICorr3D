@@ -14,8 +14,9 @@ import pandas
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
-from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+# from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
 
+from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
 class TPsTOGCPS(RawTP2GCP):
     def __init__(self, in_tp_file: str, ref_img_path: str, base_img_path: str,

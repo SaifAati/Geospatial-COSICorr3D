@@ -71,6 +71,6 @@ def test_ortho_rfm(o_gsd, resampling_method):
 
         temp_ortho = cRasterInfo(temp_ortho_obj.output_ortho_path).geo_transform
         assert os.path.exists(o_ortho_path)
-        assert temp_ortho == [273870.0, 30, 0, 4568430.0, 0, -30]
+        assert temp_ortho == [273570.0, 30, 0, 4568250.0, 0, -30]
 
     return

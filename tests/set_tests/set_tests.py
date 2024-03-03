@@ -62,33 +62,84 @@ def ortho():
 def transformer():
     from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
     from geoCosiCorr3D.geoCore.core_RSM import RSM
+    test_rfm_fn = '/home/saif/PycharmProjects/Geospatial-COSICorr3D/tests/test_dataset/test_ortho_dataset/test_psscene_basic_analytic_udm2/PSScene/20240222_084309_00_241c_1B_AnalyticMS_RPC.TXT'
 
     debug = True
     geoCoordList = []
     cols = [0, 5999, 0, 5999, 3000, 3001]
     lins = [0, 0, 5999, 5999, 3000, 3001]
-    model_data = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5, debug=debug)
-    for xVal, yVal in zip(cols, lins):
-        pix2Ground_obj = cPix2GroundDirectModel(rsmModel=model_data,
-                                                xPix=xVal,
-                                                yPix=yVal,
-                                                rsmCorrectionArray=None,
-                                                demFile=test_dem_fn)
-        geoCoordList.append(pix2Ground_obj.geoCoords)
-    coords = np.asarray(geoCoordList)
-    print(coords)
 
+    print('_____________________________________________________________________')
+    # model_data = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5, debug=debug)
+    # for xVal, yVal in zip(cols, lins):
+    #     pix2Ground_obj = cPix2GroundDirectModel(rsmModel=model_data,
+    #                                             xPix=xVal,
+    #                                             yPix=yVal,
+    #                                             rsmCorrectionArray=None,
+    #                                             demFile=test_dem_fn)
+    #     geoCoordList.append(pix2Ground_obj.geoCoords)
+    # coords = np.asarray(geoCoordList)
+    # print(coords)
+    print('_____________________________________________________________________')
     from geoCosiCorr3D.geoRFM.RFM import RFM
     import geoCosiCorr3D.georoutines.geo_utils as geoRT
-    model_data = RFM(test_rfm_fn)
-    dem_info = geoRT.cRasterInfo(test_dem_fn)
-    # TODO use getGSD from RFM class
-    lonBBox_RFM, latBBox_RFM, altBBox_RFM = model_data.Img2Ground_RFM(col=cols,
-                                                                      lin=lins,
-                                                                      demInfo=dem_info,
-                                                                      corrModel=None)
+    model_data = RFM(test_rfm_fn, dem_fn=test_dem_fn, debug=True)
+
+    # # TODO use getGSD from RFM class
+
+    lonBBox_RFM, latBBox_RFM, altBBox_RFM = model_data.i2g(col=cols,
+                                                           lin=lins,
+                                                           )
     rfm_coords = np.array([lonBBox_RFM, latBBox_RFM, altBBox_RFM]).T
     print('rfm_coords:\n', rfm_coords)
+    # # print(lonBBox_RFM, latBBox_RFM, altBBox_RFM)
+    # lons = [30.52895296, 31.44808898, 30.32253163, 31.22086155, 30.87121092, 30.87136232]
+    # lats = [41.24090926, 41.05062958, 40.72244546, 40.53710197, 40.89057797, 40.89045288]
+    # alts = [1691.49774714, 367.12418755, 30., 918.10812233, 550.42556207, 544.97850478]
+    #
+    # res = model_data.g2i(lons, lats, alts)
+    # print(np.asarray(res).T)
+    #
+    # res_2 = model_data_2.g2i(lons, lats)#, alts)
+    # print(np.asarray(res_2).T)
+
+    # TODO add to unit/functional tests
+    # img = '/home/cosicorr/0-WorkSpace/3-PycharmProjects/geoCosiCorr3D/geoCosiCorr3D/Tests/3-geoOrtho_Test/Sample/Sample1/SPOT2.TIF'
+    # rfm = RFM(test_rfm_fn, debug=True)
+    print(f'attitude range:{model_data.get_altitude_range()}')
+    print(f'GSD:{model_data.get_gsd()}')
+    print(f'geoTransform:{model_data.get_geotransform()}')
+    print(f'fp:{model_data.get_footprint()}')
+    # return
+
+
+def rfm_transformer():
+    from geoCosiCorr3D.geoRFM.RFM import RFM
+    cols = [0, 5999, 0, 5999, 3000, 3001]
+    lins = [0, 0, 5999, 5999, 3000, 3001]
+
+    model_data = RFM(test_rfm_fn, dem_fn=test_dem_fn, debug=True)
+
+    # # TODO use getGSD from RFM class
+
+    lonBBox_RFM, latBBox_RFM, altBBox_RFM = model_data.i2g(col=cols,
+                                                           lin=lins,
+                                                           )
+    rfm_coords = np.array([lonBBox_RFM, latBBox_RFM, altBBox_RFM]).T
+    print('rfm_coords:\n', rfm_coords)
+
+    res = model_data.g2i(rfm_coords[:, 0], rfm_coords[:, 1], rfm_coords[:, 2])
+    print(np.asarray(res).T)
+
+    res = model_data.g2i(rfm_coords[:, 0], rfm_coords[:, 1])
+    print(np.asarray(res).T)
+
+    # TODO add to unit/functional tests
+
+    print(f'attitude range:{model_data.get_altitude_range()}')
+    print(f'GSD:{model_data.get_gsd()}')
+    print(f'geoTransform:{model_data.get_geotransform()}')
+    print(f'fp:{model_data.get_footprint()}')
     return
 
 
@@ -100,8 +151,8 @@ def set_grid():
 
     o_res = 20
     model = RFM(test_rfm_fn, debug=True)
-    model = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5,
-                  debug=True)
+    # model = RSM.build_RSM(metadata_file=dmpFile, sensor_name=C.SENSOR.SPOT1_5,
+    #                       debug=True)
 
     l1a_raster_info = geoRT.cRasterInfo(test_raw_img_fn)
     ortho_grid = SatMapGrid(raster_info=l1a_raster_info,
@@ -111,7 +162,6 @@ def set_grid():
                             new_res=o_res,
                             corr_model=np.zeros((3, 3)),
                             debug=True)
-    # print(ortho_grid)
     print(ortho_grid.grid_fp())
 
     return
@@ -120,6 +170,5 @@ def set_grid():
 if __name__ == '__main__':
     # correlation()
     # ortho()
-    transformer()
+    rfm_transformer()
     # set_grid()
-    pass

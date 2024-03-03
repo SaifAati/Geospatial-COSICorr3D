@@ -80,10 +80,8 @@ class SatMapGrid:
             from geoCosiCorr3D.geoRFM.RFM import RFM
             model_data: RFM = self.model_data
             # TODO use getGSD from RFM class
-            lonBBox_RFM, latBBox_RFM, altBBox_RFM = model_data.Img2Ground_RFM(col=cols,
-                                                                              lin=lins,
-                                                                              demInfo=self.dem_info,
-                                                                              corrModel=self.model_corr)
+            lonBBox_RFM, latBBox_RFM, altBBox_RFM = model_data.i2g(col=cols,
+                                                                   lin=lins)
 
             return np.array([lonBBox_RFM, latBBox_RFM, altBBox_RFM]).T
         else:

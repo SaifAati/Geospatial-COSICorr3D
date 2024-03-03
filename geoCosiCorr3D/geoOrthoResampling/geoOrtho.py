@@ -403,7 +403,7 @@ class RFMOrtho(RawInverseOrtho):
 
     def orthorectify(self):
 
-        self.model = RFM(self.metadata, debug=self.debug)
+        self.model = RFM(self.metadata, dem_fn=self.dem_path, debug=self.debug)
         self.mean_h = self.model.altOff
         self._get_correction_model()
 
@@ -517,10 +517,9 @@ class RFMOrtho(RawInverseOrtho):
                                                                      targetEPSG=4326)
         if self.debug:
             logging.info(">>> RFM Ground 2 Pix >>> ")
-        x_pix, y_pix = self.model.Ground2Img_RFM(lon=lon_flat,
-                                                 lat=lat_flat,
-                                                 alt=alt_flat,
-                                                 corrModel=self.corr_model)
+        x_pix, y_pix = self.model.g2i(lon=lon_flat,
+                                      lat=lat_flat,
+                                      alt=alt_flat)
 
         outX = np.reshape(x_pix, eastArr.shape)
         outY = np.reshape(y_pix, northArr.shape)

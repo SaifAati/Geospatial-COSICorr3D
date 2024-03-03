@@ -9,7 +9,8 @@ from geoCosiCorr3D.geoCore.base.base_RSM_Mapping import \
     BasePix2GroundDirectModel
 from geoCosiCorr3D.geoCore.constants import EARTH
 from geoCosiCorr3D.geoRSM.Interpol import LinearIterpolation
-from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+# from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
 
 class RawPix2GroundDirectModel(BasePix2GroundDirectModel):

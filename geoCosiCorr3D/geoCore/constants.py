@@ -36,10 +36,18 @@ class SOFTWARE:
 
     GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "lib/lfgeoCosiCorr3D.so")
 
+
 @dataclass(frozen=True)
 class SATELLITE_MODELS:
     RSM: str = 'RSM'
     RFM: str = 'RFM'
+
+
+@dataclass(frozen=True)
+class TransformationMethods:
+    RSM: str = SATELLITE_MODELS.RSM
+    RFM: str = SATELLITE_MODELS.RFM
+    IDENTITY: str = 'identity'
 
 
 class ResamplingMethods(Enum):
@@ -55,6 +63,33 @@ class Resampling_Methods:
 
 GEOCOSICORR3D_SATELLITE_MODELS = [SATELLITE_MODELS.RFM, SATELLITE_MODELS.RSM]
 GEOCOSICORR3D_RESAMLING_METHODS = [ResamplingMethods.SINC.value, ResamplingMethods.BILINEAR.value]
+
+
+@dataclass(frozen=True)
+class RfmKeys:
+    LINE_OFF = 'LINE_OFF'
+    SAMP_OFF = 'SAMP_OFF'
+
+    LAT_OFF = 'LAT_OFF'
+    LONG_OFF = 'LONG_OFF'
+
+    HEIGHT_SCALE = 'HEIGHT_SCALE'
+    HEIGHT_OFF = 'HEIGHT_OFF'
+
+    LINE_SCALE = 'LINE_SCALE'
+    SAMP_SCALE = 'SAMP_SCALE'
+    LAT_SCALE = 'LAT_SCALE'
+    LONG_SCALE = 'LONG_SCALE'
+
+    LINE_NUM_COEFF = 'LINE_NUM_COEFF'
+    LINE_DEN_COEFF = 'LINE_DEN_COEFF'
+    SAMP_NUM_COEFF = 'SAMP_NUM_COEFF'
+    SAMP_DEN_COEFF = 'SAMP_DEN_COEFF'
+
+    LON_NUM_COEFF = 'LON_NUM_COEFF'
+    LON_DEN_COEFF = 'LON_DEN_COEFF'
+    LAT_NUM_COEFF = 'LAT_NUM_COEFF'
+    LAT_DEN_COEFF = 'LAT_DEN_COEFF'
 
 
 @dataclass(frozen=True)
@@ -201,8 +236,6 @@ class SatModelParams:
     SAT_MODEL: str
     METADATA: str
     SENSOR: str
-
-
 
 
 class TEST_CONFIG:
