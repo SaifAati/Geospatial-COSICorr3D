@@ -1,4 +1,4 @@
-name: Conda install Ubuntu (CI- GHA)
+name: Linux-Docker-install (CI- GHA)
 on:
   push
 

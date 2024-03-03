@@ -1,4 +1,4 @@
-name: Conda correlation test (CI-GHA)
+name: Correlation-conda (CI-GHA)
 
 on:
   push:
