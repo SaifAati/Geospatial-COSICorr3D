@@ -86,7 +86,7 @@ page.
 
 ### Important Note on Environment Variables
 
-Sometimes, environment variables are not automatically picked up and set during the installation process. To ensure the software operates correctly, it is recommended to manually set these variables. For example, to set the `LD_LIBRARY_PATH` environment variable, you can use the following command in your terminal:
+⚠️ Sometimes, environment variables are not automatically picked up and set during the installation process. To ensure the software operates correctly, it is recommended to manually set these variables. For example, to set the `LD_LIBRARY_PATH` environment variable, you can use the following command in your terminal:
 
 ```bash
 export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatial-COSICorr3D/lib/:$LD_LIBRARY_PATH
@@ -184,7 +184,8 @@ python3 scripts/cosicorr.py transform -h
 
 <details>
 <summary>Transform Module Usage</summary>
-### Example Usage of the `transform` Command
+
+#### Example Usage of the `transform` Command:
 
 This section demonstrates how to use the `transform` command within the GeoCosiCorr3D CLI to perform coordinate transformations. 
 The examples show how to convert pixel coordinates to geographic coordinates (longitude, latitude, and altitude) and vice versa.
@@ -237,6 +238,17 @@ python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.168
 
 
 </details>
+
+### CLI Development Note:
+
+⚠️ Please note that the CLI for  `ortho` module and the `transform RSM` are currently under active development. 
+
+##### Upcoming Release Information
+
+- **Scheduled Release Date**: May 2024
+- **Features to be Included**:
+  - **`ortho` Module**
+  - **RSM Transformation module**
 
 # geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
