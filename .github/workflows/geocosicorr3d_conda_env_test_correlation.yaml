@@ -2,13 +2,9 @@ name: Correlation-conda (CI-GHA)
 
 on:
   push:
+  pull_request:
     branches:
-      - py3.9-update
       - main
-#  pull_request:
-#    branches:
-#      - py3.9-update
-#      - main
 
 jobs:
   setup-and-test:

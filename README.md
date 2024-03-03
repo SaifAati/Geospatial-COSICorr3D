@@ -34,7 +34,6 @@ Questions, comments, and bug reports can be sent to:
     - saif@caltech.edu
     - saifaati@gmail.com
 
-# Introduction
 
 # Workflow
 
