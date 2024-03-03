@@ -8,14 +8,20 @@ Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 # geoCosiCorr3D
 
-Free, and open-source software tailored for satellite image processing.
-geoCosiCorr3D is adept at handling various types of satellite imagery, including push-broom, frame, and push-frame
-sensors.
-geoCoiCorr3D excels in rigorous sensor model (RSM) refinement, rational function model (RFM) refinement,
-and offers advanced features like orthorectification,
-sub-pixel image correlation, and 3D surface displacement extraction.
-Designed for professionals and researchers in geospatial analysis,
-geoCoiCorr3D bridges the gap between complex data processing needs and practical applications.
+GeoCosiCorr3D is an innovative,free and open-source software tailored for 
+satellite image processing.
+geoCosiCorr3D is adept at handling various types of satellite imagery,
+including push-broom, frame, and push-frame sensors.
+At its core, `geoCoiCorr3D` excels in rigorous sensor model (RSM) refinement,
+rational function model (RFM) refinement, and offers advanced processing features: including
+orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
+
+Designed for researchers in remote sensing. 
+`geoCosiCorr3D` serves as a critical bridge linking complex data processing requirements 
+with real-world applicability. 
+It is particularly beneficial for projects focused on change detection, time series analysis,
+and applications in diverse scientific fields such as geology, geomorphology,
+glaciology, planetology, as well as in the assessment and mitigation of natural disasters.
 
 See the [NEWS](NEWS.md) for the most recent additions and upgrades.
 
