@@ -1,5 +1,8 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
+[![Linux-Docker-install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml/badge.svg?branch=py3.9-update)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml)
+[![Linux-Conda-Install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml)
+[![Ortho-conda-tests (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml)
 
 # geoCosiCorr3D
 
@@ -28,48 +31,47 @@ Questions, comments, and bug reports can be sent to:
 ![Alt text](Figs/WorkFlow.png?raw=true "Title")
 
 
-# Installation and dependencies
---------------
-To install `geoCosiCorr3D` from source:
-### Option 1: 
+# Installation
 
-1- Set and activate `geoCosiCorr3D` environment:
+There are two methods available to install `geoCosiCorr3D`: using Conda or Docker. Follow the instructions below based on your preferred installation method.
 
-    conda env create --file geoCosiCorr3D.yml
+## Option 1: Installing with Conda
+
+1. To install using Conda, execute the following script in your terminal:
+    ```bash
+    ./install_cosicorr.sh --conda
+    ```
+   If Conda (or Miniconda) is not already installed on your machine, the script will attempt to install Miniconda automatically.
+2. Once the installation is complete, you can activate the `geoCosiCorr3D` environment with:
+    ```bash
     conda activate geoCosiCorr3D
+    ```
+    Alternatively, you can run Python scripts within the environment without activating it by using:
+    ```bash
+    conda run -n geoCosiCorr3D your_script.py
+    ```
+    Replace `your_script.py` with the name of the Python script you wish to run.
 
-2- Set shared libraries:
+## Option 2: Installing with Docker
 
-For Linux, you have to append the path to the [lib](https://github.com/SaifAati/geoCosiCorr3D/blob/main/geoCosiCorr3D/lib/) directory to LD_LIBRARY_PATH in .bashrc to be able to use geoCosiCorr3D shared libraries,  
-by adding the following line: 
-    
-    LD_LIBRARY_PATH=~/geoCosiCorr3D/lib/:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH
+For Docker installation, execute the following command:
+```bash
+./install_cosicorr.sh --docker
+```
+This command will attempt to install Docker if it's not already installed on your system, start the Docker service, and then pull the base `geoCosiCorr3D` Docker image. Ensure you have the necessary permissions to install software on your system when using this option.
 
+---
 
-Third party libraries and packages (optional):
-
-1- Ames Stereo Pipeline ([ASP](https://github.com/NeoGeographyToolkit/StereoPipeline.git)) for WV1 and WV2 CCD correction using [wv_correct] : set the binary path of ASP in the configuration file ('geoConfig.py')
-
-
-Note:
-
-To update the `geoCosiCorr3D` env you can use the following cmd:
-
-    conda env update --file geoCosiCorr3D.yml --prune
-
-### Option 2: Docker
-1- Build the image:
-
-    docker-compose -f docker-compose.yml build geocosicorr3d
-2- Run a container:
-
-    docker-compose -f  docker-compose.yml run geocosicorr3d
+**Note:** Please follow these steps for a smooth installation process. 
+If you encounter any issues or need further assistance, 
+refer to the documentation (the documentation is still under construction 🚧) or submit an issue on the project's GitHub page.
 
 
-# geoCosiCorr3D: CLI + GUI
-[CLI + GUI doc](Doc/GUI_DOC.md)
 
+# geoCosiCorr3D: CLI 
+
+
+# geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
 # License
 [License](LICENSE)

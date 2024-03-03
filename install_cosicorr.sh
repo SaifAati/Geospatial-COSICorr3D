@@ -149,7 +149,6 @@ install_docker() {
     echo 'Building cosicorr3D base image '
     check_dockerfile_exists
     pulling_base_image
-#    docker build -t geocosicorr3d:latest .
     docker-compose -f docker-compose.yml build geocosicorr3d
 }
 
