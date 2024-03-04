@@ -8,10 +8,8 @@ Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 # geoCosiCorr3D
 
-GeoCosiCorr3D is an innovative,free and open-source software tailored for
-satellite image processing.
-geoCosiCorr3D is adept at handling various types of satellite imagery,
-including push-broom, frame, and push-frame sensors.
+`geoCosiCorr3D` is an innovative, free and open-source software tailored for satellite image processing.
+`geoCosiCorr3D` is adept at handling various types of satellite imagery, including push-broom, frame, and push-frame sensors.
 At its core, `geoCoiCorr3D` excels in rigorous sensor model (RSM) refinement,
 rational function model (RFM) refinement, and offers advanced processing features: including
 orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
@@ -99,7 +97,7 @@ echo 'export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatia
 # geoCosiCorr3D: CLI
 
 
-The primary entry point for the GeoCosiCorr3D command line interface (CLI) is accessible through the Python script
+The primary entry point for the `geoCosiCorr3D` command line interface (CLI) is accessible through the Python script
 located at `scripts/cosicorr.py`. 
 To explore the available commands and their options, you can use the `-h` or `--help` flag.
 Below is a brief overview of how to use the GeoCosiCorr3D CLI:
@@ -187,7 +185,7 @@ python3 scripts/cosicorr.py transform -h
 
 #### Example Usage of the `transform` Command:
 
-This section demonstrates how to use the `transform` command within the GeoCosiCorr3D CLI to perform coordinate transformations. 
+This section demonstrates how to use the `transform` command within the `geoCosiCorr3D` CLI to perform coordinate transformations. 
 The examples show how to convert pixel coordinates to geographic coordinates (longitude, latitude, and altitude) and vice versa.
 
 ```bash
