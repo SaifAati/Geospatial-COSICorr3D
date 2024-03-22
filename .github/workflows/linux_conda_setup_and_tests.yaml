@@ -1,5 +1,4 @@
-name: Linux conda setup & test (CI-GHA)
-
+name: Linux-conda-tests (CI-GHA)
 on:
   push:
   pull_request:
