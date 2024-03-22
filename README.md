@@ -2,7 +2,7 @@ Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
 [![Linux-Conda-Install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml)
 [![Linux-Docker-install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml)
-[![Linux conda setup & test (CI-GHA))](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_linux_conda_setup_and_tests.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_linux_conda_setup_and_tests.yaml)
+[![Linux conda setup & test (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_linux_conda_setup_and_tests.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_linux_conda_setup_and_tests.yaml)
 [![Correlation-conda (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_correlation.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_correlation.yaml)
 [![Ortho-conda (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml)
 
