@@ -6,7 +6,7 @@ OVERWRITE=false
 
 DOCKERFILE_PATH="Dockerfile"
 BASE_IMAGE_NAME="ghcr.io/saifaati/geospatial-cosicorr3d/base_cosicorr3d_image"
-BASE_IMAGE_TAG="base.1.0"
+BASE_IMAGE_TAG="base.1.1"
 
 
 show_help() {
