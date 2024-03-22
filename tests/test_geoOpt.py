@@ -22,7 +22,6 @@ dmp_file = os.path.join(folder, 'SP-2.DIM')
 params = C.SatModelParams(C.SATELLITE_MODELS.RSM, dmp_file, C.SENSOR.SPOT2)
 
 
-@pytest.mark.functional
 def test_geoOpt():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='test_gcp_opt') as tmp_dir:
         geoCosiCorr3DLog("Test_GCP_OPTIMIZATION", log_dir=tmp_dir)

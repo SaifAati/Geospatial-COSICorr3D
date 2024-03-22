@@ -19,7 +19,6 @@ test_rfm_fn = os.path.join(test_folder, "SP2_RPC.txt")
 log = geoCosiCorr3DLog("test_rfm_loading")
 
 
-@pytest.mark.functional
 @pytest.mark.parametrize('rfm_fn', [test_rfm_fn])
 def test_loading_rfm(rfm_fn):
     rpc = ReadRFM(rfm_fn)

@@ -23,7 +23,6 @@ ref_img_path = os.path.join(folder, 'basemap.TIF')
 dem_path = os.path.join(folder, 'DEM.TIF')
 
 
-@pytest.mark.functional
 def test_tp_to_gcps():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_gcp') as tmp_dir:
         tp_2_gcp = TPsTOGCPS(in_tp_file=match_file,
@@ -45,7 +44,6 @@ def test_tp_to_gcps():
     np.testing.assert_allclose(expec_array, gcp_array, rtol=1e-3)
 
 
-@pytest.mark.functional
 def test_asift_tps():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_asift') as tmp_dir:
         tp_obj = cMicMacTp(ref_img_path=img1,
