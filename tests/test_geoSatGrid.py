@@ -21,7 +21,6 @@ test_dem_fn = os.path.join(test_folder, "DEM.tif")
 test_dmp_fn = os.path.join(test_folder, "SP2_METADATA.DIM")
 
 
-@pytest.mark.functional
 @pytest.mark.parametrize('o_res', [20, 5])
 @pytest.mark.parametrize('model_data_type', [[RFM(test_rfm_fn, debug=True), C.SATELLITE_MODELS.RFM],
                                              [RSM.build_RSM(metadata_file=test_dmp_fn, sensor_name=C.SENSOR.SPOT1_5,

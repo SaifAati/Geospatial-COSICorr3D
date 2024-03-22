@@ -24,7 +24,6 @@ COLS = [0, 5999, 0, 5999, 3000, 3001]
 LINS = [0, 0, 5999, 5999, 3000, 3001]
 
 
-@pytest.mark.functional
 @pytest.mark.parametrize('rfm_fn', [test_rfm_fn])
 def test_rfm_transformer(rfm_fn):
     model_data = RFM(test_rfm_fn, dem_fn=test_dem_fn, debug=True)
