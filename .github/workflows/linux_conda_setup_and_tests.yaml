@@ -1,4 +1,4 @@
-name: Linux conda setup & test (CI-GHA)
+name: Linux-Conda-Tests (CI-GHA)
 
 on:
   push:
