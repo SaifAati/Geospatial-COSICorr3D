@@ -136,7 +136,7 @@ class RawMMTP(RawGeoTP):
 
                 if format_cosi_corr:
                     header = "; COSI-Corr tie points file (from Micmac)\n; base file:" + ref_img_name + "\n; warp file:" + \
-                             ref_img_name + "\n; Base Image (x,y), Warp Image (x,y)\n;\n"
+                              raw_img_name+ "\n; Base Image (x,y), Warp Image (x,y)\n;\n"
                     with open(filePath_, 'w') as file:
                         file.write(header)
                         data_df.to_csv(file, header=False, index=False, sep='\t', float_format='%.6f')
@@ -151,7 +151,7 @@ class RawMMTP(RawGeoTP):
                 return
 
         else:
-            logging.warning("No tie points file !!!! ")
+            logging.warning("No tie points file !! ")
             return None
 
     @abstractmethod
