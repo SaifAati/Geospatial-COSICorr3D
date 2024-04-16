@@ -274,6 +274,24 @@ model:
     RFM                 RFM model specific arguments
     RSM                 RSM model specific arguments
 ```
+##### RSM model
+```bash
+usage: cosicorr3d ortho input_img RSM [-h] {Spot1,Spot2,Spot3,Spot4,Spot5,Spot15,Spot6,Spot7,Spot67,WV1,WV2,WV3,WV4,GE,QB,DG} rsm_fn
+
+positional arguments:
+  {Spot1,Spot2,Spot3,Spot4,Spot5,Spot15,Spot6,Spot7,Spot67,WV1,WV2,WV3,WV4,GE,QB,DG}
+                        Sat-name
+  rsm_fn                Specifies the path to the .xml DMP file. Additional formats are supported in GeoCosiCorr3D.pro.
+```
+
+##### RFM model
+```bash
+usage: cosicorr3d ortho input_img RFM [-h] rfm_fn
+
+positional arguments:
+  rfm_fn      RFM file name (.tiff or .TXT)
+```
+
 </details>
 
 ##### Upcoming Release Information
