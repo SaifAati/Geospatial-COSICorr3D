@@ -239,12 +239,13 @@ python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.168
 ### Orthorectification and model refinement
 For detailed usage of the `ortho` module, execute the following command:
 
-<details>
-<summary>Ortho Module Usage</summary>
-
 ```bash
 python3 scripts/cosicorr.py ortho -h
 ```
+
+<details>
+<summary>Ortho Module Usage</summary>
+
 ```bash
 usage: cosicorr3d ortho [-h] [--o_ortho O_ORTHO] [--corr_model CORR_MODEL] [--dem DEM] [--gsd GSD] [--resampling_method {sinc,bilinear}] [--debug] [--show] [--refine]
                         [--ref_img REF_IMG] [--gcps GCPS]
