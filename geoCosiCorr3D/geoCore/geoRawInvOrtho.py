@@ -25,10 +25,9 @@ class InvalidOutputOrthoPath(Exception):
 
 
 class RawInverseOrtho(BaseInverseOrtho):
-    def __init__(self, input_l1a_path: str, output_ortho_path: str, output_trans_path: Optional[str],
-                 ortho_params: Dict, dem_path: Optional[str], debug: bool = True):
+    def __init__(self, input_l1a_path, output_ortho_path, ortho_params, **kwargs):
 
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
         self._ingest()
 
     def _ingest(self):
@@ -40,7 +39,7 @@ class RawInverseOrtho(BaseInverseOrtho):
             self.dem_raster_info = None
 
         self.o_res = self.ortho_params.get("GSD", None)
-        self.ortho_method = self.ortho_params.get("method", None)
+        self.ortho_method = self.ortho_params.get("method", {})
 
         self.ortho_type = self.ortho_method.get("method_type", None)
 

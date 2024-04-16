@@ -15,12 +15,10 @@ from geoCosiCorr3D.geoCore.base.base_geoGCPs import BaseTP2GCP
 
 
 class RawTP2GCP(BaseTP2GCP):
-    def __init__(self, in_tp_file: str, ref_img_path: str, base_img_path: str, dem_path: Optional[str] = None,
-                 output_gcp_path: Optional[str] = None, debug: bool = False):
+    def __init__(self, **kwargs):
 
-        super().__init__(in_tp_file, ref_img_path, base_img_path, dem_path, output_gcp_path)
+        super().__init__(**kwargs)
         logging.info(f'{self.__class__.__name__}: GCP generation')
-        self.debug = debug
 
     def ingest(self) -> None:
         if self.debug:

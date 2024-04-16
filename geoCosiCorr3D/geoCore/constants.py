@@ -6,7 +6,7 @@
 
 import configparser
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import Enum
 from typing import Dict
 
@@ -57,9 +57,12 @@ class ResamplingMethods(Enum):
 
 @dataclass(frozen=True)
 class Resampling_Methods:
-    SINC = ResamplingMethods.SINC.value
-    BILINEAR = ResamplingMethods.BILINEAR.value
+    SINC: str = ResamplingMethods.SINC.value
+    BILINEAR: str = ResamplingMethods.BILINEAR.value
 
+
+GEOCOSICORR3D_SATELLITE_MODELS = [getattr(SATELLITE_MODELS, field.name) for field in fields(SATELLITE_MODELS)]
+GEOCOSICORR3D_RESAMLING_METHODS = [getattr(Resampling_Methods, field.name) for field in fields(Resampling_Methods)]
 
 GEOCOSICORR3D_SATELLITE_MODELS = [SATELLITE_MODELS.RFM, SATELLITE_MODELS.RSM]
 GEOCOSICORR3D_RESAMLING_METHODS = [ResamplingMethods.SINC.value, ResamplingMethods.BILINEAR.value]
