@@ -5,9 +5,10 @@
 """
 
 import os
-from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
+from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
 geoCosiCorr3DLog("image_correlation")
 folder = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/geoCosiCorr3D_scripts/Corr_sample")

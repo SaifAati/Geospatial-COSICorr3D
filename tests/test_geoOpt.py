@@ -25,13 +25,14 @@ params = C.SatModelParams(C.SATELLITE_MODELS.RSM, dmp_file, C.SENSOR.SPOT2)
 def test_geoOpt():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='test_gcp_opt') as tmp_dir:
         geoCosiCorr3DLog("Test_GCP_OPTIMIZATION", log_dir=tmp_dir)
-        cGCPOptimization(gcp_file_path=gcp_file,
-                         raw_img_path=raw_img_path,
-                         ref_ortho_path=ref_img_path,
-                         sat_model_params=params,
-                         dem_path=dem_path,
-                         opt_params=C.TEST_CONFIG.GCP_OPT_CONFIG,
-                         opt_gcp_file_path=tmp_dir,
-                         corr_config=C.TEST_CONFIG.FREQ_CORR_CONFIG,
-                         debug=False,
-                         svg_patches=False)
+        opt = cGCPOptimization(gcp_file_path=gcp_file,
+                               raw_img_path=raw_img_path,
+                               ref_ortho_path=ref_img_path,
+                               sat_model_params=params,
+                               dem_path=dem_path,
+                               opt_params=C.TEST_CONFIG.GCP_OPT_CONFIG,
+                               opt_gcp_file_path=tmp_dir,
+                               corr_config=C.TEST_CONFIG.FREQ_CORR_CONFIG,
+                               debug=False,
+                               svg_patches=False)
+        opt()

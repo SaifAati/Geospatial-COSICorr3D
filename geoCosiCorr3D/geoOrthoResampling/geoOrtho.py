@@ -12,6 +12,7 @@ from inspect import currentframe
 from typing import Dict, Optional
 
 import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig as rcfg
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
@@ -25,6 +26,7 @@ from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoRFM.RFM import RFM
 
+CONFIG_FN = C.SOFTWARE.CONFIG
 geoWarns.wrIgnoreNotGeoreferencedWarning()
 process = psutil.Process(os.getpid())
 G2P_LIB_Path = C.SOFTWARE.GEO_COSI_CORR3D_LIB
@@ -43,16 +45,17 @@ class RSMOrtho(RawInverseOrtho):
                  input_l1a_path: str,
                  output_ortho_path: str,
                  ortho_params: Optional[Dict] = None,
-                 output_trans_path: Optional[str] = None,
-                 dem_path: Optional[str] = None,
-                 debug: bool = True):
+                 **kwargs):
 
         if ortho_params is None:
             ortho_params = {}
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
         self.check_sensor_type()
-        self.orthorectify()
+
         return
+
+    def __call__(self, *args, **kwargs):
+        self.orthorectify()
 
     def orthorectify(self):
         self.model = self._get_rsm_model()
@@ -392,14 +395,15 @@ class RFMOrtho(RawInverseOrtho):
                  input_l1a_path: str,
                  output_ortho_path: str,
                  ortho_params: Optional[Dict] = None,
-                 output_trans_path: Optional[str] = None,
-                 dem_path: Optional[str] = None,
-                 debug: bool = False):
+                 **kwargs):
         if ortho_params is None:
             ortho_params = {}
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
-        self.orthorectify()
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
+
         return
+
+    def __call__(self, *args, **kwargs):
+        self.orthorectify()
 
     def orthorectify(self):
 
@@ -544,21 +548,66 @@ def orthorectify(input_l1a_path: str,
                  ortho_params: Optional[Dict] = None,
                  output_trans_path: Optional[str] = None,
                  dem_path: Optional[str] = None,
-                 debug: bool = False):
-    method_type = ortho_params['method']['method_type']
-    if method_type == C.SATELLITE_MODELS.RFM:
-        RFMOrtho(input_l1a_path=input_l1a_path,
-                 output_ortho_path=output_ortho_path,
-                 dem_path=dem_path,
-                 ortho_params=ortho_params,
-                 output_trans_path=output_trans_path,
-                 debug=debug)
-    if method_type == C.SATELLITE_MODELS.RSM:
-        RSMOrtho(input_l1a_path=input_l1a_path,
-                 output_ortho_path=output_ortho_path,
-                 output_trans_path=output_trans_path,
-                 dem_path=dem_path,
-                 ortho_params=ortho_params,
-                 debug=debug)
+                 refine: bool = False,
+                 gcp_fn: Optional[str] = None,
+                 ref_img_path: Optional[str] = None,
+                 debug: bool = False,
+                 show=True):
+    sat_model = C.SatModelParams(ortho_params['method']['method_type'],
+                                 ortho_params['method']['metadata'],
+                                 ortho_params['method'].get('sensor', None))
+    logging.info(f'sat_model:{sat_model}')
+    config = rcfg.ConfigReader(config_file=CONFIG_FN).get_config
+    if refine:
+        workspace_folder = os.path.dirname(output_ortho_path)
+        if gcp_fn is None:
+            from geoCosiCorr3D.geoOptimization.gcpOptimization import \
+                cGCPOptimization
+            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
+            from geoCosiCorr3D.geoTiePoints.wf_features import features
+            if ref_img_path is None:
+                raise ValueError('ref_img_path cannot be None')
+            match_file = features(img1=ref_img_path,
+                                  img2=input_l1a_path,
+                                  tp_params=config[C.ConfigKeys.FEATURE_PTS_PARAMS],
+                                  output_folder=workspace_folder,
+                                  show=False)
+            gcps = tp2gcp(in_tp_file=match_file,
+                          base_img_path=input_l1a_path,
+                          ref_img_path=ref_img_path,
+                          dem_path=dem_path,
+                          debug=show)
+            gcps()
+            opt = cGCPOptimization(gcp_file_path=gcps.output_gcp_path,
+                                   raw_img_path=input_l1a_path,
+                                   ref_ortho_path=ref_img_path,
+                                   sat_model_params=sat_model,
+                                   dem_path=dem_path,
+                                   opt_params=config[C.ConfigKeys.OPT_PARAMS],
+                                   debug=debug)
+            opt()
+            logging.info(f'correction model file:{opt.corr_model_file}')
+            ortho_params['method']['corr_model'] = opt.corr_model_file
 
-    return
+    if sat_model.SAT_MODEL == C.SATELLITE_MODELS.RFM:
+        ortho = RFMOrtho(input_l1a_path=input_l1a_path,
+                         output_ortho_path=output_ortho_path,
+                         dem_path=dem_path,
+                         ortho_params=ortho_params,
+                         output_trans_path=output_trans_path,
+                         debug=debug)
+        ortho()
+    if sat_model.SAT_MODEL == C.SATELLITE_MODELS.RSM:
+        ortho = RSMOrtho(input_l1a_path=input_l1a_path,
+                         output_ortho_path=output_ortho_path,
+                         output_trans_path=output_trans_path,
+                         dem_path=dem_path,
+                         ortho_params=ortho_params,
+                         debug=debug)
+        ortho()
+
+        return
+
+    if __name__ == '__main__':
+        config = rcfg.ConfigReader(config_file=CONFIG_FN).get_config
+        print(config)

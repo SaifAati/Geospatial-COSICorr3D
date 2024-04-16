@@ -15,8 +15,8 @@ class BaseInverseOrtho(ABC):
                  input_l1a_path: str,
                  output_ortho_path: str,
                  ortho_params: Dict,
-                 output_trans_path: Optional[str],
                  dem_path: Optional[str],
+                 output_trans_path: Optional[str] = None,
                  debug: bool = True):
         self.ortho_geo_transform: List[float] = []
         self.input_l1a_path = input_l1a_path

@@ -29,6 +29,8 @@ class SOFTWARE:
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
     WKDIR = os.path.join(os.path.dirname(GEOCOSICORR3D_PACKAGE_DIR), 'GEO_COSI_CORR_3D_WD/')
     geoCosiCorr3DOrientation = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
+    CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                          'geoCosiCorrBaseCfg/geo_3DDA_config.yaml')
     CORR_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'geoCosiCorrBaseCfg/correlation.yaml')
     CORR_PARAMS_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
@@ -64,8 +66,14 @@ class Resampling_Methods:
 GEOCOSICORR3D_SATELLITE_MODELS = [getattr(SATELLITE_MODELS, field.name) for field in fields(SATELLITE_MODELS)]
 GEOCOSICORR3D_RESAMLING_METHODS = [getattr(Resampling_Methods, field.name) for field in fields(Resampling_Methods)]
 
-GEOCOSICORR3D_SATELLITE_MODELS = [SATELLITE_MODELS.RFM, SATELLITE_MODELS.RSM]
-GEOCOSICORR3D_RESAMLING_METHODS = [ResamplingMethods.SINC.value, ResamplingMethods.BILINEAR.value]
+
+@dataclass(frozen=True)
+class ConfigKeys:
+    FEATURE_PTS_PARAMS: str = 'feature_points_params'
+    SATMODEL_PARAMS: str = 'sat_model_params'
+    OPT_PARAMS: str = 'opt_params'
+    ORTHO_PARAMS: str = 'ortho_params'
+    OPT_CORR_CONFIG: str = 'opt_corr_config'
 
 
 @dataclass(frozen=True)
