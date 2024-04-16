@@ -7,10 +7,12 @@ You may rename cosicorr.py to cosicorr for convenience.
 >> sudo mv cosicorr.py /usr/local/bin/cosicorr
 """
 import argparse
-
-import numpy as np
+import os
+from pathlib import Path
 
 import geoCosiCorr3D.geoCore.constants as C
+import numpy as np
+from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
 
@@ -19,7 +21,48 @@ def parse_list(value):
 
 
 def ortho_func(args):
-    raise NotImplementedError
+    from geoCosiCorr3D.geoOrthoResampling.geoOrtho import orthorectify
+
+    if args.model_name == C.SATELLITE_MODELS.RFM:
+        ortho_params = {"method": {"method_type": args.model_name,
+                                   "metadata": args.rfm_fn,
+                                   "corr_model": args.corr_model,
+                                   },
+                        "GSD": args.gsd,
+                        "resampling_method": args.resampling_method}
+
+        if os.path.isdir(args.o_ortho):
+            o_ortho_path = os.path.join(
+                args.o_ortho,
+                f"ORTHO_{Path(args.input_img).stem}_{ortho_params['resampling_method']}_RFM_{ortho_params['GSD']}_GSD.tif")
+
+        else:
+            o_ortho_path = args.o_ortho
+        geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+
+        orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.debug)
+
+    if args.model_name == C.SATELLITE_MODELS.RSM:
+        if args.model_name == C.SATELLITE_MODELS.RSM:
+            ortho_params = {"method": {"method_type": args.model_name,
+                                       "metadata": args.rsm_fn,
+                                       "corr_model": args.corr_model,
+                                       "sensor": args.sat_id,
+                                       },
+                            "GSD": args.gsd,
+                            "resampling_method": args.resampling_method}
+
+            if os.path.isdir(args.o_ortho):
+                o_ortho_path = os.path.join(
+                    args.o_ortho,
+                    f"ORTHO_{Path(args.input_img).stem}_{ortho_params['resampling_method']}_RSM_{ortho_params['GSD']}_GSD.tif")
+
+            else:
+                o_ortho_path = args.o_ortho
+            geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+
+            orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.refine,
+                         args.gcps, args.ref_img, args.debug,args.show)
 
 
 def transform_func(args):
@@ -81,10 +124,36 @@ def correlate_func(args):
 
 
 def ortho_subparser(subparsers):
-    ortho_parser = subparsers.add_parser('ortho', help='Orthorectification')
-    ortho_parser.add_argument('--input', help='Input file for ortho', required=True)
-    ortho_parser.add_argument('--output', help='Output file for ortho', required=True)
-    ortho_parser.set_defaults(func=ortho_func)
+    ortho_parser = subparsers.add_parser('ortho', help='Orthorectification process')
+    ortho_parser.add_argument('input_img', type=str, help='Input file for ortho')
+    ortho_parser.add_argument('--o_ortho', type=str, default=os.getcwd(),
+                              help='Output path for ortho. Defaults to the current working directory.')
+    ortho_parser.add_argument('--corr_model', type=str, default=None, help='Correction model path (None)')
+    ortho_parser.add_argument('--dem', type=str, default=None, help='DEM path (None)')
+    ortho_parser.add_argument('--gsd', type=float, default=None, help='Output file for ortho (None)')
+    ortho_parser.add_argument('--resampling_method', type=str, default=C.Resampling_Methods.SINC,
+                              choices=C.GEOCOSICORR3D_RESAMLING_METHODS, help='Resampling method (SINC)')
+
+    ortho_parser.add_argument("--debug", action="store_true")
+    ortho_parser.add_argument("--show", action="store_true")
+
+    ortho_parser.add_argument("--refine", action="store_true",
+                              help="Refine model, this require GCPs or reference imagery to collect GCPs")
+    ortho_parser.add_argument('--ref_img', type=str, default=None, help='Reference Ortho image (None)')
+    ortho_parser.add_argument('--gcps', type=str, default=None, help='GCPs file (None)')
+
+    model_subparsers = ortho_parser.add_subparsers(title='model', dest='model_name', metavar='<model_name>',
+                                                   required=True)
+
+    rfm_parser = model_subparsers.add_parser(C.SATELLITE_MODELS.RFM, help="RFM model specific arguments")
+    rfm_parser.add_argument('rfm_fn', type=str, help="RFM file name (.tiff or .TXT)")
+    rfm_parser.set_defaults(func=ortho_func)
+
+    rsm_parser = model_subparsers.add_parser(C.SATELLITE_MODELS.RSM, help="RSM model specific arguments")
+    rsm_parser.add_argument('sat_id', type=str, choices=C.GEOCOSICORR3D_SENSORS_LIST, help="Sat-name")
+    rsm_parser.add_argument('rsm_fn', type=str, help="Specifies the path to the .xml DMP file. Additional formats "
+                                                     "are supported in GeoCosiCorr3D.pro.")
+    rsm_parser.set_defaults(func=ortho_func)
 
 
 def transform_subparser(subparsers):
@@ -93,7 +162,7 @@ def transform_subparser(subparsers):
     transform_parser.add_argument('x', type=parse_list, help="list: x=cols and if with invert flag: lon")
     transform_parser.add_argument('y', type=parse_list, help="list: y=lines and if with invert flag: lat")
     transform_parser.add_argument("--inv", action="store_true", help="Transform form ground to image space.")
-    transform_parser.add_argument('--dem_fn', type=int, default=None, help="DEM file name (None)")
+    transform_parser.add_argument('--dem_fn', type=str, default=None, help="DEM file name (None)")
 
     model_subparsers = transform_parser.add_subparsers(title='model', dest='model_name', metavar='<model_name>',
                                                        required=True)
@@ -106,8 +175,8 @@ def transform_subparser(subparsers):
     rsm_parser = model_subparsers.add_parser(C.SATELLITE_MODELS.RSM, help="RSM model specific arguments")
     rsm_parser.add_argument('sat_id', type=str, help="Sat-name")
     rsm_parser.add_argument('rsm_fn', type=str, help="Specifies the path to the .xml DMP file. Additional formats "
-                                                     "are supported in GeoCosiCorr3D.pro."
-)
+                                                     "are supported in GeoCosiCorr3D.pro"
+                            )
     rsm_parser.set_defaults(func=transform_func)
 
 

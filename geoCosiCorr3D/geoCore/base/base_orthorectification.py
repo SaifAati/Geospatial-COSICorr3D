@@ -14,9 +14,9 @@ class BaseInverseOrtho(ABC):
     def __init__(self,
                  input_l1a_path: str,
                  output_ortho_path: str,
-                 output_trans_path: Optional[str],
                  ortho_params: Dict,
                  dem_path: Optional[str],
+                 output_trans_path: Optional[str] = None,
                  debug: bool = True):
         self.ortho_geo_transform: List[float] = []
         self.input_l1a_path = input_l1a_path
@@ -111,10 +111,6 @@ class BaseOrthoGrid(ABC):
 
     def __init__(self, sat_model: Type['SatModel'], grid_epsg: int = None, gsd: float = None, ):
         self.sat_model = sat_model
-        # modelType,
-        # modelCorr = np.zeros((3, 3)),
-        # rDEM = None,
-        newRes = None,
         self.grid_epsg = grid_epsg
         self.grid_gsd = gsd
 

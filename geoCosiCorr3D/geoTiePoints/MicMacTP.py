@@ -19,10 +19,14 @@ from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 class cMicMacTp(RawMMTP):
 
-    def __init__(self, ref_img_path: str, raw_img_path: str, o_dir: Optional[str] = None,
-                 mode: str = C.ASIFT_TP_PARAMS.MODE, scale_factor: Optional[float] = None,
+    def __init__(self, ref_img_path: str,
+                 raw_img_path: str,
+                 o_dir: Optional[str] = None,
+                 mode: str = C.ASIFT_TP_PARAMS.MODE,
+                 scale_factor: Optional[float] = None,
                  tmp_dir: Optional[str] = None,
-                 plot_tps: bool = False, tp_format: str = "COSI-Corr",
+                 plot_tps: bool = False,
+                 tp_format: str = "COSI-Corr",
                  max_pts: Optional[int] = None):
 
         config = {"method": "mmSIFT", "scale_factor": scale_factor, "mode": mode,

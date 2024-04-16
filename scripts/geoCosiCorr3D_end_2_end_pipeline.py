@@ -3,17 +3,20 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2023
 """
-import os.path
-import pandas, shutil
-import warnings
-import numpy as np
-from tqdm import tqdm
 import logging
+import os.path
+import shutil
+import warnings
 from pathlib import Path
 from typing import List, Optional
+
 import geoCosiCorr3D.geoCore.constants as C
+import numpy as np
+import pandas
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
-from geoCosiCorr3D.georoutines.file_cmd_routines import get_files_based_on_extension
+from geoCosiCorr3D.georoutines.file_cmd_routines import \
+    get_files_based_on_extension
+from tqdm import tqdm
 
 
 class GeoCosiCorr3DPipeline:
@@ -46,7 +49,8 @@ class GeoCosiCorr3DPipeline:
         logging.info(f'{self.__class__.__name__}:: configuration:{self.config}')
 
     def _ingest(self):
-        from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import ConfigReader
+        from geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig import \
+            ConfigReader
         self.pre_post_pairs_file = os.path.join(self.workspace_dir, "PrePost_Pairs_overlap.csv")
         self.o_3DD_folder = os.path.join(self.workspace_dir, 'o3DDA')
         self.sets_path = os.path.join(self.workspace_dir, "Sets_3DDA.csv")
@@ -192,7 +196,7 @@ class GeoCosiCorr3DPipeline:
         return
 
     def gcp_generation(self, data_file):
-        from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
+        from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
         def isNaN(string):
             return string != string
 
@@ -204,11 +208,12 @@ class GeoCosiCorr3DPipeline:
             logging.info(f'{self.__class__.__name__}:-- GCP generation--: [{item + 1}]/[{len(validIndexList)}]')
             match_file = dataDf.loc[index, "MatchFile"]
             if match_file is not None and isNaN(match_file) == False and dataDf.loc[index, "Tp"] > min_tps:
-                gcp = TPsTOGCPS(in_tp_file=match_file,
+                gcp = tp2gcp(in_tp_file=match_file,
                                 base_img_path=dataDf.loc[index, "ImgPath"],
                                 ref_img_path=self.ref_ortho,
                                 dem_path=self.dem_file,
                                 debug=True)
+                gcp()
                 dataDf.loc[index, "GCPs"] = gcp.output_gcp_path
                 logging.info(
                     f'{self.__class__.__name__}: GCP GENERATION: GCPs for:{dataDf.loc[index, "ImgPath"]} --> {gcp.output_gcp_path}')
@@ -222,7 +227,8 @@ class GeoCosiCorr3DPipeline:
         return
 
     def rsm_refinement(self, data_file, recompute=False):
-        from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
+        from geoCosiCorr3D.geoOptimization.gcpOptimization import \
+            cGCPOptimization
 
         Path(self.rsm_refinement_folder).mkdir(parents=True, exist_ok=True)
 
@@ -257,6 +263,7 @@ class GeoCosiCorr3DPipeline:
                                        corr_config=self.config['opt_corr_config'],
                                        debug=False,
                                        svg_patches=False)
+                opt()
                 dataDf.loc[validIndex, "RSM_Refinement"] = opt.opt_report_path
             else:
                 msg = "RSM optimization and correction files exists for img :{}".format(dataDf.loc[validIndex, "Name"])
@@ -291,11 +298,12 @@ class GeoCosiCorr3DPipeline:
                 get_files_based_on_extension(os.path.dirname(dataDf.loc[validIndex, "RSM_Refinement"]),
                                              f"*_{loop_min_err}_correction.txt")[0]
             self.config['ortho_params']['GSD'] = ortho_gsd
-            RSMOrtho(input_l1a_path=dataDf.loc[validIndex, "ImgPath"],
+            ortho = RSMOrtho(input_l1a_path=dataDf.loc[validIndex, "ImgPath"],
                      ortho_params=self.config['ortho_params'],
                      output_ortho_path=output_ortho_path,
                      output_trans_path=output_trans_path,
                      dem_path=self.dem_file)
+            ortho()
             dataDf.loc[validIndex, "Orthos"] = output_ortho_path
             dataDf.loc[validIndex, "Trxs"] = output_trans_path
             # break
@@ -325,8 +333,8 @@ class GeoCosiCorr3DPipeline:
     @staticmethod
     def compute_pre_post_overlap(pre_event_df, post_event_df, overlap_th: Optional[int] = None):
         import geopandas
-        import shapely.geometry
         import rasterio
+        import shapely.geometry
 
         preList = [pair for index, pair in pre_event_df.iterrows()]
         postList = [pair for index, pair in post_event_df.iterrows()]
@@ -435,9 +443,10 @@ class GeoCosiCorr3DPipeline:
     @staticmethod
     def compute_pairs(dataDf, overlap_th: Optional[float] = None):
         from itertools import combinations
+
         import geopandas
-        import shapely.geometry
         import rasterio
+        import shapely.geometry
         fp_polygon = []
 
         for img_ in dataDf["Orthos"]:
@@ -544,9 +553,9 @@ class GeoCosiCorr3DPipeline:
     def plot_pairs_distribution(corrPair, oFolder=None, save=True):
 
         import matplotlib.gridspec as gridspec
-        import seaborn as sns
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (AutoMinorLocator)
+        import seaborn as sns
+        from matplotlib.ticker import AutoMinorLocator
         fig = plt.figure()
         fontSize = 14
         gs = gridspec.GridSpec(1, 1)
@@ -579,10 +588,11 @@ class GeoCosiCorr3DPipeline:
         return
 
     def compute_3DD(self, data_file):
-        import pandas
         import datetime
-        from geoCosiCorr3D.geo3DDA.misc import generate_3DD_set_combination
+
+        import pandas
         from geoCosiCorr3D.geo3DDA.main_geo3DDA import cCombination3DD
+        from geoCosiCorr3D.geo3DDA.misc import generate_3DD_set_combination
         Path(self.o_3DD_folder).mkdir(parents=True, exist_ok=True)
         set_data = pandas.read_csv(self.sets_path)
 

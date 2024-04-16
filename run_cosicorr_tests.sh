@@ -1,9 +1,12 @@
 #!/bin/bash
 
-TEST_DIR="tests/"
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
+TEST_DIR="${SCRIPT_DIR}/tests/"
+TEST_LIST="${SCRIPT_DIR}/tests/geoCosiCorr3D_tests.txt"
 
-TEST_LIST="tests/geoCosiCorr3D_tests.txt"
+echo "Tests directory: $TEST_DIR"
+echo "Test list file: $TEST_LIST"
 
 export LD_LIBRARY_PATH=$(pwd)/lib/:$LD_LIBRARY_PATH
 if [ ! -f "$TEST_LIST" ]; then
