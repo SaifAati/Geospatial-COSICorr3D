@@ -8,7 +8,6 @@ import tempfile
 
 import numpy as np
 import pandas
-import pytest
 
 import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
