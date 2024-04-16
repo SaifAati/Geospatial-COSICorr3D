@@ -236,9 +236,44 @@ python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.168
 
 </details>
 
-### CLI Development Note:
+### Orthorectification and model refinement
+For detailed usage of the `ortho` module, execute the following command:
 
-⚠️ Please note that the CLI for  `ortho` module and the `transform RSM` are currently under active development. 
+<details>
+<summary>Ortho Module Usage</summary>
+
+```bash
+python3 scripts/cosicorr.py ortho -h
+```
+```bash
+usage: cosicorr3d ortho [-h] [--o_ortho O_ORTHO] [--corr_model CORR_MODEL] [--dem DEM] [--gsd GSD] [--resampling_method {sinc,bilinear}] [--debug] [--show] [--refine]
+                        [--ref_img REF_IMG] [--gcps GCPS]
+                        input_img <model_name> ...
+
+positional arguments:
+  input_img             Input file for ortho
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --o_ortho O_ORTHO     Output path for ortho. Defaults to the current working directory.
+  --corr_model CORR_MODEL
+                        Correction model path (None)
+  --dem DEM             DEM path (None)
+  --gsd GSD             Output file for ortho (None)
+  --resampling_method {sinc,bilinear}
+                        Resampling method (SINC)
+  --debug
+  --show
+  --refine              Refine model, this require GCPs or reference imagery to collect GCPs
+  --ref_img REF_IMG     Reference Ortho image (None)
+  --gcps GCPS           GCPs file (None)
+
+model:
+  <model_name>
+    RFM                 RFM model specific arguments
+    RSM                 RSM model specific arguments
+```
+</details>
 
 ##### Upcoming Release Information
 
