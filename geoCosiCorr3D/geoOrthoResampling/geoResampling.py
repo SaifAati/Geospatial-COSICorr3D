@@ -5,10 +5,11 @@
 """
 import logging
 import warnings
-from typing import Optional, Dict
-import numpy as np
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
+from typing import Dict, Optional
+
 import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import numpy as np
 from geoCosiCorr3D.geoCore.core_resampling import (BilinearResampler,
                                                    RawResampling,
                                                    ResamplingEngine,

@@ -5,18 +5,20 @@
 """
 
 import logging
+import os
 import shutil
 import uuid
-import click
 from pathlib import Path
 
+import click
+import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig as rcfg
-from geoCosiCorr3D.geoCore.constants import *
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
+from geoCosiCorr3D.geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import \
+    validatePath
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
-from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
 from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
-from geoCosiCorr3D.geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import validatePath
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
+from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
 
 
 def single_ortho(ortho_inputs, ortho_config):
@@ -25,13 +27,15 @@ def single_ortho(ortho_inputs, ortho_config):
         match_file = features(img1=ortho_inputs.ref_ortho_path,
                               img2=ortho_inputs.raw_img_path,
                               tp_params=ortho_config.feature_points_params,
-                              output_folder=ortho_inputs.workspace_folder)
+                              output_folder=ortho_inputs.workspace_folder,
+                              show=True)
 
-        gcp = TPsTOGCPS(in_tp_file=match_file,
+        gcp = tp2gcp(in_tp_file=match_file,
                         base_img_path=ortho_inputs.raw_img_path,
                         ref_img_path=ortho_inputs.ref_ortho_path,
                         dem_path=ortho_inputs.dem_path,
                         debug=True)
+        gcp()
         opt = cGCPOptimization(gcp_file_path=gcp.output_gcp_path,
                                raw_img_path=ortho_inputs.raw_img_path,
                                ref_ortho_path=ortho_inputs.ref_ortho_path,
@@ -43,22 +47,26 @@ def single_ortho(ortho_inputs, ortho_config):
                                corr_config=ortho_config.opt_corr_config,
                                debug=True,
                                svg_patches=True)
+        opt()
         logging.info(f'correction model file:{opt.corr_model_file}')
         ortho_config.ortho_params['method']['corr_model'] = opt.corr_model_file
 
-    if ortho_inputs.metadata_type == SATELLITE_MODELS.RSM:
-        RSMOrtho(input_l1a_path=ortho_inputs.raw_img_path,
+    if ortho_inputs.metadata_type == C.SATELLITE_MODELS.RSM:
+        ortho = RSMOrtho(input_l1a_path=ortho_inputs.raw_img_path,
                  ortho_params=ortho_config.ortho_params,
                  output_ortho_path=ortho_inputs.output_ortho_path,
                  output_trans_path=ortho_inputs.output_trans_path,
                  dem_path=ortho_inputs.dem_path)
-    if ortho_inputs.metadata_type == SATELLITE_MODELS.RFM:
-        RFMOrtho(input_l1a_path=ortho_inputs.raw_img_path,
+        ortho()
+    if ortho_inputs.metadata_type == C.SATELLITE_MODELS.RFM:
+        rfm_ortho= RFMOrtho(input_l1a_path=ortho_inputs.raw_img_path,
                  ortho_params=ortho_config.ortho_params,
                  output_ortho_path=ortho_inputs.output_ortho_path,
                  output_trans_path=ortho_inputs.output_trans_path,
                  dem_path=ortho_inputs.ref_ortho_path,
                  )
+        rfm_ortho()
+
 
     return
 

@@ -19,6 +19,7 @@ from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOptimization.RSM_Refinement import cRSMRefinement
 from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator, SpatialCorrelator)
 from geoCosiCorr3D.geoOrthoResampling.GCPPatch import (GCPPatch, OrthoPatch, RawInverseOrthoPatch)
+from geoCosiCorr3D.geoTiePoints.misc import opt_report
 
 geoWarn.wrIgnoreNotGeoreferencedWarning()
 
@@ -45,7 +46,7 @@ class cGCPOptimization:
         self.sat_model_params = sat_model_params
         self.debug = debug
         self.opt_gcp_file = opt_gcp_file_path
-        self.svg_patches = True
+        self.svg_patches = True  # svg_patches
         if opt_params is None:
             self.opt_params = {}
         else:
@@ -56,6 +57,8 @@ class cGCPOptimization:
             self.corr_params = corr_config
         self.ingest()
         self.set_patch_sz()
+
+    def __call__(self, *args, **kwargs):
         self.optimize()
 
     def ingest(self):
@@ -387,8 +390,8 @@ class cGCPOptimization:
         self.gcp_df_corr['lat'] = np.where(self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id'],
                                            res[0][0], self.gcp_df_corr['lat'])
         if self.dem_info is not None:
-            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
-            alt = TPsTOGCPS.get_gcp_alt(lon=res[1][0], lat=res[0][0], dem_path=self.dem_path)
+            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
+            alt = tp2gcp.get_gcp_alt(lon=res[1][0], lat=res[0][0], dem_path=self.dem_path)
             self.gcp_df_corr['alt'] = np.where(self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id'],
                                                alt, self.gcp_df_corr['alt'])
 
@@ -507,11 +510,11 @@ class cGCPOptimization:
 
             logging.info(f'{self.__class__.__name__}:: mean_err[pix]:{mean_err_xy_pix} --  RMSE[pix]:{xy_rmse}')
 
-            if self.debug and self.svg_patches:
-                # TODO another plot will be the cumulative error plot, where we can compute the elbow thrshold and filter outliers
-                ## similar to what I have implemented for RFM with Skysat/PlanetScope.
-                self.plot_error_distribution(dx_pixs, dy_pixs, loop_nb=loop,
-                                             saving_folder=os.path.dirname(self.opt_gcp_file))
+            # if self.debug and self.svg_patches:
+            #     # TODO another plot will be the cumulative error plot, where we can compute the elbow thrshold and filter outliers
+            #     ## similar to what I have implemented for RFM with Skysat/PlanetScope.
+            #     self.plot_error_distribution(dx_pixs, dy_pixs, loop_nb=loop,
+            #                                  saving_folder=os.path.dirname(self.opt_gcp_file))
             # if mean_err_xy_pix <= self.mean_error_th:
             #     break
 
@@ -523,9 +526,8 @@ class cGCPOptimization:
                                             Path(self.opt_gcp_file).stem + ".opt_report.csv")
         df_report.to_csv(self.opt_report_path, index=False)
         self.opt_report_df = df_report
-        if self.debug:
-            from geoCosiCorr3D.geoTiePoints.misc import opt_report
-            opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)
+
+        opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)
         return
 
     @staticmethod
