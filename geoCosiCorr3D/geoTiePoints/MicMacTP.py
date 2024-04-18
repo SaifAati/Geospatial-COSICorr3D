@@ -17,9 +17,10 @@ from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
-class cMicMacTp(RawMMTP):
+class AsiftKpsMM(RawMMTP):
 
-    def __init__(self, ref_img_path: str,
+    def __init__(self,
+                 ref_img_path: str,
                  raw_img_path: str,
                  o_dir: Optional[str] = None,
                  mode: str = C.ASIFT_TP_PARAMS.MODE,
@@ -75,15 +76,16 @@ class cMicMacTp(RawMMTP):
                                                              img_j=tmp_raw_img_path,
                                                              homol_dir=homol_path,
                                                              format_cosi_corr=self.cosi_corr_format,
-                                                             max_tps = self.max_pts)
+                                                             max_tps=self.max_pts)
             if self.tp_report_dic is not None:
                 self.tp: pandas.DataFrame = self.tp_report_dic["DataFrame"]
                 self.o_tp_path = fileRT.CopyFile(inputFilePath=self.tp_report_dic["TpFile"], outputFolder=self.o_dir)
                 logging.info("Copy to :{}".format(self.o_tp_path))
 
             if self.plot_tps:
-                # self.plot_matches(img_i=refImg, img_j=img_, matches=self.tp, tpPath=self.tpPath)
-                self.plot_matches_v2(img_i=tmp_ref_img_path, img_j=tmp_raw_img_path, matches_file=self.o_tp_path)
+                self.plot_matches_v2(img_i=tmp_ref_img_path,
+                                     img_j=tmp_raw_img_path,
+                                     matches_file=self.o_tp_path)
 
         except:
             logging.error("No matched Tie points ")

@@ -11,7 +11,7 @@ import pandas
 import pytest
 
 import geoCosiCorr3D.geoCore.constants as C
-from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
+from geoCosiCorr3D.geoTiePoints.MicMacTP import AsiftKpsMM
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
 
 folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
@@ -24,7 +24,7 @@ dem_path = os.path.join(folder, 'DEM.TIF')
 
 
 def asift_tps():
-    tp_obj = cMicMacTp(ref_img_path=img1,
+    tp_obj = AsiftKpsMM(ref_img_path=img1,
                        raw_img_path=img2,
                        scale_factor=1 / 6,
                        plot_tps=True,

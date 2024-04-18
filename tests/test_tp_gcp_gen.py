@@ -10,7 +10,7 @@ import numpy as np
 import pandas
 
 import geoCosiCorr3D.geoCore.constants as C
-from geoCosiCorr3D.geoTiePoints.MicMacTP import cMicMacTp
+from geoCosiCorr3D.geoTiePoints.MicMacTP import AsiftKpsMM
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
 
 folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset")
@@ -46,13 +46,12 @@ def test_tp_to_gcps():
 
 def test_asift_tps():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_asift') as tmp_dir:
-        tp_obj = cMicMacTp(ref_img_path=img1,
+        tp_obj = AsiftKpsMM(ref_img_path=img1,
                            raw_img_path=img2,
                            scale_factor=1 / 6,
                            plot_tps=False,
                            o_dir=tmp_dir
                            )
         expec_tps = np.loadtxt(os.path.join(folder, 'expec_mmtps.pts'))
-        #
         assert np.allclose(np.loadtxt(tp_obj.o_tp_path, comments=';'), expec_tps)
     return

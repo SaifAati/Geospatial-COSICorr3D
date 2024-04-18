@@ -225,10 +225,11 @@ class RENDERING:
 @dataclass(frozen=True)
 class TP_DETECTION_METHODS:
     ASIFT = 'ASIFT'
-    CVTP = 'cvTP'
+    SIFT_CV = 'SIFT_CV'
     GEOSIFT = 'geoSIFT'
     ASP_SIFT = 'aspSIFT'
     ASP_IAGD = 'asp_IAGD'
+    GRID_AREA = 'grid_area'
 
 
 @dataclass(frozen=True)

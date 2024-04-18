@@ -11,7 +11,7 @@ def normalize_uint8(data):
 
 
 def plot_matches(ax, image1, image2, keypoints1, keypoints2, matches,
-                 keypoints_color='k', matches_color=None, only_matches=False,
+                 keypoints_color='r', matches_color=None, only_matches=False,
                  alignment='horizontal', only_keypoints=False):
     """Plot matched features.
 
