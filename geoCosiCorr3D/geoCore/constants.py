@@ -8,7 +8,7 @@ import configparser
 import os
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 from osgeo import gdal
@@ -243,16 +243,9 @@ class ASIFT_TP_PARAMS:
     MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/mmlibs/bin/mm3d")
 
 
-@dataclass(frozen=True)
-class SatModelParams:
-    SAT_MODEL: str
-    METADATA: str
-    SENSOR: str
-
-
 class TEST_CONFIG:
     FREQ_CORR_PARAMS = {
-        "window_size": [64, 64, 64, 64],
+        "window_size": 4 * [64],
         "step": [8, 8],
         "grid": True,
         "mask_th": 0.95,
@@ -271,3 +264,90 @@ class TEST_CONFIG:
                        }
     GCP_OPT_CONFIG = {'nb_loops': 3, 'snr_th': 0.9, 'mean_error_th': 1 / 20,
                       'resampling_method': Resampling_Methods.SINC}
+
+
+@dataclass
+class GCPKeys:
+    ID: str = 'gcp_id'
+    LON: str = 'lon'
+    LAT: str = 'lat'
+    ALT: str = 'alt'
+    COL: str = 'col'
+    LIN: str = 'lin'
+    WEIGHT: str = 'weight'
+    X_MAP: str = 'x_map'
+    Y_MAP: str = 'y_map'
+    EPSG: str = 'epsg'
+    REF_IMG: str = 'ref_img'
+    TARGET_IMG: str = 'target_img'
+    DEM: str = 'dem'
+
+
+@dataclass
+class RsmRefinementModels:
+    LINEAR: str = 'linear'
+    QUADRATIC: str = 'quadratic'
+
+
+@dataclass
+class Solvers:
+    W_GAUSS_MARKOV: str = 'wlsq_gm'
+    SP_LM: str = 'lm'
+
+
+@dataclass
+class ImgExtents:
+    COL_MIN = 'COL_MIN'
+    COL_MAX = 'COL_MAX'
+    LIN_MIN = 'LIN_MIN'
+    LIN_MAX = 'LIN_MAX'
+
+
+@dataclass
+class GrdMapExtents:
+    UP_LEFT_EW = 'up_left_ew'
+    UP_LEFT_NS = 'up_left_ns'
+    BOT_RIGHT_EW = 'bot_right_ew'
+    BOT_RIGHT_NS = 'bot_right_ns'
+
+
+@dataclass(frozen=True)
+class SatModelParams:
+    SAT_MODEL: str
+    METADATA: str
+    SENSOR: Optional[str] = None
+
+
+@dataclass
+class Observation:
+    COL: float
+    LIN: float
+    DU: np.ndarray
+    WEIGHT: float = 1.0
+
+
+@dataclass
+class GCP:
+    ID: str
+    LON: float
+    LAT: float
+    ALT: float
+    COL: float
+    LIN: float
+    # WEIGHT: float
+    # X_MAP: float
+    # Y_MAP: float
+    # EPSG: int
+    # REF_IMG: str
+    # TARGET_IMG: str
+    # DEM: str
+
+
+@dataclass
+class Patch:
+    id: str
+    data: np.ndarray
+    img_extent: Optional[Dict] = None
+    ground_extent: Optional[Dict] = None
+    status: bool = True
+    gsd: Optional[float] = None

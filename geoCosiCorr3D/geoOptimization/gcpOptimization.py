@@ -3,6 +3,7 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import dataclasses
 import sys, pandas
 import logging
 import matplotlib.pyplot as plt
@@ -24,7 +25,6 @@ from geoCosiCorr3D.geoTiePoints.misc import opt_report
 geoWarn.wrIgnoreNotGeoreferencedWarning()
 
 MULTIPROCS_2LOOP_DEBUG = False
-
 
 class cGCPOptimization:
     def __init__(self,
@@ -77,6 +77,7 @@ class cGCPOptimization:
         else:
             logging.info(f'{self.__class__.__name__}: loading DEM ')
             self.dem_info = geoRT.cRasterInfo(self.dem_path)
+
         self.nb_loops = self.opt_params.get('nb_loops', 3)
         self.snr_th = self.opt_params.get('snr_th', 0.9)
         self.snr_weighting = self.opt_params.get('snr_weighting', True)
@@ -124,7 +125,7 @@ class cGCPOptimization:
 
         self.corr_method = self.corr_params.get('correlator_name', 'frequency')
         corr_params = self.corr_params.get('correlator_params', {})
-        self.corr_wz = corr_params.get('window_size', [128, 128, 128, 128])
+        self.corr_wz = corr_params.get('window_size', 4*[128])
         logging.info(f'correlation params: {self.corr_method} || {self.corr_wz}')
 
         if self.svg_patches:
@@ -452,9 +453,16 @@ class cGCPOptimization:
             dx_pixs: List = []
             dy_pixs: List = []
             logging.info(f'{self.__class__.__name__}: GCP patch generation ...')
-            gcp_patches = generate_gcp_patches(self.nb_gcps, self.raw_img_info, self.sat_model, self.corr_model,
-                                               self.patch_sz, self.ref_ortho_info, self.patches_folder,
-                                               self.gcp_df_corr, dem_path, loop)
+            gcp_patches = generate_gcp_patches(self.nb_gcps,
+                                               self.raw_img_info,
+                                               self.sat_model,
+                                               self.corr_model,
+                                               self.patch_sz,
+                                               self.ref_ortho_info,
+                                               self.patches_folder,
+                                               self.gcp_df_corr,
+                                               dem_path,
+                                               loop)
 
             for gcp_patch in gcp_patches:
                 dx, dy, ew, ns, snr = self.compute_patch_shift(patch_path=gcp_patch[0],
@@ -643,5 +651,8 @@ def generate_gcp_patches(nb_gcps, raw_img_info, sat_model, corr_model, patch_sz,
     for index, arg in enumerate(arg_list):
         logging.info(f'___ Loop:{loop}  GCP:{index + 1}/{len(arg_list)} ___')
         gcp_patches.append(cGCPOptimization.generate_patches(*arg))
+        print(gcp_patches)
+        import sys
+        sys.exit()
 
     return gcp_patches

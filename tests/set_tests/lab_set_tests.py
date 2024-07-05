@@ -3,9 +3,9 @@ import os
 import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
 
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 
-geoCosiCorr3DLog("set_tests")
+GeoCosiCorr3DLog("set_tests")
 
 folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset/test_ortho_dataset")
 test_raw_img_fn = os.path.join(folder, "RAW_SP2.TIF")

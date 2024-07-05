@@ -8,10 +8,10 @@ import logging
 from typing import Optional
 
 import numpy as np
+import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RSMOrtho
-from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import (
-    EstimateGeoTransformation, get_dem_dims)
+from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import (EstimateGeoTransformation, get_dem_dims)
 from geoCosiCorr3D.georoutines.geo_utils import Convert, cRasterInfo
 
 
@@ -122,8 +122,19 @@ class RSMG2P:
         topRightGround = [extent_utm_coords[0][1], extent_utm_coords[1][1], extent_utm_coords[2][1]]
         bottomRightGround = [extent_utm_coords[0][2], extent_utm_coords[1][2], extent_utm_coords[2][2]]
         bottomLeftGround = [extent_utm_coords[0][3], extent_utm_coords[1][3], extent_utm_coords[2][3]]
-        logging.info(
-            f'{self.__class__.__name__}: patch ground extent:{topLeftGround, topRightGround, bottomLeftGround, bottomRightGround, iXPixList, iYPixList}')
+
+        ground_extent = {C.GrdMapExtents.UP_LEFT_EW: topLeftGround[0],
+                         C.GrdMapExtents.UP_LEFT_NS: topLeftGround[1],
+                         C.GrdMapExtents.BOT_RIGHT_EW: bottomRightGround[0],
+                         C.GrdMapExtents.BOT_RIGHT_NS: bottomRightGround[1]}
+
+        img_extent = {C.ImgExtents.COL_MIN: 0,
+                      C.ImgExtents.COL_MAX: self.rsmModel.nbCols - 1,
+                      C.ImgExtents.LIN_MIN: 0,
+                      C.ImgExtents.LIN_MAX: self.rsmModel.nbRows - 1}
+        if self.debug:
+            logging.info(
+                f'{self.__class__.__name__}: Ground extent:{ground_extent} - Image extent:{img_extent}')
 
         pixObs = np.array([iXPixList, iYPixList]).T
 
@@ -165,5 +176,4 @@ class RSMG2P:
         return oArray
 
     def get_pix_coords(self):
-
         return self.oArray

@@ -9,7 +9,7 @@ import pytest
 import logging
 import numpy as np
 import geoCosiCorr3D.geoCore.constants as C
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.geoRFM.RFM import RFM
 
 folder = os.path.join(C.SOFTWARE.PARENT_FOLDER, "tests/test_dataset/test_ortho_dataset")
@@ -18,7 +18,7 @@ test_dem_fn = os.path.join(folder, "DEM.tif")
 test_rfm_fn = os.path.join(folder, "SP2_RPC.txt")
 dmpFile = os.path.join(folder, "SP2_METADATA.DIM")
 
-log = geoCosiCorr3DLog("test_sat_models")
+log = GeoCosiCorr3DLog("test_sat_models")
 
 COLS = [0, 5999, 0, 5999, 3000, 3001]
 LINS = [0, 0, 5999, 5999, 3000, 3001]

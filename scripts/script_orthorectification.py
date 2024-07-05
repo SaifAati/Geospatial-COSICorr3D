@@ -15,7 +15,7 @@ import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig as rcfg
 from geoCosiCorr3D.geoCosiCorr3D_CLI.geoImageCorrelation_cli.cli_utils import \
     validatePath
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.geoOptimization.gcpOptimization import cGCPOptimization
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RFMOrtho, RSMOrtho
 from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
@@ -75,7 +75,7 @@ def main_geoOrtho(input_file, config_file):
     input_dict = rcfg.parse_inputs(input_file)
     ortho_inputs = rcfg.IngestInputs(input_dict)
     wk_dir = ortho_inputs.workspace_folder
-    geoCosiCorr3DLog(ortho_inputs.log_name, wk_dir)
+    GeoCosiCorr3DLog(ortho_inputs.log_name, wk_dir)
     logging.info(f'ortho inputs:{ortho_inputs.__dict__}')
     config = rcfg.ConfigReader(config_file=config_file).get_config
 

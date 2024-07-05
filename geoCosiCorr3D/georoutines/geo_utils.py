@@ -66,12 +66,8 @@ class cRasterInfo(BaseRasterInfo):
                               row_off_max: int,
                               band_number: Optional[int] = 1):
         """
-
-        Args:
-
-        Returns:
-        References: https://gdal.org/python/osgeo.gdal-pysrc.html#Band.ReadAsArray
-        https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
+            References: https://gdal.org/python/osgeo.gdal-pysrc.html#Band.ReadAsArray
+            https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
         """
         from rasterio.windows import Window
         raster = rasterio.open(self.get_raster_path)

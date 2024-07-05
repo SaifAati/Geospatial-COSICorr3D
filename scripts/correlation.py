@@ -7,10 +7,10 @@
 import os
 
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
-geoCosiCorr3DLog("image_correlation")
+GeoCosiCorr3DLog("image_correlation")
 folder = os.path.join(SOFTWARE.PARENT_FOLDER, "geoCosiCorr3D/geoCosiCorr3D_scripts/Corr_sample")
 
 img1 = os.path.join(folder, "BASE_IMG.TIF")

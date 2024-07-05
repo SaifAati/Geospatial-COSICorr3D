@@ -7,7 +7,7 @@
 import argparse
 
 from geoCosiCorr3D.geoCore.constants import CORR_METHODS, SOFTWARE
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
 
@@ -79,5 +79,5 @@ def main():
 
 
 if __name__ == "__main__":
-    geoCosiCorr3DLog("image_correlation")
+    GeoCosiCorr3DLog("image_correlation")
     main()

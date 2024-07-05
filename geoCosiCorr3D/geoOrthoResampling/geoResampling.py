@@ -4,7 +4,6 @@
 # Copyright (C) 2022
 """
 import logging
-import warnings
 from typing import Dict, Optional
 
 import geoCosiCorr3D.geoCore.constants as C
@@ -24,23 +23,11 @@ class Resampling(RawResampling):
     def resample(self):
         if self.debug:
             logging.info(
-                "RESAMPLING::____________________ Resampling::{} ____________________________".format(self.method))
+                f"{self.__class__.__name__}:RESAMPLING::____________________ Resampling::{self.method} _______________")
 
-        nbBands = self.raster_info.band_number
-        ##Fixme: force band = 1
-        if nbBands > 1:
-            nbBands = 1
-            msg = f"Multi-band image: This version does not support multi-band ortho-rectification, only band {nbBands} will be orthorectified "
-            warnings.warn(msg)
-            logging.warning(msg)
-
-        # Definition of the matrices dimensions
-        dims_geom = [0, self.trans_matx.shape[2] - 1, 0, self.trans_matx.shape[1] - 1]
-
-        if nbBands == 1:
-            oOrthoTile = np.zeros((dims_geom[3] - dims_geom[2] + 1, dims_geom[1] - dims_geom[0] + 1))
-        else:
-            # geoErrors.erNotImplemented(routineName="This version does not support multi-band ortho-rectification")
+        nb_bands = self.raster_info.band_number
+        if nb_bands > 1:
+            nb_bands = 1
             logging.warning(
                 f'Multi-band orthorectification is not supported in {C.SOFTWARE.SOFTWARE_NAME}_v_{C.SOFTWARE.VERSION}')
 
@@ -50,10 +37,12 @@ class Resampling(RawResampling):
         if self.debug:
             logging.info(f'sz:{sz}')
 
-        raw_l1a_subset_img_extent = self.compute_l1A_img_tile_subset(self.raster_info, matrix_x, matrix_y)
+        self.raw_l1a_subset_img_extent = self.compute_l1A_img_tile_subset(self.raster_info, matrix_x, matrix_y)
 
-        logging.info(f'L1A subset extent to orthorectify :{raw_l1a_subset_img_extent}')
-        dims = list(raw_l1a_subset_img_extent.values())
+        if self.debug:
+            logging.info(
+                f'{self.__class__.__name__}:L1A subset extent to orthorectify :{self.raw_l1a_subset_img_extent}')
+        dims = list(self.raw_l1a_subset_img_extent.values())
 
         if np.all(dims == 0):
             logging.error('ERROR: enable to orthorectify the subset ')
@@ -61,7 +50,7 @@ class Resampling(RawResampling):
         im1A = self.raster_info.image_as_array_subset(dims[0],
                                                       dims[1],
                                                       dims[2],
-                                                      dims[3], band_number=nbBands)
+                                                      dims[3], band_number=nb_bands)
 
         ## Correct the matrices coordinates for the subsetting of the extracted image
         matrix_x = matrix_x - dims[0]
@@ -75,9 +64,9 @@ class Resampling(RawResampling):
 
 
 if __name__ == '__main__':
-    from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+    from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 
-    log = geoCosiCorr3DLog("Test_Resampling")
+    log = GeoCosiCorr3DLog("Test_Resampling")
     engine1 = ResamplingEngine(debug=True)
     logging.info('====================================================')
     engine2 = ResamplingEngine(resampling_params={'method': 'sinc', 'kernel_sz': 3}, debug=True)

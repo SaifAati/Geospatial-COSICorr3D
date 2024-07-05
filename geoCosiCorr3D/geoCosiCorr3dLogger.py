@@ -11,20 +11,25 @@ from typing import Optional
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 
 
-class geoCosiCorr3DLog:
+class GeoCosiCorr3DLog:
     def __init__(self, log_prefix: str, log_dir: Optional[str] = None):
-        if log_dir is None:
-            log_dir = SOFTWARE.WKDIR
+        # Set default log directory based on some application-wide setting
+        self.log_dir = log_dir or getattr(SOFTWARE, 'WKDIR', 'default_log_dir')
 
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-        now = datetime.now()
-        GENERATION_TIME = now.strftime("%m-%d-%Y-%H-%M-%S")
+        # Ensure the log directory exists
+        os.makedirs(self.log_dir, exist_ok=True)
+
+        # Create a unique timestamp for the log file
+        generation_time = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        log_filename = f"{log_prefix}_{generation_time}.log"
+        full_log_path = os.path.join(self.log_dir, log_filename)
+
+        # Set up the basic configuration for logging
         logging.basicConfig(
             level=logging.INFO,
-            format="%(asctime)s [%(levelname)s] %(message)s",
+            format="%(asctime)s [%(levelname)s] - %(message)s",
             handlers=[
-                logging.FileHandler(os.path.join(log_dir, log_prefix + "_" + GENERATION_TIME + '.log')),
+                logging.FileHandler(full_log_path),
                 logging.StreamHandler(sys.stdout)
             ]
         )

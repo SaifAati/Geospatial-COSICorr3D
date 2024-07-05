@@ -110,34 +110,34 @@ class RawResampling(ResamplingEngine):
         minY = math.floor(np.nanmin(matrix_y))
         maxY = math.ceil(np.nanmax(matrix_y))
 
-        raw_img_pix_extent: Dict = {'col_pix_min': 0, 'col_pix_max': rasterInfo.raster_width - 1,
-                                    'row_pix_min': 0, 'row_pix_max': rasterInfo.raster_height}
+        raw_img_pix_extent: Dict = {C.ImgExtents.COL_MIN: 0, C.ImgExtents.COL_MAX: rasterInfo.raster_width - 1,
+                                    C.ImgExtents.LIN_MIN: 0, C.ImgExtents.LIN_MAX: rasterInfo.raster_height}
         ## Compute the necessary image subset dimension
         # initialize as the full image raw image size
         raw_img_subset_pix_extent = raw_img_pix_extent.copy()
 
-        if (minX - margin) > raw_img_pix_extent['col_pix_min']:
-            raw_img_subset_pix_extent['col_pix_min'] = minX - margin
-        if (maxX + margin) < raw_img_pix_extent['col_pix_max']:
-            raw_img_subset_pix_extent['col_pix_max'] = maxX + margin
+        if (minX - margin) > raw_img_pix_extent[C.ImgExtents.COL_MIN]:
+            raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] = minX - margin
+        if (maxX + margin) < raw_img_pix_extent[C.ImgExtents.COL_MAX]:
+            raw_img_subset_pix_extent[C.ImgExtents.COL_MAX] = maxX + margin
 
-        if (minY - margin) > raw_img_pix_extent['row_pix_min']:
-            raw_img_subset_pix_extent['row_pix_min'] = minY + margin
+        if (minY - margin) > raw_img_pix_extent[C.ImgExtents.LIN_MIN]:
+            raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY + margin
 
-        if (maxY + margin) < raw_img_pix_extent['row_pix_max']:
-            raw_img_pix_extent['row_pix_max'] = maxY + margin
+        if (maxY + margin) < raw_img_pix_extent[C.ImgExtents.LIN_MAX]:
+            raw_img_pix_extent[C.ImgExtents.LIN_MAX] = maxY + margin
 
         if self.method == C.Resampling_Methods.SINC:
             borderX, borderY = SincResampler.compute_resampling_distance(matrix_x, matrix_y, matrix_x.shape,
                                                                          self.resampling_cfg.kernel_sz)
-            if (minX - borderX) > raw_img_pix_extent['col_pix_min']:
-                raw_img_subset_pix_extent['col_pix_min'] = minX - borderX
-            if (maxX + borderX) < raw_img_pix_extent['col_pix_max']:
-                raw_img_subset_pix_extent['col_pix_max'] = maxX + borderX
-            if (minY - borderY) > raw_img_pix_extent['row_pix_min']:
-                raw_img_subset_pix_extent['row_pix_min'] = minY - borderY
-            if (maxY + borderY) < raw_img_pix_extent['row_pix_max']:
-                raw_img_subset_pix_extent['row_pix_max'] = maxY + borderY
+            if (minX - borderX) > raw_img_pix_extent[C.ImgExtents.COL_MIN]:
+                raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] = minX - borderX
+            if (maxX + borderX) < raw_img_pix_extent[C.ImgExtents.COL_MAX]:
+                raw_img_subset_pix_extent[C.ImgExtents.COL_MAX] = maxX + borderX
+            if (minY - borderY) > raw_img_pix_extent[C.ImgExtents.LIN_MIN]:
+                raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY - borderY
+            if (maxY + borderY) < raw_img_pix_extent[C.ImgExtents.LIN_MAX]:
+                raw_img_subset_pix_extent[C.ImgExtents.LIN_MAX] = maxY + borderY
 
         if self.debug:
             logging.info(f'L1A Img subset img extent:{raw_img_subset_pix_extent}')
@@ -146,8 +146,8 @@ class RawResampling(ResamplingEngine):
         ## Check for situation where the entire current matrice tile is outside image boundaries
         ## In that case need to output a zero array, either on file or in the output array, and
         ## continue to the next tile
-        if (raw_img_subset_pix_extent['col_pix_min'] > raw_img_subset_pix_extent['col_pix_max']) or (
-                raw_img_subset_pix_extent['row_pix_min'] > raw_img_subset_pix_extent['row_pix_max']):
+        if (raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] > raw_img_subset_pix_extent[C.ImgExtents.COL_MAX]) or (
+                raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] > raw_img_subset_pix_extent[C.ImgExtents.LIN_MAX]):
             warnings.warn(
                 f"ERROR:Raw image subset is out of the boundary of the the input L1A img{raw_img_subset_pix_extent}"
                 f"--> out of :{raw_img_pix_extent}")

@@ -13,7 +13,7 @@ from typing import List, Optional
 import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
 import pandas
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.georoutines.file_cmd_routines import \
     get_files_based_on_extension
 from tqdm import tqdm
@@ -39,7 +39,7 @@ class GeoCosiCorr3DPipeline:
         self.workspace_dir = os.path.join(C.SOFTWARE.WKDIR,
                                           self.__class__.__name__) if workspace_dir is None else workspace_dir
         Path(self.workspace_dir).mkdir(parents=True, exist_ok=True)
-        geoCosiCorr3DLog(self.__class__.__name__, self.workspace_dir)
+        GeoCosiCorr3DLog(self.__class__.__name__, self.workspace_dir)
         self.config_file = config_file
         self._ingest()
         logging.info(f'{self.__class__.__name__}:: WD:{self.workspace_dir}')

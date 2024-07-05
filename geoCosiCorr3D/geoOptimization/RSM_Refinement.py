@@ -3,13 +3,12 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
-import sys
+import logging
 
+import numpy as np
 import pandas
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import logging
 
 
 class cRSMRefinement:
@@ -131,13 +130,13 @@ class cRSMRefinement:
     def compute_correction(self):
         for i in range(3):
             corrParams = self.fit_correction_plan(x=self.gcp_df['xPix'],
-                                                   y=self.gcp_df['yPix'],
-                                                   w=self.gcp_df['weight'],
-                                                   obs=self.dU[:, i])
+                                                  y=self.gcp_df['yPix'],
+                                                  w=self.gcp_df['weight'],
+                                                  du=self.dU[:, i])
             self.corr_model[:, i] = corrParams
         return
 
-    def fit_correction_plan(self, x, y, w, obs):
+    def fit_correction_plan(self, x, y, w, du):
         """
         perform wighted least  square  ==> we could improve this subroutine by an iterative wighted LSQ
         :param x: x -coordinates
@@ -158,9 +157,9 @@ class cRSMRefinement:
 
         gamma_3 = np.sum(w_square)
 
-        delta1 = np.sum(w_square * x * obs)
-        delta2 = np.sum(w_square * y * obs)
-        delta3 = np.sum(w_square * obs)
+        delta1 = np.sum(w_square * x * du)
+        delta2 = np.sum(w_square * y * du)
+        delta3 = np.sum(w_square * du)
 
         mat = np.array([
             [alpha1, alpha2, alpha3],
@@ -174,8 +173,7 @@ class cRSMRefinement:
 
     def plot_error(self):
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                                       AutoMinorLocator)
+        from matplotlib.ticker import (AutoMinorLocator)
         dU_est = np.dot(self.cartCoordPlaneCoefs.T,
                         np.array([self.gcps[:, 3], self.gcps[:, 4], self.gcps.shape[0] * [1]])).T
         dU_res = self.dU - dU_est

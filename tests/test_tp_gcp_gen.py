@@ -25,10 +25,10 @@ dem_path = os.path.join(folder, 'DEM.TIF')
 def test_tp_to_gcps():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_gcp') as tmp_dir:
         tp_2_gcp = tp2gcp(in_tp_file=match_file,
-                             base_img_path=raw_img_path,
-                             ref_img_path=ref_img_path,
-                             dem_path=dem_path,
-                             output_gcp_path=tmp_dir)
+                          base_img_path=raw_img_path,
+                          ref_img_path=ref_img_path,
+                          dem_path=dem_path,
+                          output_gcp_path=tmp_dir)
         tp_2_gcp()
 
     gcp_df = tp_2_gcp.gcp_df[['lon', 'lat', 'alt', 'xPix', 'yPix', 'x_map', 'y_map', 'epsg']]
@@ -40,18 +40,18 @@ def test_tp_to_gcps():
     gcp_array = np.array([gcp_df['lon'].values, gcp_df['lat'].values, gcp_df['alt'].values,
                           gcp_df['xPix'].values, gcp_df['yPix'].values, gcp_df['x_map'].values,
                           gcp_df['y_map'].values]).T
-    # assert np.allclose(expec_array, gcp_array)
     np.testing.assert_allclose(expec_array, gcp_array, rtol=1e-3)
 
 
 def test_asift_tps():
     with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='_test_asift') as tmp_dir:
         tp_obj = AsiftKpsMM(ref_img_path=img1,
-                           raw_img_path=img2,
-                           scale_factor=1 / 6,
-                           plot_tps=False,
-                           o_dir=tmp_dir
-                           )
+                            raw_img_path=img2,
+                            scale_factor=1 / 6,
+                            plot_tps=False,
+                            o_dir=tmp_dir
+                            )
         expec_tps = np.loadtxt(os.path.join(folder, 'expec_mmtps.pts'))
         assert np.allclose(np.loadtxt(tp_obj.o_tp_path, comments=';'), expec_tps)
     return
+# TODO as CV_SIFT

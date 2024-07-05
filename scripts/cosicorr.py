@@ -12,7 +12,7 @@ from pathlib import Path
 
 import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
-from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
+from geoCosiCorr3D.geoCosiCorr3dLogger import GeoCosiCorr3DLog
 from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 
 
@@ -38,7 +38,7 @@ def ortho_func(args):
 
         else:
             o_ortho_path = args.o_ortho
-        geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+        GeoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
 
         orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.debug)
 
@@ -59,7 +59,7 @@ def ortho_func(args):
 
             else:
                 o_ortho_path = args.o_ortho
-            geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+            GeoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
 
             orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.refine,
                          args.gcps, args.ref_img, args.debug,args.show)
