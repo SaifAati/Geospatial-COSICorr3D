@@ -190,8 +190,8 @@ class SincResampler:
             n_row_img = ctypes.c_int(l1a_img.shape[1])  # dims[1] - dims[0] + 1)
 
             sincLib.main_sinc_adp_resampling_(
-                matrix_x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 matrix_y.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                matrix_x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 l1a_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 ctypes.byref(width),
                 o_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
