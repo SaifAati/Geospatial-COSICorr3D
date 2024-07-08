@@ -7,10 +7,13 @@ import logging
 import warnings
 from typing import Dict, Optional
 
-import geoCosiCorr3D.geoCore.constants as C
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import numpy as np
 import psutil
+import cv2
+
+import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+
 from geoCosiCorr3D.geoCore.core_resampling import (BilinearResampler,
                                                    RawResampling,
                                                    ResamplingEngine,
@@ -22,8 +25,9 @@ class Resampling(RawResampling):
     _cache = {}
 
     def __init__(self, input_raster_info: geoRT.cRasterInfo, transformation_mat: np.ndarray,
-                 resampling_params: Optional[Dict] = None, debug: bool = False):
+                 resampling_params: Optional[Dict] = None, debug: bool = False, tile_num: int = 0):
         misc.log_available_memory(self.__class__.__name__)
+        self.tile_num = tile_num
         super().__init__(input_raster_info, transformation_mat, resampling_params, debug)
 
     def resample(self):
@@ -84,6 +88,10 @@ class Resampling(RawResampling):
         # FIXME: there is something wrong here why I am loading the full image instead of loading the subset,
         #  dims points always to the full extent for the first 2 tiles
         l1a_img = self.raster_info.image_as_array_subset(*dims_key)
+
+        normalized_img = cv2.normalize(l1a_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        equalized_img = cv2.equalizeHist(normalized_img)
+        cv2.imwrite(f'l1a_img_equalized_{self.tile_num}.png', equalized_img)
 
         if l1a_img.dtype != np.float32 or l1a_img.dtype != np.float_:
             if self.method == C.Resampling_Methods.SINC:

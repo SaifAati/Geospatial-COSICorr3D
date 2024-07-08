@@ -123,7 +123,7 @@ class RSMOrtho(RawInverseOrtho):
 
             resample = Resampling(input_raster_info=self.l1a_raster_info,
                                   transformation_mat=matTile,
-                                  resampling_params={'method': self.resampling_method})
+                                  resampling_params={'method': self.resampling_method}, tile_num=index)
             oOrthoTile = resample.resample()
 
             if self.debug:
