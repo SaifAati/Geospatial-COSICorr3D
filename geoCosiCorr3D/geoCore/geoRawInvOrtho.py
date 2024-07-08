@@ -8,16 +8,19 @@ import math
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+from typing import List, Type
+
+import numpy as np
+import psutil
+from osgeo import gdal, osr
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-import numpy as np
+import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.base.base_orthorectification import (
     BaseInverseOrtho, BaseOrthoGrid, SatModel)
-from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS, SOFTWARE
+from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
-from osgeo import gdal, osr
 
 
 class InvalidOutputOrthoPath(Exception):
@@ -28,7 +31,9 @@ class RawInverseOrtho(BaseInverseOrtho):
     def __init__(self, input_l1a_path, output_ortho_path, ortho_params, **kwargs):
 
         super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
+        misc.log_available_memory(self.__class__.__name__)
         self._ingest()
+        misc.log_available_memory(f'{self.__class__.__name__}: ingest')
 
     def _ingest(self):
         self.l1a_raster_info = geoRT.cRasterInfo(self.input_l1a_path)
@@ -95,6 +100,29 @@ class RawInverseOrtho(BaseInverseOrtho):
         return [self.ortho_grid.o_up_left_ew, self.ortho_grid.o_res, 0, self.ortho_grid.o_up_left_ns, 0,
                 -1 * self.ortho_grid.o_res]
 
+    @staticmethod
+    def compute_nb_rows_per_tile(o_raster_w, memory_usage_percent=0.5, bit_depth=32):
+        """
+        Dynamically computes the number of rows per tile based on available system memory and desired memory usage percentage.
+
+        Args:
+        - o_raster_w: The width of the raster.
+        - memory_usage_percent: The percentage of available memory to use for computing the number of rows per tile.
+        - bit_depth: The bit depth of the raster.
+
+        Returns:
+        - The number of rows per tile.
+        """
+        # Get available memory
+        available_memory = psutil.virtual_memory().available
+        memory_to_use = available_memory * memory_usage_percent
+        bytes_per_pixel = 4 * 2
+        # Calculate the number of pixels that can fit into the desired memory usage
+        num_pixels = memory_to_use // bytes_per_pixel
+        nb_rows_per_tile = num_pixels // (o_raster_w * bit_depth * 2)
+
+        return math.floor(nb_rows_per_tile)
+
     def compute_num_tiles(self):
         """
         Compute the required number of tiles.
@@ -106,7 +134,8 @@ class RawInverseOrtho(BaseInverseOrtho):
             ((self.ortho_grid.o_bot_right_ew - self.ortho_grid.o_up_left_ew) / self.ortho_grid.o_res) + 1)
         self.o_raster_h = round(
             ((self.ortho_grid.o_up_left_ns - self.ortho_grid.o_bot_right_ns) / self.ortho_grid.o_res) + 1)
-        self.nb_rows_per_tile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (self.o_raster_w * 32 * 2))
+        # self.nb_rows_per_tile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (self.o_raster_w * 32 * 2))
+        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, memory_usage_percent=0.2)
         if self.debug:
             logging.info(f'{self.__class__.__name__}: nb_rows_per_tile: {self.nb_rows_per_tile}')
         self.n_tiles = int(self.o_raster_h / self.nb_rows_per_tile)
@@ -143,7 +172,7 @@ class RawInverseOrtho(BaseInverseOrtho):
 
         self.o_ortho_raster = driver.Create(self.output_ortho_path, self.o_raster_w, self.o_raster_h, 1,
                                             gdal.GDT_UInt16,
-                                            options=["TILED=YES", "COMPRESS=LZW", "BIGTIFF=YES"])
+                                            options=["COMPRESS=LZW", "PREDICTOR=2", "BIGTIFF=YES"])
         self.o_ortho_raster.SetGeoTransform(
             (self.ortho_geo_transform[0], self.ortho_geo_transform[1], self.ortho_geo_transform[2],
              self.ortho_geo_transform[3],
@@ -278,15 +307,6 @@ class RawInverseOrtho(BaseInverseOrtho):
         return h_new
 
     def compute_transformation_matrix(self, ortho_data):
-        """
-
-        Args:
-            need_loop:
-            init_data:
-
-        Returns:
-
-        """
         pass
 
 
