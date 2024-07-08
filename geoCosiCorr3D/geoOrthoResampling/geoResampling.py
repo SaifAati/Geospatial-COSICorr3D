@@ -90,21 +90,19 @@ class Resampling(RawResampling):
         l1a_img = self.raster_info.image_as_array_subset(*dims_key)
 
         print('----------Plotting ----------')
-        l1a_img_normalized = (l1a_img - np.min(l1a_img)) / (np.max(l1a_img) - np.min(l1a_img)) * 255
-        l1a_img_8bit = l1a_img_normalized.astype(np.uint8)
-        pil_img = Image.fromarray(l1a_img_8bit)
-        equalized_img = ImageOps.equalize(pil_img)
-        equalized_img.save(f'l1a_img_equalized_{self.tile_num}.png')
+        import tifffile
+        l1a_img_16bit = l1a_img.astype(np.uint16)
+        tifffile.imwrite(f'tile_{self.tile_num}.tif', l1a_img_16bit)
 
         if l1a_img.dtype != np.float32 or l1a_img.dtype != np.float_:
             if self.method == C.Resampling_Methods.SINC:
                 if check_memory_before_conversion(l1a_img, size_float=8):
-                    l1a_img = l1a_img.astype(np.float_)
+                    l1a_img = l1a_img.astype(np.float_, copy =False)
                 else:
                     raise MemoryError("Insufficient memory for conversion to float 64, try with bilinear resampling")
             else:
                 if check_memory_before_conversion(l1a_img, size_float=4):
-                    l1a_img = l1a_img.astype(np.float32)
+                    l1a_img = l1a_img.astype(np.float32, copy= False)
                 else:
                     raise MemoryError("Insufficient memory for conversion to float 32")
 

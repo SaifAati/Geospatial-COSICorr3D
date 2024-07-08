@@ -18,7 +18,7 @@ import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.base.base_orthorectification import (
     BaseInverseOrtho, BaseOrthoGrid, SatModel)
-from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS
+from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS, SOFTWARE
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 
@@ -135,7 +135,7 @@ class RawInverseOrtho(BaseInverseOrtho):
         self.o_raster_h = round(
             ((self.ortho_grid.o_up_left_ns - self.ortho_grid.o_bot_right_ns) / self.ortho_grid.o_res) + 1)
         # self.nb_rows_per_tile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (self.o_raster_w * 32 * 2))
-        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, memory_usage_percent=0.2)
+        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, memory_usage_percent=0.3)
         if self.debug:
             logging.info(f'{self.__class__.__name__}: nb_rows_per_tile: {self.nb_rows_per_tile}')
         self.n_tiles = int(self.o_raster_h / self.nb_rows_per_tile)
