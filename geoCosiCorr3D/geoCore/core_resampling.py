@@ -10,12 +10,14 @@ import math
 import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-from scipy.interpolate import RegularGridInterpolator
-import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
+
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
 import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import geoCosiCorr3D.utils.misc as misc
 
 SINC_KERNEL_SZ: int = 15
 
@@ -168,55 +170,38 @@ class SincResampler:
     apodization = 1  # sinc kernel apodization (1 by default, with no option for user)
 
     @staticmethod
-    def f_sinc_resampler(matrix_x, matrix_y, im1A, kernel_sz, weigthing=1):
-        """
-
-        Args:
-            matrix_x:
-            matrix_y:
-            im1A:
-            weigthing:
-
-        Returns:
-
-        """
-
+    def f_sinc_resampler(matrix_x, matrix_y, l1a_img, kernel_sz, weigthing=1):
         sz = matrix_x.shape
-
-        # libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
-        #
-        # if not libPath_:
-        #     geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
+        misc.log_available_memory(f'f_sinc_resampler')
         try:
             sincLib = ctypes.CDLL(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
-            matCol = np.array(matrix_y, dtype=np.float_)
-            matRow = np.array(matrix_x, dtype=np.float_)
+            if matrix_x.dtype != np.float_:
+                matrix_x = matrix_x.astype(np.float_, copy=False)
+            if matrix_y.dtype != np.float_:
+                matrix_y = matrix_y.astype(np.float_, copy=False)
 
-            # print("matrix_x[15,3]:{},matrix_y[15,3]:{}".format(matrix_x[15,3],matrix_y[15,3]))
-
-            img = np.array(im1A, dtype=np.float_)
             width = ctypes.c_int(kernel_sz)
-            oImg = np.zeros(sz, dtype=float)
+            o_img = np.zeros(sz, dtype=float)
             weighting = ctypes.c_int(weigthing)
-            nbColMat = ctypes.c_int(sz[0])
-            nbRowMat = ctypes.c_int(sz[1])
+            n_col_mat = ctypes.c_int(sz[0])
+            n_row_mat = ctypes.c_int(sz[1])
 
-            nbColImg = ctypes.c_int(im1A.shape[0])  # dims[3] - dims[2] + 1)
-            nbRowImg = ctypes.c_int(im1A.shape[1])  # dims[1] - dims[0] + 1)
+            n_col_img = ctypes.c_int(l1a_img.shape[0])  # dims[3] - dims[2] + 1)
+            n_row_img = ctypes.c_int(l1a_img.shape[1])  # dims[1] - dims[0] + 1)
 
             sincLib.main_sinc_adp_resampling_(
-                matCol.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                matRow.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                matrix_x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                matrix_y.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                l1a_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 ctypes.byref(width),
-                oImg.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                o_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 ctypes.byref(weighting),
-                ctypes.byref(nbColMat),
-                ctypes.byref(nbRowMat),
-                ctypes.byref(nbColImg),
-                ctypes.byref(nbRowImg))
+                ctypes.byref(n_col_mat),
+                ctypes.byref(n_row_mat),
+                ctypes.byref(n_col_img),
+                ctypes.byref(n_row_img))
 
-            return oImg
+            return o_img
         except OSError:
             geoErrors.erLibLoading(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
 
@@ -265,7 +250,7 @@ class BilinearResampler:
     def resampling(cls, matrix_x, matrix_y, im1A):
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]
-        ## Note: since we have corrected matrix_x nad matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
+        ## Note: since we have corrected matrix_x and matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
         f = RegularGridInterpolator(
             (np.arange(0, nbRows, 1), np.arange(0, nbCols, 1)),
             im1A,
