@@ -9,7 +9,7 @@ from typing import Dict, Optional
 
 import numpy as np
 import psutil
-import cv2
+from PIL import Image, ImageOps
 
 import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
@@ -89,9 +89,12 @@ class Resampling(RawResampling):
         #  dims points always to the full extent for the first 2 tiles
         l1a_img = self.raster_info.image_as_array_subset(*dims_key)
 
-        normalized_img = cv2.normalize(l1a_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        equalized_img = cv2.equalizeHist(normalized_img)
-        cv2.imwrite(f'l1a_img_equalized_{self.tile_num}.png', equalized_img)
+        print('----------Plotting ----------')
+        l1a_img_normalized = (l1a_img - np.min(l1a_img)) / (np.max(l1a_img) - np.min(l1a_img)) * 255
+        l1a_img_8bit = l1a_img_normalized.astype(np.uint8)
+        pil_img = Image.fromarray(l1a_img_8bit)
+        equalized_img = ImageOps.equalize(pil_img)
+        equalized_img.save(f'l1a_img_equalized_{self.tile_num}.png')
 
         if l1a_img.dtype != np.float32 or l1a_img.dtype != np.float_:
             if self.method == C.Resampling_Methods.SINC:
