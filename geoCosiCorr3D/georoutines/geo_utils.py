@@ -56,8 +56,15 @@ class cRasterInfo(BaseRasterInfo):
                               self.geo_transform_affine[4]]
         self.rpcs = self.raster.tags(ns='RPC')
         self.bbox_map = self.raster.bounds
-        self.raster_array = self.raster.read()  # all bands
+        # self.raster_array = self.raster.read()  # all bands
+        self._raster_array = None  # Initialize a private attribute to None to return all bands
         # self.raster = None
+
+    @property
+    def raster_array(self):
+        if self._raster_array is None:  # Check if the raster data has been loaded
+            self._raster_array = self.raster.read()  # Read & store the data
+        return self._raster_array
 
     def image_as_array_subset(self,
                               col_off_min: int,
@@ -74,20 +81,22 @@ class cRasterInfo(BaseRasterInfo):
         https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
         """
         from rasterio.windows import Window
-        raster = rasterio.open(self.get_raster_path)
+
+        # raster = self.raster  # = rasterio.open(self.get_raster_path)
         width = (col_off_max - col_off_min) + 1
         height = (row_off_max - row_off_min) + 1
-        array = raster.read(band_number,
-                            window=Window(col_off=col_off_min,
-                                          row_off=row_off_min,
-                                          width=width,
-                                          height=height))
-        raster = None
-        return array
+        # Note: This operation is performed each time the method is called and will allocate memory
+        # for the subset array that is being read
+        # raster = None
+        return self.raster.read(band_number,
+                                window=Window(col_off=col_off_min,
+                                              row_off=row_off_min,
+                                              width=width,
+                                              height=height))
 
     def image_as_array(self, band: Optional[int] = 1, read_masked=False):
-        raster = rasterio.open(self.get_raster_path)
-        return raster.read(band, masked=read_masked)
+        # raster = rasterio.open(self.get_raster_path)
+        return self.raster.read(band, masked=read_masked)
 
     @staticmethod
     def write_raster(output_raster_path,
@@ -392,9 +401,10 @@ class cRasterInfoGDAL:
         width = (col_off_max - col_off_min) + 1
         height = (row_off_max - row_off_min) + 1
         raster = gdal.Open(input_raster_path)
-        array = np.array(
-            raster.GetRasterBand(band_number).ReadAsArray(int(col_off_min), int(row_off_min), int(width),
-                                                          int(height)))
+        array = np.array(raster.GetRasterBand(band_number).ReadAsArray(int(col_off_min),
+                                                                       int(row_off_min),
+                                                                       int(width),
+                                                                       int(height)))
         raster = None
         return array
 
