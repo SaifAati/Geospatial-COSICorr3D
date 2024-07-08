@@ -68,25 +68,30 @@ class cDigitalGlobe(RSM):
         self.orbitalPos_Y = None
         self.satToNavMat = None
         if self.debug:
-            print("--- Computing DG RSM:", end="")
+            print(f"--- Computing DG RSM:{self.__class__.__name__}")
 
-            print("*", end="")
-        self.Interpolate_position_velocity_attitude()
+        temp = (1 / self.avgLineRate)
+        if self.scanDirection.lower() == "FORWARD".lower():
+            loc_img = np.arange(0, self.nbRows, 1) * temp
+        else:
+            loc_img = np.arange(0, self.nbRows, 1) * -1 * temp
+        self.loc_img = loc_img
+
+        self.interp_eph()
+
+        self.interp_attitude()
+
+        self.compute_look_direction()
+
+        self.compute_orbital_reference_system()
+
+        self.sat_to_orb_rotation()
+
         if self.debug:
-            print(" *", end="")
-        self.__ComputeCCDLookAngles()
-        if self.debug:
-            print(" *", end="")
-        self.__ComputeOrbitalReferenceSystem()
-        if self.debug:
-            print(" *", end="")
-        self.__RotMatxConversion_Sat2OrbitlaReference()
-        if self.debug:
-            print(" *", end="")
             print(" Done!\n", end="")
-            logging.info("CCLookAngle:{}\n{}".format(self.CCDLookAngle.shape, self.CCDLookAngle))
+        return
 
-    def Interpolate_position_velocity_attitude(self):
+    def interp_eph(self):
         """
 
         Returns:
@@ -95,47 +100,37 @@ class cDigitalGlobe(RSM):
             ephemeris and attitude measures frequency is high enough.
         """
 
-        temp = (1 / self.avgLineRate)
-        if self.scanDirection.lower() == "FORWARD".lower():
-            loc_img = np.arange(0, self.nbRows, 1) * temp
-        else:
-            loc_img = np.arange(0, self.nbRows, 1) * -1 * temp
+        loc_eph = np.arange(0, self.ephemeris.shape[0], 1) * self.dtEph
+        line_dates = self.startTime - self.startTimeEph + self.loc_img
 
-        sztmp = np.shape(self.ephemeris)
-
-        loc_eph = np.arange(0, sztmp[0], 1) * self.dtEph
-        ## Note: sztmp[0] should be the same as the no of point in ephemeris
-        # Need to be validated
-        ## It will be good to plot the points before interpolation
-        ## Attitude
-        sztmp = np.shape(self.attitude)
-        loc_att = np.arange(0, sztmp[0], 1) * self.dtAtt
-
-        loc_img0 = self.startTime - self.startTimeEph + loc_img
-
-        ## Ephemeris (Position)
         self.interpSatPosition = np.zeros((self.nbRows, 3))
-
         for i in range(3):
-            self.interpSatPosition[:, i] = Interpol(VV=self.ephemeris[:, i], XX=loc_eph, xOut=loc_img0)
+            self.interpSatPosition[:, i] = Interpol(VV=self.ephemeris[:, i],
+                                                    XX=loc_eph,
+                                                    xOut=line_dates)
 
-        ##Ephemeris (Velocity)
         self.interpSatVelocity = np.zeros((self.nbRows, 3))
-
         for i in range(3):
             self.interpSatVelocity[:, i] = Interpol(VV=self.ephemeris[:, i + 3],
                                                     XX=loc_eph,
-                                                    xOut=loc_img0)
+                                                    xOut=line_dates)
+        self.interp_sat_eph_tpv = np.hstack((line_dates[:, np.newaxis], self.interpSatPosition, self.interpSatVelocity))
+        logging.info(f"{self.__class__.__name__}: interp_sat_eph: {self.interp_sat_eph_tpv.shape}")
+
+    def interp_attitude(self):
+        loc_att = np.arange(0, self.attitude.shape[0], 1) * self.dtAtt
 
         ## Attitude (quaternions interpolation)
-        loc_img0 = self.startTime - self.startTimeAtt + loc_img
+        line_dates = self.startTime - self.startTimeAtt + self.loc_img
         self.att_quat = np.zeros((self.nbRows, 4))
         for i in range(4):
-            self.att_quat[:, i] = Interpol(VV=self.attitude[:, i], XX=loc_att, xOut=loc_img0)
+            self.att_quat[:, i] = Interpol(VV=self.attitude[:, i], XX=loc_att, xOut=line_dates)
 
+        self.interp_quat_txyzs = np.hstack((line_dates[:, np.newaxis], self.att_quat))
+        logging.info(f"{self.__class__.__name__}: interp_quat: {self.interp_quat_txyzs.shape}")
         return
 
-    def __ComputeCCDLookAngles(self):
+    def compute_look_direction(self):
         """
 
         Returns:
@@ -162,10 +157,7 @@ class cDigitalGlobe(RSM):
         look_angle_in_camera = geoRSMMisc.NormalizeArray(inputArray=ccd_coord)
 
         ##Convert quaternion into a rotation matrix from Camera ref to Satellite ref
-
-        # print(self.cameraAttitude)
         rotMatCamToSat = np.asarray(geoRSMMisc.Qaut2Rot(quat_=self.cameraAttitude, axis=0, order=2)).T
-        # print(rotMatCamToSat)
 
         ## Convert each CCD look angle in Camera ref into Satellite ref
 
@@ -183,7 +175,7 @@ class cDigitalGlobe(RSM):
 
         return
 
-    def __ComputeOrbitalReferenceSystem(self):
+    def compute_orbital_reference_system(self):
         """
         ORBITAL REFERENCE SYSTEM DEFINITION
         Express orbital reference system for each line of the image in the ECF frame
@@ -193,13 +185,13 @@ class cDigitalGlobe(RSM):
 
         """
 
-        self.orbitalPos_Z = geoRSMMisc.NormalizeArray(self.interpSatPosition)  # normalize_array(interpSatPosition)
-        self.orbitalPos_X = geoRSMMisc.NormalizeArray(np.cross(self.interpSatVelocity, self.orbitalPos_Z))
+        self.orbitalPos_Z = geoRSMMisc.normalize_array(self.interpSatPosition)  # normalize_array(interpSatPosition)
+        self.orbitalPos_X = geoRSMMisc.normalize_array(np.cross(self.interpSatVelocity, self.orbitalPos_Z))
         self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
 
         return
 
-    def __RotMatxConversion_Sat2OrbitlaReference(self):
+    def sat_to_orb_rotation(self):
         """
         DEFINITION OF THE SATELLITE TO ORBITAL REFERENCE ROTATION MATRIX
         Returns:
@@ -226,8 +218,6 @@ class cDigitalGlobe(RSM):
             self.satToNavMat[i, :, :] = np.dot(invTemp, rotMatSatToECF[i, :, :].T)  ##
         return
 
-    def ComputeAttitude(self):
-        pass
     def __repr__(self):
         pass
 
