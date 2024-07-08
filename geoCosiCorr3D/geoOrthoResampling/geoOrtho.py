@@ -18,6 +18,8 @@ import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import numpy as np
 import psutil
+
+import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoCore.geoRawInvOrtho import RawInverseOrtho
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import \
@@ -25,6 +27,7 @@ from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import \
 from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoRFM.RFM import RFM
+
 
 CONFIG_FN = C.SOFTWARE.CONFIG
 geoWarns.wrIgnoreNotGeoreferencedWarning()
@@ -79,21 +82,19 @@ class RSMOrtho(RawInverseOrtho):
         if self.debug:
             logging.info(
                 f'{self.__class__.__name__}:Raster: W:{self.o_raster_w}, H:{self.o_raster_h}, #tiles:{self.n_tiles}')
-
         if self.n_tiles > 1:
             self.write_ortho_per_tile()
+        dem_dims, easting, northing, nbTiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nb_rows_per_tile,
+                                                                        nbRowsOut=self.o_raster_h,
+                                                                        nbColsOut=self.o_raster_w,
+                                                                        need_loop=need_loop,
+                                                                        oUpLeftEW=self.ortho_grid.o_up_left_ew,
+                                                                        oUpLeftNS=self.ortho_grid.o_up_left_ns,
+                                                                        xRes=self.ortho_grid.o_res,
+                                                                        yRes=self.ortho_grid.o_res,
+                                                                        demInfo=self.dem_raster_info,
+                                                                        )
 
-        dem_dims, easting, northing, nbTiles, tiles = self.ortho_tiling(
-            nbRowsPerTile=self.nb_rows_per_tile,
-            nbRowsOut=self.o_raster_h,
-            nbColsOut=self.o_raster_w,
-            need_loop=need_loop,
-            oUpLeftEW=self.ortho_grid.o_up_left_ew,
-            oUpLeftNS=self.ortho_grid.o_up_left_ns,
-            xRes=self.ortho_grid.o_res,
-            yRes=self.ortho_grid.o_res,
-            demInfo=self.dem_raster_info,
-        )
         xPixInit, yPixInit = self.compute_initial_approx(modelData=self.model,
                                                          oGrid=self.ortho_grid,
                                                          easting=easting,
@@ -108,17 +109,20 @@ class RSMOrtho(RawInverseOrtho):
                       "nbTiles": nbTiles,
                       "tiles": tiles,
                       }
+        misc.log_available_memory(component_name=self.__class__.__name__)
 
         while need_loop is True:
             if self.debug:
                 if self.debug:
                     logging.info(f'========= Tile:{index} /{self.n_tiles} =============')
             matTile, need_loop, ortho_data = self.compute_transformation_matrix(ortho_data=ortho_data)
+
             if self.debug:
                 logging.info(f'{self.__class__.__name__}:mat_tile.shape:{matTile.shape}')
                 logging.info(f'{self.__class__.__name__}:Resampling::{self.resampling_method}')
 
-            resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
+            resample = Resampling(input_raster_info=self.l1a_raster_info,
+                                  transformation_mat=matTile,
                                   resampling_params={'method': self.resampling_method})
             oOrthoTile = resample.resample()
 
@@ -308,6 +312,7 @@ class RSMOrtho(RawInverseOrtho):
         semiMinor_f = ctypes.c_double(C.EARTH.SEMIMINOR)
         outX_f = outX.T
         outY_f = outY.T
+        misc.log_available_memory('rsm_g2p_minimization')
         fLib.ground2pixel_(ctypes.byref(nbColsOut_f),
                            ctypes.byref(nbRowsOut_f),
                            s2n00.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
