@@ -4,7 +4,6 @@
 # Copyright (C) 2022
 """
 import ctypes
-# import ctypes.util
 import logging
 import os
 import sys
@@ -17,7 +16,6 @@ import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import numpy as np
-import psutil
 
 import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.core_RSM import RSM
@@ -28,10 +26,9 @@ from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoRFM.RFM import RFM
 
-
 CONFIG_FN = C.SOFTWARE.CONFIG
 geoWarns.wrIgnoreNotGeoreferencedWarning()
-process = psutil.Process(os.getpid())
+
 G2P_LIB_Path = C.SOFTWARE.GEO_COSI_CORR3D_LIB
 
 # TODO CHANGE RSM class location
@@ -84,29 +81,29 @@ class RSMOrtho(RawInverseOrtho):
                 f'{self.__class__.__name__}:Raster: W:{self.o_raster_w}, H:{self.o_raster_h}, #tiles:{self.n_tiles}')
         if self.n_tiles > 1:
             self.write_ortho_per_tile()
-        dem_dims, easting, northing, nbTiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nb_rows_per_tile,
-                                                                        nbRowsOut=self.o_raster_h,
-                                                                        nbColsOut=self.o_raster_w,
-                                                                        need_loop=need_loop,
-                                                                        oUpLeftEW=self.ortho_grid.o_up_left_ew,
-                                                                        oUpLeftNS=self.ortho_grid.o_up_left_ns,
-                                                                        xRes=self.ortho_grid.o_res,
-                                                                        yRes=self.ortho_grid.o_res,
-                                                                        demInfo=self.dem_raster_info,
-                                                                        )
+        dem_dims, easting, northing, num_tiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nb_rows_per_tile,
+                                                                          nbRowsOut=self.o_raster_h,
+                                                                          nbColsOut=self.o_raster_w,
+                                                                          need_loop=need_loop,
+                                                                          oUpLeftEW=self.ortho_grid.o_up_left_ew,
+                                                                          oUpLeftNS=self.ortho_grid.o_up_left_ns,
+                                                                          xRes=self.ortho_grid.o_res,
+                                                                          yRes=self.ortho_grid.o_res,
+                                                                          demInfo=self.dem_raster_info,
+                                                                          )
 
-        xPixInit, yPixInit = self.compute_initial_approx(modelData=self.model,
-                                                         oGrid=self.ortho_grid,
-                                                         easting=easting,
-                                                         northing=northing,
-                                                         oRasterW=self.o_raster_w)
+        init_x_pix, init_y_pix = self.compute_initial_approx(modelData=self.model,
+                                                             oGrid=self.ortho_grid,
+                                                             easting=easting,
+                                                             northing=northing,
+                                                             oRasterW=self.o_raster_w)
         ortho_data = {"easting": easting,
                       "northing": northing,
                       "current_tile": 0,
-                      "xPixInit": xPixInit,
-                      "yPixInit": yPixInit,
+                      "xPixInit": init_x_pix,
+                      "yPixInit": init_y_pix,
                       "dem_dims": dem_dims,
-                      "nbTiles": nbTiles,
+                      "nbTiles": num_tiles,
                       "tiles": tiles,
                       }
         misc.log_available_memory(component_name=self.__class__.__name__)
@@ -114,22 +111,26 @@ class RSMOrtho(RawInverseOrtho):
         while need_loop is True:
             if self.debug:
                 if self.debug:
-                    logging.info(f'========= Tile:{index} /{self.n_tiles} =============')
-            matTile, need_loop, ortho_data = self.compute_transformation_matrix(ortho_data=ortho_data)
+                    logging.info(f'========= Tile:{index} / {self.n_tiles} =============')
+            tile_tr_mat, need_loop, ortho_data = self.compute_transformation_matrix(ortho_data=ortho_data)
 
             if self.debug:
-                logging.info(f'{self.__class__.__name__}:mat_tile.shape:{matTile.shape}')
-                logging.info(f'{self.__class__.__name__}:Resampling::{self.resampling_method}')
+                logging.info(f'{self.__class__.__name__}: tile_tr :{tile_tr_mat.shape}')
+                logging.info(f'{self.__class__.__name__}: Resampling::{self.resampling_method}')
+                logging.info(
+                    f'{self.__class__.__name__}: L1A tile img_extent --> '
+                    f'X: {np.nanmin(tile_tr_mat[0]), np.nanmax(tile_tr_mat[0])},'
+                    f'Y: {np.nanmin(tile_tr_mat[1]), np.nanmax(tile_tr_mat[1])}')
 
             resample = Resampling(input_raster_info=self.l1a_raster_info,
-                                  transformation_mat=matTile,
-                                  resampling_params={'method': self.resampling_method}, tile_num=index)
+                                  transformation_mat=tile_tr_mat,
+                                  resampling_params={'method': self.resampling_method},
+                                  tile_num=index)
             oOrthoTile = resample.resample()
+            import sys
+            sys.exit()
 
-            if self.debug:
-                logging.info(f'{self.__class__.__name__}: rss = {process.memory_info().rss * 1e-6} Mb')
-
-            yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=matTile, yOff=yOff)
+            yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=tile_tr_mat, yOff=yOff)
             index = index + 1
 
         if self.n_tiles > 1:
@@ -177,39 +178,46 @@ class RSMOrtho(RawInverseOrtho):
         tiles = ortho_data["tiles"]
         current_tile = ortho_data["current_tile"]
         if self.debug:
-            logging.info(f'{self.__class__.__name__}:Current Tile:{current_tile + 1}')
-        ## We assume that eastArry and northArray are in the same coordinate system as the DEM if exist.
-        ## No conversion or proj system is needed
-        nbRowsOut = tiles[current_tile + 1] - tiles[current_tile]
-        eastArr = np.tile(easting, (nbRowsOut, 1))
+            logging.info(f'{self.__class__.__name__}: current tile_num: {current_tile + 1}')
 
-        tempNorthing = [northing[tiles[current_tile] + i] for i in range(nbRowsOut)]
-        northArr = np.tile(tempNorthing, (self.o_raster_w, 1)).T
-        hNew = self.elev_interpolation(ortho_data['dem_dims'], current_tile, eastArr, northArr)
-        outX, outY, nbRowsOut = self.rsm_g2p_minimization(rsmModel=self.model,
-                                                          rsmCorrectionArray=self.corr_model,
-                                                          nbColsOut=self.o_raster_w,
-                                                          xPixInit=xPixInit,
-                                                          yPixInit=yPixInit,
-                                                          eastArr=eastArr,
-                                                          northArr=northArr,
-                                                          nbRowsOut=nbRowsOut,
-                                                          hNew=hNew,
-                                                          debug=self.debug,
-                                                          target_epsg=self.ortho_grid.grid_epsg)
+        tile_nb_rows = tiles[current_tile + 1] - tiles[current_tile]
+        east_arr = np.tile(easting, (tile_nb_rows, 1))
+
+        tmp_northing = [northing[tiles[current_tile] + i] for i in range(tile_nb_rows)]
+        north_arr = np.tile(tmp_northing, (self.o_raster_w, 1)).T
+
+        hNew = self.elev_interpolation(ortho_data['dem_dims'], current_tile, east_arr, north_arr)
+
+        out_x, out_y, tile_nb_rows = self.rsm_g2p_minimization(rsmModel=self.model,
+                                                               rsmCorrectionArray=self.corr_model,
+                                                               nbColsOut=self.o_raster_w,
+                                                               xPixInit=xPixInit,
+                                                               yPixInit=yPixInit,
+                                                               eastArr=east_arr,
+                                                               northArr=north_arr,
+                                                               nbRowsOut=tile_nb_rows,
+                                                               hNew=hNew,
+                                                               debug=self.debug,
+                                                               target_epsg=self.ortho_grid.grid_epsg)
         if current_tile != self.n_tiles - 1:
             need_loop = True
 
             ortho_data["current_tile"] = current_tile + 1
-            ortho_data["xPixInit"] = outX[nbRowsOut - 1, :]
-            ortho_data["yPixInit"] = outY[nbRowsOut - 1, :]
+            ortho_data["xPixInit"] = out_x[tile_nb_rows - 1, :]
+            ortho_data["yPixInit"] = out_y[tile_nb_rows - 1, :]
         else:
             need_loop = False
 
-        oArray = np.zeros((2, outX.shape[0], outX.shape[1]))
-        oArray[0, :, :] = outX
-        oArray[1, :, :] = outY
-        return oArray, need_loop, ortho_data
+        o_arr = np.zeros((2, out_x.shape[0], out_x.shape[1]))
+        o_arr[0, :, :] = out_x
+        o_arr[1, :, :] = out_y
+
+        compute_tile_fp(east_arr, north_arr, self.ortho_grid.grid_epsg, current_tile)
+
+        if np.isnan(out_x).all() or np.isnan(out_y).all():
+            raise ValueError("MATRIX_X or MATRIX_Y ALL NANs")
+
+        return o_arr, need_loop, ortho_data
 
     @staticmethod
     def rsm_g2p_minimization(rsmModel,
@@ -287,16 +295,10 @@ class RSMOrtho(RawInverseOrtho):
         outX = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
         outY = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
 
-        # libPath_ = ctypes.util.find_library(G2P_LIB_Path)
-        # if not libPath_:
-        #     msg = "Unable to find the specified library:" + G2P_LIB_Path
-        #     sys.exit(msg)
         try:
             fLib = ctypes.CDLL(G2P_LIB_Path)
         except OSError:
             sys.exit("Unable to load the system C library")
-        if debug:
-            logging.info(f'lib path:{G2P_LIB_Path}')
 
         nbColsOut_f = ctypes.c_int(nbColsOut)
         nbRowsOut_f = ctypes.c_int(nbRowsOut)
@@ -312,7 +314,6 @@ class RSMOrtho(RawInverseOrtho):
         semiMinor_f = ctypes.c_double(C.EARTH.SEMIMINOR)
         outX_f = outX.T
         outY_f = outY.T
-        misc.log_available_memory('rsm_g2p_minimization')
         fLib.ground2pixel_(ctypes.byref(nbColsOut_f),
                            ctypes.byref(nbRowsOut_f),
                            s2n00.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
@@ -469,8 +470,7 @@ class RFMOrtho(RawInverseOrtho):
             resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
                                   resampling_params={'method': self.resampling_method})
             oOrthoTile = resample.resample()
-            if self.debug:
-                logging.info(f'{self.__class__.__name__}: rss = {process.memory_info().rss * 1e-6} Mb')
+
             yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=matTile, yOff=yOff)
             index = index + 1
 
@@ -616,3 +616,41 @@ def orthorectify(input_l1a_path: str,
     if __name__ == '__main__':
         config = rcfg.ConfigReader(config_file=CONFIG_FN).get_config
         print(config)
+
+
+def compute_tile_fp(east_arr, north_arr, grid_epsg, tile_num):
+    import json
+    min_east = np.min(east_arr)
+    max_east = np.max(east_arr)
+    min_north = np.min(north_arr)
+    max_north = np.max(north_arr)
+
+    footprint_corners = [
+        [min_east, max_north],  # Top-left
+        [max_east, max_north],  # Top-right
+        [max_east, min_north],  # Bottom-right
+        [min_east, min_north],  # Bottom-left
+        [min_east, max_north]
+    ]
+    geojson_object = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [footprint_corners]
+                },
+                "properties": {}
+            }
+        ],
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": f"urn:ogc:def:crs:EPSG::{grid_epsg}"
+            }
+        }
+    }
+    output_file_path = f'footprint_{tile_num}.geojson'
+    with open(output_file_path, 'w') as f:
+        json.dump(geojson_object, f)

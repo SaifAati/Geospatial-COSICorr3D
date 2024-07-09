@@ -68,8 +68,10 @@ class ResamplingEngine:
 
 
 class RawResampling(ResamplingEngine):
-    def __init__(self, input_raster_info: geoRT.cRasterInfo, transformation_mat: np.ndarray,
-                 resampling_params: Optional[Dict], debug: bool = False):
+    def __init__(self, input_raster_info: geoRT.cRasterInfo,
+                 transformation_mat: np.ndarray,
+                 resampling_params: Optional[Dict],
+                 debug: bool = False):
         """
         Resampling an image according to transformation matrices using the selected
         resampling kernel (e.g., sinc ,bilinear,bicubic,)
@@ -84,84 +86,72 @@ class RawResampling(ResamplingEngine):
         self.raster_info = input_raster_info
         self.trans_matx = transformation_mat
 
-    def compute_l1A_img_tile_subset(self, rasterInfo: geoRT.cRasterInfo, matrix_x, matrix_y, margin=3) -> Dict:
+    def compute_l1A_img_tile_subset(self, raster_info: geoRT.cRasterInfo, matrix_x, matrix_y, margin=3) -> Dict:
         """
         Define the necessary image subset Dimensions needed for the resampling,
         depending on the resample engine selected.
-        Args:
             matrix_x: X-pixel coordinates : array
             matrix_y: Y-pixel coordinates : array
             margin: margin added around the subset for interpolation purpose :int
-
-        Returns:
-
         """
-        ### In order to define the necessary image subset to process the current matrix tile
-        ### we need the matrix_x min and max,
-        ### as well an estimate of the resampling distance in case of Sinc resampling engine.
         if np.isnan(matrix_x).all() or np.isnan(matrix_y).all():
             logging.error("RESAMPLING::MATRIX_X or MATRIX_Y ALL NANs")
-            import sys
-            sys.exit("MATRIX_X or MATRIX_Y ALL NANs")
-        if self.debug:
-            logging.info(
-                f'Resampling:compute L1A subset img_extent--> X: {np.nanmin(matrix_x), np.nanmax(matrix_x)},'
-                f' Y:{np.nanmin(matrix_y), np.nanmax(matrix_y)}')
+            raise ValueError("RESAMPLING::MATRIX_X or MATRIX_Y ALL NANs")
+
         minX = math.floor(np.nanmin(matrix_x))
         maxX = math.ceil(np.nanmax(matrix_x))
         minY = math.floor(np.nanmin(matrix_y))
         maxY = math.ceil(np.nanmax(matrix_y))
 
-        raw_img_pix_extent: Dict = {'col_pix_min': 0, 'col_pix_max': rasterInfo.raster_width - 1,
-                                    'row_pix_min': 0, 'row_pix_max': rasterInfo.raster_height}
+        raw_img_pix_extent: Dict = {'col_pix_min': 0, 'col_pix_max': raster_info.raster_width - 1,
+                                    'row_pix_min': 0, 'row_pix_max': raster_info.raster_height}
+        logging.info(f'{self.__class__.__name__}: Raw image extent:{raw_img_pix_extent}')
+
         ## Compute the necessary image subset dimension
         # initialize as the full image raw image size
-        raw_img_subset_pix_extent = raw_img_pix_extent.copy()
+        tile_img_subset_pix_extent = raw_img_pix_extent.copy()
 
         if (minX - margin) > raw_img_pix_extent['col_pix_min']:
-            raw_img_subset_pix_extent['col_pix_min'] = minX - margin
+            tile_img_subset_pix_extent['col_pix_min'] = minX - margin
         if (maxX + margin) < raw_img_pix_extent['col_pix_max']:
-            raw_img_subset_pix_extent['col_pix_max'] = maxX + margin
+            tile_img_subset_pix_extent['col_pix_max'] = maxX + margin
 
         if (minY - margin) > raw_img_pix_extent['row_pix_min']:
-            raw_img_subset_pix_extent['row_pix_min'] = minY + margin
+            tile_img_subset_pix_extent['row_pix_min'] = minY + margin
 
         if (maxY + margin) < raw_img_pix_extent['row_pix_max']:
-            raw_img_pix_extent['row_pix_max'] = maxY + margin
+            tile_img_subset_pix_extent['row_pix_max'] = maxY + margin
 
         if self.method == C.Resampling_Methods.SINC:
             borderX, borderY = SincResampler.compute_resampling_distance(matrix_x, matrix_y, matrix_x.shape,
                                                                          self.resampling_cfg.kernel_sz)
             if (minX - borderX) > raw_img_pix_extent['col_pix_min']:
-                raw_img_subset_pix_extent['col_pix_min'] = minX - borderX
+                tile_img_subset_pix_extent['col_pix_min'] = minX - borderX
             if (maxX + borderX) < raw_img_pix_extent['col_pix_max']:
-                raw_img_subset_pix_extent['col_pix_max'] = maxX + borderX
+                tile_img_subset_pix_extent['col_pix_max'] = maxX + borderX
             if (minY - borderY) > raw_img_pix_extent['row_pix_min']:
-                raw_img_subset_pix_extent['row_pix_min'] = minY - borderY
+                tile_img_subset_pix_extent['row_pix_min'] = minY - borderY
             if (maxY + borderY) < raw_img_pix_extent['row_pix_max']:
-                raw_img_subset_pix_extent['row_pix_max'] = maxY + borderY
+                tile_img_subset_pix_extent['row_pix_max'] = maxY + borderY
 
-        if self.debug:
-            logging.info(f'L1A Img subset img extent:{raw_img_subset_pix_extent}')
+
+
         # print("-- not sinc --- ")
-        # print(dims1, dims2, dims3, dims4)
         ## Check for situation where the entire current matrice tile is outside image boundaries
         ## In that case need to output a zero array, either on file or in the output array, and
         ## continue to the next tile
-        if (raw_img_subset_pix_extent['col_pix_min'] > raw_img_subset_pix_extent['col_pix_max']) or (
-                raw_img_subset_pix_extent['row_pix_min'] > raw_img_subset_pix_extent['row_pix_max']):
+        if (tile_img_subset_pix_extent['col_pix_min'] > tile_img_subset_pix_extent['col_pix_max']) or (
+                tile_img_subset_pix_extent['row_pix_min'] > tile_img_subset_pix_extent['row_pix_max']):
             warnings.warn(
-                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{raw_img_subset_pix_extent}"
+                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{tile_img_subset_pix_extent}"
                 f"--> out of :{raw_img_pix_extent}")
             logging.error(
-                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{raw_img_subset_pix_extent}"
+                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{tile_img_subset_pix_extent}"
                 f"--> out of :{raw_img_pix_extent}")
-            return dict.fromkeys(raw_img_subset_pix_extent, 0)
+            return dict.fromkeys(tile_img_subset_pix_extent, 0)
 
-        if self.debug:
-            logging.info(f'Raw subset img extent:dims:{raw_img_subset_pix_extent}')
 
-        return raw_img_subset_pix_extent
+        return tile_img_subset_pix_extent
 
 
 class SincResampler:
