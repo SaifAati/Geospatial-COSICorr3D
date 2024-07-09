@@ -86,7 +86,7 @@ class RawResampling(ResamplingEngine):
         self.raster_info = input_raster_info
         self.trans_matx = transformation_mat
 
-    def compute_l1A_img_tile_subset(self, raster_info: geoRT.cRasterInfo, matrix_x, matrix_y, margin=3) -> Dict:
+    def compute_l1A_img_tile_subset(self, raster_info: geoRT.cRasterInfo, matrix_x, matrix_y, margin=15) -> Dict:
         """
         Define the necessary image subset Dimensions needed for the resampling,
         depending on the resample engine selected.
@@ -103,18 +103,19 @@ class RawResampling(ResamplingEngine):
         minY = math.floor(np.nanmin(matrix_y))
         maxY = math.ceil(np.nanmax(matrix_y))
 
-        raw_img_pix_extent: Dict = {'col_pix_min': 0, 'col_pix_max': raster_info.raster_width - 1,
-                                    'row_pix_min': 0, 'row_pix_max': raster_info.raster_height}
+        raw_img_pix_extent: Dict = {'col_pix_min': 0,
+                                    'col_pix_max': raster_info.raster_width - 1,
+                                    'row_pix_min': 0,
+                                    'row_pix_max': raster_info.raster_height}
         logging.info(f'{self.__class__.__name__}: Raw image extent:{raw_img_pix_extent}')
 
-        ## Compute the necessary image subset dimension
         # initialize as the full image raw image size
         tile_img_subset_pix_extent = raw_img_pix_extent.copy()
 
-        if (minX - margin) > raw_img_pix_extent['col_pix_min']:
-            tile_img_subset_pix_extent['col_pix_min'] = minX - margin
-        if (maxX + margin) < raw_img_pix_extent['col_pix_max']:
-            tile_img_subset_pix_extent['col_pix_max'] = maxX + margin
+        # if (minX - margin) > raw_img_pix_extent['col_pix_min']:
+        #     tile_img_subset_pix_extent['col_pix_min'] = minX - margin
+        # if (maxX + margin) < raw_img_pix_extent['col_pix_max']:
+        #     tile_img_subset_pix_extent['col_pix_max'] = maxX + margin
 
         if (minY - margin) > raw_img_pix_extent['row_pix_min']:
             tile_img_subset_pix_extent['row_pix_min'] = minY + margin
@@ -123,7 +124,9 @@ class RawResampling(ResamplingEngine):
             tile_img_subset_pix_extent['row_pix_max'] = maxY + margin
 
         if self.method == C.Resampling_Methods.SINC:
-            borderX, borderY = SincResampler.compute_resampling_distance(matrix_x, matrix_y, matrix_x.shape,
+            borderX, borderY = SincResampler.compute_resampling_distance(matrix_x,
+                                                                         matrix_y,
+                                                                         matrix_x.shape,
                                                                          self.resampling_cfg.kernel_sz)
             if (minX - borderX) > raw_img_pix_extent['col_pix_min']:
                 tile_img_subset_pix_extent['col_pix_min'] = minX - borderX
@@ -134,10 +137,7 @@ class RawResampling(ResamplingEngine):
             if (maxY + borderY) < raw_img_pix_extent['row_pix_max']:
                 tile_img_subset_pix_extent['row_pix_max'] = maxY + borderY
 
-
-
-        # print("-- not sinc --- ")
-        ## Check for situation where the entire current matrice tile is outside image boundaries
+        ## Check for situation where the entire current matx tile is outside image boundaries
         ## In that case need to output a zero array, either on file or in the output array, and
         ## continue to the next tile
         if (tile_img_subset_pix_extent['col_pix_min'] > tile_img_subset_pix_extent['col_pix_max']) or (
@@ -150,13 +150,11 @@ class RawResampling(ResamplingEngine):
                 f"--> out of :{raw_img_pix_extent}")
             return dict.fromkeys(tile_img_subset_pix_extent, 0)
 
-
         return tile_img_subset_pix_extent
 
 
 class SincResampler:
     # Definition of the resampling kernel
-
     apodization = 1  # sinc kernel apodization (1 by default, with no option for user)
 
     @staticmethod
@@ -207,12 +205,11 @@ class SincResampler:
             dx3 = (matrix_x[0, 0] - matrix_x[sz[0] - 1, sz[0] - 1]) / sz[0]
         else:
             dx3 = (matrix_x[0, 0] - matrix_x[sz[1] - 1, sz[1] - 1]) / sz[1]
-            ## Note:
-            # 10 =max variability of the resampling distance,
-            # 1.15= oversampling for kernel edge response
+
+        ## Note:
+        # 10= max variability of the resampling distance,
+        # 1.15= oversampling for kernel edge response
         borderX = int(np.ceil(np.max(np.abs([dx1, dx2, dx3])) * resampling_kernel_sz * 10 * 1.15))
-        # print("dx1:{},dx2:{},dx3:{}".format(dx1, dx2,dx3))
-        # print("borderX:", borderX)
 
         ## Get the average resampling distance in Y over the current tile in X, Y and diagonal directions.
         ## Take the maximum
@@ -223,9 +220,9 @@ class SincResampler:
             dy3 = (matrix_y[0, 0] - matrix_y[sz[0] - 1, sz[0] - 1]) / sz[0]
         else:
             dy3 = (matrix_y[0, 0] - matrix_y[sz[1] - 1, sz[1] - 1]) / sz[1]
-            ## Note:
-            # 10 =max variability of the resampling distance,
-            # 1.15= oversampling for kernel edge response
+        ## Note:
+        # 10 =max variability of the resampling distance,
+        # 1.15= oversampling for kernel edge response
         borderY = int(np.ceil(np.max(np.abs([dy1, dy2, dy3])) * resampling_kernel_sz * 10 * 1.15))
 
         return borderX, borderY
