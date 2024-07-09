@@ -224,8 +224,7 @@ class RawInverseOrtho(BaseInverseOrtho):
                                   descriptions=["Transformation xMat", "Transformation yMat"],
                                   epsg=self.ortho_grid.grid_epsg,
                                   progress=progress,
-                                  dtype=gdal.GDT_Float32,
-                                  overviewLevels=[2, 4, 8])
+                                  dtype=gdal.GDT_Float32)
 
             geoRT.WriteRaster(oRasterPath=self.output_ortho_path,
                               geoTransform=self.ortho_geo_transform,
@@ -234,8 +233,7 @@ class RawInverseOrtho(BaseInverseOrtho):
                               epsg=self.ortho_grid.grid_epsg,
                               progress=progress,
                               dtype=gdal.GDT_UInt16,
-                              noData=0,
-                              overviewLevels=[2, 4, 8])
+                              noData=0)
         return yOff
 
     def _set_ortho_grid(self) -> SatMapGrid:

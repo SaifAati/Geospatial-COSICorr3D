@@ -426,8 +426,7 @@ def WriteRaster(oRasterPath,
                 descriptions=None,
                 noData=None,
                 progress=False,
-                driver='GTiff',
-                overviewLevels=None):  # [2,4,8]
+                driver='GTiff'):
     """
     Returns:
     Notes:
@@ -480,8 +479,6 @@ def WriteRaster(oRasterPath,
             # outBand.SetRasterCategoryNames(descriptions[i])
         if progress:
             print("Writing band number: ", i + 1, " ", i + 1, "/", len(arrayList))
-        if overviewLevels:
-            outband.BuildOverviews("NEAREST", overviewLevels)
 
     outband.FlushCache()
     outRaster = None
