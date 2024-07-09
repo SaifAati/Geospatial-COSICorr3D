@@ -35,7 +35,6 @@ class Resampling(RawResampling):
             logging.warning(
                 f'Multi-band orthorectification is not supported in {C.SOFTWARE.SOFTWARE_NAME}_v_{C.SOFTWARE.VERSION}')
         band_num = 1
-        o_ortho_tile = np.zeros((self.trans_matx.shape[1], self.trans_matx.shape[2]))
 
         matrix_x = self.trans_matx[0, :, :]  # rows
         matrix_y = self.trans_matx[1, :, :]  # cols
@@ -72,10 +71,11 @@ class Resampling(RawResampling):
         #  dims points always to the full extent for the first 2 tiles
         l1a_img = self.raster_info.image_as_array_subset(*dims_key)
 
-        print('----------Plotting ----------')
-        import tifffile
-        l1a_img_16bit = l1a_img.astype(np.uint16)
-        tifffile.imwrite(f'tile_{self.tile_num}.tif', l1a_img_16bit)
+        # print('---------- Debug: Plotting ----------')
+        # import tifffile
+        # l1a_img_16bit = l1a_img.astype(np.uint16)
+        # tifffile.imwrite(f'tile_{self.tile_num}.tif', l1a_img_16bit)
+        # print('---------- Debug: Plotting ----------')
 
         if l1a_img.dtype != np.float32 or l1a_img.dtype != np.float_:
             if self.method == C.Resampling_Methods.SINC:

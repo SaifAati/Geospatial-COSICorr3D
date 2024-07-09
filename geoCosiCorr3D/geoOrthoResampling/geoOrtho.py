@@ -3,6 +3,7 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+
 import ctypes
 import logging
 import os
@@ -63,9 +64,8 @@ class RSMOrtho(RawInverseOrtho):
         self._get_correction_model()
         self.ortho_grid = self._set_ortho_grid()
         if self.debug:
-            if self.debug:
-                self.ortho_grid.grid_fp(o_folder=None)  # TODO set wd_folder
-                logging.info(f'{self.__class__.__name__}:{repr(self.ortho_grid)}')
+            self.ortho_grid.grid_fp(o_folder=None)  # TODO set wd_folder
+            logging.info(f'{self.__class__.__name__}:{repr(self.ortho_grid)}')
         self._check_dem_prj()
         self.ortho_geo_transform = self.set_ortho_geo_transform()
         if self.debug:
@@ -127,8 +127,6 @@ class RSMOrtho(RawInverseOrtho):
                                   resampling_params={'method': self.resampling_method},
                                   tile_num=index)
             oOrthoTile = resample.resample()
-            import sys
-            sys.exit()
 
             yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=tile_tr_mat, yOff=yOff)
             index = index + 1
@@ -212,7 +210,8 @@ class RSMOrtho(RawInverseOrtho):
         o_arr[0, :, :] = out_x
         o_arr[1, :, :] = out_y
 
-        compute_tile_fp(east_arr, north_arr, self.ortho_grid.grid_epsg, current_tile)
+        ## Create a geojson file for the footprint of the tile for debug purposes
+        # misc.compute_tile_fp(east_arr, north_arr, self.ortho_grid.grid_epsg, current_tile)
 
         if np.isnan(out_x).all() or np.isnan(out_y).all():
             raise ValueError("MATRIX_X or MATRIX_Y ALL NANs")
@@ -618,39 +617,3 @@ def orthorectify(input_l1a_path: str,
         print(config)
 
 
-def compute_tile_fp(east_arr, north_arr, grid_epsg, tile_num):
-    import json
-    min_east = np.min(east_arr)
-    max_east = np.max(east_arr)
-    min_north = np.min(north_arr)
-    max_north = np.max(north_arr)
-
-    footprint_corners = [
-        [min_east, max_north],  # Top-left
-        [max_east, max_north],  # Top-right
-        [max_east, min_north],  # Bottom-right
-        [min_east, min_north],  # Bottom-left
-        [min_east, max_north]
-    ]
-    geojson_object = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [footprint_corners]
-                },
-                "properties": {}
-            }
-        ],
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": f"urn:ogc:def:crs:EPSG::{grid_epsg}"
-            }
-        }
-    }
-    output_file_path = f'footprint_{tile_num}.geojson'
-    with open(output_file_path, 'w') as f:
-        json.dump(geojson_object, f)

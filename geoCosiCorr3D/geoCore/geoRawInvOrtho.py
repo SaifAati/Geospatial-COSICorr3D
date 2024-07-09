@@ -68,11 +68,6 @@ class RawInverseOrtho(BaseInverseOrtho):
         pass
 
     def _get_correction_model(self):
-        """
-
-        Returns:
-
-        """
         pass
 
     def _check_dem_prj(self):
@@ -126,7 +121,6 @@ class RawInverseOrtho(BaseInverseOrtho):
     def compute_num_tiles(self):
         """
         Compute the required number of tiles.
-        Returns:
 
         """
 
@@ -135,7 +129,7 @@ class RawInverseOrtho(BaseInverseOrtho):
         self.o_raster_h = round(
             ((self.ortho_grid.o_up_left_ns - self.ortho_grid.o_bot_right_ns) / self.ortho_grid.o_res) + 1)
         # self.nb_rows_per_tile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (self.o_raster_w * 32 * 2))
-        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, memory_usage_percent=0.3)
+        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, SOFTWARE.MEMORY_USAGE)
         if self.debug:
             logging.info(f'{self.__class__.__name__}: nb_rows_per_tile: {self.nb_rows_per_tile}')
         self.n_tiles = int(self.o_raster_h / self.nb_rows_per_tile)
@@ -258,7 +252,6 @@ class RawInverseOrtho(BaseInverseOrtho):
 
         """
         # # Define number max of lines per "tile"
-        # self.nbRowsPerTile = math.floor((self.__imgTileSizemb * 8 * 1024 * 1024) / (nbColsOut * 32 * 2))
         n_tiles = int(nbRowsOut / nbRowsPerTile)
         if (n_tiles != 0) and (need_loop == 1):  # if needLoop=0 -> compute full matrix in memory
             tiles = list(np.arange(n_tiles + 1) * nbRowsPerTile)
@@ -312,7 +305,6 @@ class RawInverseOrtho(BaseInverseOrtho):
 
 class RawOrthoGrid(BaseOrthoGrid):
     def __init__(self, sat_model: Type['SatModel'], grid_epsg: int = None, gsd: float = None):
-        # rasterInfo,
         super().__init__(sat_model, grid_epsg, gsd)
 
 # TODO Notes:
