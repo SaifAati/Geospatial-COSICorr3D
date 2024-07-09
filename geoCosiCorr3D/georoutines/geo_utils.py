@@ -426,7 +426,8 @@ def WriteRaster(oRasterPath,
                 descriptions=None,
                 noData=None,
                 progress=False,
-                driver='GTiff'):
+                driver='GTiff',
+                overviewLevels=None):  # [2,4,8]
     """
     Returns:
     Notes:
@@ -438,21 +439,18 @@ def WriteRaster(oRasterPath,
     global outband
     driver = gdal.GetDriverByName(driver)
     rows, cols = np.shape(arrayList[0])
-    # print(oRasterPath, cols, rows, len(arrayList), dtype)
     outRaster = driver.Create(oRasterPath, cols, rows, len(arrayList), dtype,
                               options=["TILED=YES", "BIGTIFF=YES", "COMPRESS=LZW"])
     outRaster.SetGeoTransform((geoTransform[0], geoTransform[1], geoTransform[2], geoTransform[3], geoTransform[4],
                                geoTransform[5]))
-    # dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0,
-    #                            options=["TILED=YES", "COMPRESS=PACKBITS"])
-    ## Set the projection
     if epsg is not None:
         outRasterSRS = osr.SpatialReference()
         outRasterSRS.ImportFromEPSG(epsg)
         outRaster.SetProjection(outRasterSRS.ExportToWkt())
 
     outRaster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
-    ## Set the metadata
+
+    # Set the metadata
     metaData_ = []
     if metaData is not None:
         if isinstance(metaData, dict):
@@ -463,7 +461,6 @@ def WriteRaster(oRasterPath,
             metaData_ = metaData
 
         for mm in metaData_:
-            # print("mm    ",mm)
             if not isinstance(mm[1], dict):
                 if not isinstance(mm[1], str):
                     str_ = str(mm[1])
@@ -483,6 +480,8 @@ def WriteRaster(oRasterPath,
             # outBand.SetRasterCategoryNames(descriptions[i])
         if progress:
             print("Writing band number: ", i + 1, " ", i + 1, "/", len(arrayList))
+        if overviewLevels:
+            outband.BuildOverviews("NEAREST", overviewLevels)
 
     outband.FlushCache()
     outRaster = None
