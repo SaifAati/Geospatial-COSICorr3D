@@ -26,6 +26,7 @@ class SOFTWARE:
     SOFTWARE_NAME = config['metadata']['name']
     VERSION = config['metadata']['version']
     TILE_SIZE_MB = 64
+    MEMORY_USAGE = 0.3
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
     WKDIR = os.path.join(os.path.dirname(GEOCOSICORR3D_PACKAGE_DIR), 'GEO_COSI_CORR_3D_WD/')
     geoCosiCorr3DOrientation = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
