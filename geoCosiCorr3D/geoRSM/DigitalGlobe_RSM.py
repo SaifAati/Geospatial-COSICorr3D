@@ -9,7 +9,7 @@ import numpy as np
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import cGetDGMetadata
-from geoCosiCorr3D.geoRSM.Interpol import Interpol
+from geoCosiCorr3D.geoRSM.Interpol import custom_linear_interpolation
 
 
 class cDigitalGlobe(RSM):
@@ -105,15 +105,15 @@ class cDigitalGlobe(RSM):
 
         self.interpSatPosition = np.zeros((self.nbRows, 3))
         for i in range(3):
-            self.interpSatPosition[:, i] = Interpol(VV=self.ephemeris[:, i],
+            self.interpSatPosition[:, i] = custom_linear_interpolation(VV=self.ephemeris[:, i],
                                                     XX=loc_eph,
-                                                    xOut=line_dates)
+                                                    x_out=line_dates)
 
         self.interpSatVelocity = np.zeros((self.nbRows, 3))
         for i in range(3):
-            self.interpSatVelocity[:, i] = Interpol(VV=self.ephemeris[:, i + 3],
+            self.interpSatVelocity[:, i] = custom_linear_interpolation(VV=self.ephemeris[:, i + 3],
                                                     XX=loc_eph,
-                                                    xOut=line_dates)
+                                                    x_out=line_dates)
         self.interp_sat_eph_tpv = np.hstack((line_dates[:, np.newaxis], self.interpSatPosition, self.interpSatVelocity))
         logging.info(f"{self.__class__.__name__}: interp_sat_eph: {self.interp_sat_eph_tpv.shape}")
 
@@ -124,7 +124,7 @@ class cDigitalGlobe(RSM):
         line_dates = self.startTime - self.startTimeAtt + self.loc_img
         self.att_quat = np.zeros((self.nbRows, 4))
         for i in range(4):
-            self.att_quat[:, i] = Interpol(VV=self.attitude[:, i], XX=loc_att, xOut=line_dates)
+            self.att_quat[:, i] = custom_linear_interpolation(VV=self.attitude[:, i], XX=loc_att, x_out=line_dates)
 
         self.interp_quat_txyzs = np.hstack((line_dates[:, np.newaxis], self.att_quat))
         logging.info(f"{self.__class__.__name__}: interp_quat: {self.interp_quat_txyzs.shape}")
