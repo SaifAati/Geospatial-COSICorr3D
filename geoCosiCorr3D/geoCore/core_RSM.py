@@ -11,10 +11,14 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import geopandas
+import numpy as np
+from shapely import Polygon
+
 import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-import numpy as np
 from geoCosiCorr3D.geoCore.base.base_RSM import BaseRSM
+from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
 
 
 class RSM(BaseRSM):
@@ -26,10 +30,10 @@ class RSM(BaseRSM):
         self.platform = None
         self.date_time_obj = None
 
-    def ComputeAttitude(self):
+    def interp_eph(self):
         pass
 
-    def Interpolate_position_velocity_attitude(self):
+    def interp_attitude(self):
         pass
 
     @staticmethod
@@ -78,10 +82,7 @@ class RSM(BaseRSM):
     @staticmethod
     def compute_rsm_footprint(rsm_model, dem_file: Optional[str] = None,
                               rsm_corr_model: Optional[np.ndarray] = None, hMean: Optional[float] = None):
-        import geopandas
-        from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import \
-            cPix2GroundDirectModel
-        from shapely import Polygon
+
         if rsm_corr_model is None:
             rsm_corr_model = np.zeros((3, 3))
 

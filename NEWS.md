@@ -38,3 +38,11 @@ Here's what's new:
 
 ---
 
+
+# [July 09, 2024] geoCosiCorr 3D v2.5.0 Release Notes
+
+- Dynamic memory management, during orthorectification, to avoid memory overflow.
+- Support state extrapolation.
+- Code cleanup and refactoring.
+
+---

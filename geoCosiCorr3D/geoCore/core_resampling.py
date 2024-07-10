@@ -10,12 +10,14 @@ import math
 import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-from scipy.interpolate import RegularGridInterpolator
-import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
+
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
 import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import geoCosiCorr3D.utils.misc as misc
 
 SINC_KERNEL_SZ: int = 15
 
@@ -66,8 +68,10 @@ class ResamplingEngine:
 
 
 class RawResampling(ResamplingEngine):
-    def __init__(self, input_raster_info: geoRT.cRasterInfo, transformation_mat: np.ndarray,
-                 resampling_params: Optional[Dict], debug: bool = False):
+    def __init__(self, input_raster_info: geoRT.cRasterInfo,
+                 transformation_mat: np.ndarray,
+                 resampling_params: Optional[Dict],
+                 debug: bool = False):
         """
         Resampling an image according to transformation matrices using the selected
         resampling kernel (e.g., sinc ,bilinear,bicubic,)
@@ -82,141 +86,109 @@ class RawResampling(ResamplingEngine):
         self.raster_info = input_raster_info
         self.trans_matx = transformation_mat
 
-    def compute_l1A_img_tile_subset(self, rasterInfo: geoRT.cRasterInfo, matrix_x, matrix_y, margin=3) -> Dict:
+    def compute_l1A_img_tile_subset(self, raster_info: geoRT.cRasterInfo, matrix_x, matrix_y, margin=15) -> Dict:
         """
         Define the necessary image subset Dimensions needed for the resampling,
         depending on the resample engine selected.
-        Args:
             matrix_x: X-pixel coordinates : array
             matrix_y: Y-pixel coordinates : array
             margin: margin added around the subset for interpolation purpose :int
-
-        Returns:
-
         """
-        ### In order to define the necessary image subset to process the current matrix tile
-        ### we need the matrix_x min and max,
-        ### as well an estimate of the resampling distance in case of Sinc resampling engine.
         if np.isnan(matrix_x).all() or np.isnan(matrix_y).all():
             logging.error("RESAMPLING::MATRIX_X or MATRIX_Y ALL NANs")
-            import sys
-            sys.exit("MATRIX_X or MATRIX_Y ALL NANs")
-        if self.debug:
-            logging.info(
-                f'Resampling:compute L1A subset img_extent--> X: {np.nanmin(matrix_x), np.nanmax(matrix_x)},'
-                f' Y:{np.nanmin(matrix_y), np.nanmax(matrix_y)}')
+            raise ValueError("RESAMPLING::MATRIX_X or MATRIX_Y ALL NANs")
+
         minX = math.floor(np.nanmin(matrix_x))
         maxX = math.ceil(np.nanmax(matrix_x))
         minY = math.floor(np.nanmin(matrix_y))
         maxY = math.ceil(np.nanmax(matrix_y))
 
-        raw_img_pix_extent: Dict = {C.ImgExtents.COL_MIN: 0, C.ImgExtents.COL_MAX: rasterInfo.raster_width - 1,
-                                    C.ImgExtents.LIN_MIN: 0, C.ImgExtents.LIN_MAX: rasterInfo.raster_height}
-        ## Compute the necessary image subset dimension
+        raw_img_pix_extent: Dict = {C.ImgExtents.COL_MIN: 0,
+                                    C.ImgExtents.COL_MAX: raster_info.raster_width - 1,
+                                    C.ImgExtents.LIN_MIN: 0,
+                                    C.ImgExtents.LIN_MAX: raster_info.raster_height}
+        logging.info(f'{self.__class__.__name__}: Raw image extent:{raw_img_pix_extent}')
         # initialize as the full image raw image size
-        raw_img_subset_pix_extent = raw_img_pix_extent.copy()
+        tile_img_subset_pix_extent = raw_img_pix_extent.copy()
 
-        if (minX - margin) > raw_img_pix_extent[C.ImgExtents.COL_MIN]:
-            raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] = minX - margin
-        if (maxX + margin) < raw_img_pix_extent[C.ImgExtents.COL_MAX]:
-            raw_img_subset_pix_extent[C.ImgExtents.COL_MAX] = maxX + margin
+        # if (minX - margin) > raw_img_pix_extent['col_pix_min']:
+        #     tile_img_subset_pix_extent['col_pix_min'] = minX - margin
+        # if (maxX + margin) < raw_img_pix_extent['col_pix_max']:
+        #     tile_img_subset_pix_extent['col_pix_max'] = maxX + margin
 
         if (minY - margin) > raw_img_pix_extent[C.ImgExtents.LIN_MIN]:
-            raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY + margin
+            tile_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY + margin
 
         if (maxY + margin) < raw_img_pix_extent[C.ImgExtents.LIN_MAX]:
-            raw_img_pix_extent[C.ImgExtents.LIN_MAX] = maxY + margin
+            tile_img_subset_pix_extent[C.ImgExtents.LIN_MAX] = maxY + margin
 
         if self.method == C.Resampling_Methods.SINC:
-            borderX, borderY = SincResampler.compute_resampling_distance(matrix_x, matrix_y, matrix_x.shape,
+            borderX, borderY = SincResampler.compute_resampling_distance(matrix_x,
+                                                                         matrix_y,
+                                                                         matrix_x.shape,
                                                                          self.resampling_cfg.kernel_sz)
             if (minX - borderX) > raw_img_pix_extent[C.ImgExtents.COL_MIN]:
-                raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] = minX - borderX
+                tile_img_subset_pix_extent[C.ImgExtents.COL_MIN] = minX - borderX
             if (maxX + borderX) < raw_img_pix_extent[C.ImgExtents.COL_MAX]:
-                raw_img_subset_pix_extent[C.ImgExtents.COL_MAX] = maxX + borderX
+                tile_img_subset_pix_extent[C.ImgExtents.COL_MAX] = maxX + borderX
             if (minY - borderY) > raw_img_pix_extent[C.ImgExtents.LIN_MIN]:
-                raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY - borderY
+                tile_img_subset_pix_extent[C.ImgExtents.LIN_MIN] = minY - borderY
             if (maxY + borderY) < raw_img_pix_extent[C.ImgExtents.LIN_MAX]:
-                raw_img_subset_pix_extent[C.ImgExtents.LIN_MAX] = maxY + borderY
+                tile_img_subset_pix_extent[C.ImgExtents.LIN_MAX] = maxY + borderY
 
-        if self.debug:
-            logging.info(f'L1A Img subset img extent:{raw_img_subset_pix_extent}')
-        # print("-- not sinc --- ")
-        # print(dims1, dims2, dims3, dims4)
-        ## Check for situation where the entire current matrice tile is outside image boundaries
+        ## Check for situation where the entire current matx tile is outside image boundaries
         ## In that case need to output a zero array, either on file or in the output array, and
         ## continue to the next tile
-        if (raw_img_subset_pix_extent[C.ImgExtents.COL_MIN] > raw_img_subset_pix_extent[C.ImgExtents.COL_MAX]) or (
-                raw_img_subset_pix_extent[C.ImgExtents.LIN_MIN] > raw_img_subset_pix_extent[C.ImgExtents.LIN_MAX]):
+        if (tile_img_subset_pix_extent[C.ImgExtents.COL_MIN] > tile_img_subset_pix_extent[C.ImgExtents.COL_MAX]) or (
+                tile_img_subset_pix_extent[C.ImgExtents.LIN_MIN] > tile_img_subset_pix_extent[C.ImgExtents.LIN_MAX]):
             warnings.warn(
-                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{raw_img_subset_pix_extent}"
+                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{tile_img_subset_pix_extent}"
                 f"--> out of :{raw_img_pix_extent}")
             logging.error(
-                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{raw_img_subset_pix_extent}"
+                f"ERROR:Raw image subset is out of the boundary of the the input L1A img{tile_img_subset_pix_extent}"
                 f"--> out of :{raw_img_pix_extent}")
-            return dict.fromkeys(raw_img_subset_pix_extent, 0)
+            return dict.fromkeys(tile_img_subset_pix_extent, 0)
 
-        if self.debug:
-            logging.info(f'Raw subset img extent:dims:{raw_img_subset_pix_extent}')
-
-        return raw_img_subset_pix_extent
+        return tile_img_subset_pix_extent
 
 
 class SincResampler:
     # Definition of the resampling kernel
-
     apodization = 1  # sinc kernel apodization (1 by default, with no option for user)
 
     @staticmethod
-    def f_sinc_resampler(matrix_x, matrix_y, im1A, kernel_sz, weigthing=1):
-        """
-
-        Args:
-            matrix_x:
-            matrix_y:
-            im1A:
-            weigthing:
-
-        Returns:
-
-        """
-
+    def f_sinc_resampler(matrix_x, matrix_y, l1a_img, kernel_sz, weigthing=1):
         sz = matrix_x.shape
-
-        # libPath_ = ctypes.util.find_library(geoCfg.geoCosiCorr3DLib)
-        #
-        # if not libPath_:
-        #     geoErrors.erLibNotFound(libPath=geoCfg.geoCosiCorr3DLib)
+        misc.log_available_memory(f'f_sinc_resampler')
         try:
             sincLib = ctypes.CDLL(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
-            matCol = np.array(matrix_y, dtype=np.float_)
-            matRow = np.array(matrix_x, dtype=np.float_)
+            if matrix_x.dtype != np.float_:
+                matrix_x = matrix_x.astype(np.float_, copy=False)
+            if matrix_y.dtype != np.float_:
+                matrix_y = matrix_y.astype(np.float_, copy=False)
 
-            # print("matrix_x[15,3]:{},matrix_y[15,3]:{}".format(matrix_x[15,3],matrix_y[15,3]))
-
-            img = np.array(im1A, dtype=np.float_)
             width = ctypes.c_int(kernel_sz)
-            oImg = np.zeros(sz, dtype=float)
+            o_img = np.zeros(sz, dtype=float)
             weighting = ctypes.c_int(weigthing)
-            nbColMat = ctypes.c_int(sz[0])
-            nbRowMat = ctypes.c_int(sz[1])
+            n_col_mat = ctypes.c_int(sz[0])
+            n_row_mat = ctypes.c_int(sz[1])
 
-            nbColImg = ctypes.c_int(im1A.shape[0])  # dims[3] - dims[2] + 1)
-            nbRowImg = ctypes.c_int(im1A.shape[1])  # dims[1] - dims[0] + 1)
+            n_col_img = ctypes.c_int(l1a_img.shape[0])  # dims[3] - dims[2] + 1)
+            n_row_img = ctypes.c_int(l1a_img.shape[1])  # dims[1] - dims[0] + 1)
 
             sincLib.main_sinc_adp_resampling_(
-                matCol.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                matRow.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                matrix_y.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                matrix_x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                l1a_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 ctypes.byref(width),
-                oImg.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
+                o_img.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
                 ctypes.byref(weighting),
-                ctypes.byref(nbColMat),
-                ctypes.byref(nbRowMat),
-                ctypes.byref(nbColImg),
-                ctypes.byref(nbRowImg))
+                ctypes.byref(n_col_mat),
+                ctypes.byref(n_row_mat),
+                ctypes.byref(n_col_img),
+                ctypes.byref(n_row_img))
 
-            return oImg
+            return o_img
         except OSError:
             geoErrors.erLibLoading(C.SOFTWARE.GEO_COSI_CORR3D_LIB)
 
@@ -232,12 +204,11 @@ class SincResampler:
             dx3 = (matrix_x[0, 0] - matrix_x[sz[0] - 1, sz[0] - 1]) / sz[0]
         else:
             dx3 = (matrix_x[0, 0] - matrix_x[sz[1] - 1, sz[1] - 1]) / sz[1]
-            ## Note:
-            # 10 =max variability of the resampling distance,
-            # 1.15= oversampling for kernel edge response
+
+        ## Note:
+        # 10= max variability of the resampling distance,
+        # 1.15= oversampling for kernel edge response
         borderX = int(np.ceil(np.max(np.abs([dx1, dx2, dx3])) * resampling_kernel_sz * 10 * 1.15))
-        # print("dx1:{},dx2:{},dx3:{}".format(dx1, dx2,dx3))
-        # print("borderX:", borderX)
 
         ## Get the average resampling distance in Y over the current tile in X, Y and diagonal directions.
         ## Take the maximum
@@ -248,9 +219,9 @@ class SincResampler:
             dy3 = (matrix_y[0, 0] - matrix_y[sz[0] - 1, sz[0] - 1]) / sz[0]
         else:
             dy3 = (matrix_y[0, 0] - matrix_y[sz[1] - 1, sz[1] - 1]) / sz[1]
-            ## Note:
-            # 10 =max variability of the resampling distance,
-            # 1.15= oversampling for kernel edge response
+        ## Note:
+        # 10 =max variability of the resampling distance,
+        # 1.15= oversampling for kernel edge response
         borderY = int(np.ceil(np.max(np.abs([dy1, dy2, dy3])) * resampling_kernel_sz * 10 * 1.15))
 
         return borderX, borderY
@@ -265,7 +236,7 @@ class BilinearResampler:
     def resampling(cls, matrix_x, matrix_y, im1A):
         sz = matrix_x.shape
         nbRows, nbCols = im1A.shape[0], im1A.shape[1]
-        ## Note: since we have corrected matrix_x nad matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
+        ## Note: since we have corrected matrix_x and matrix_y coordinates the interpolation is then done 0,nbRows and 0,nbCols
         f = RegularGridInterpolator(
             (np.arange(0, nbRows, 1), np.arange(0, nbCols, 1)),
             im1A,
