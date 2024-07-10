@@ -6,16 +6,16 @@
 
 import configparser
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import Enum
-from pathlib import Path
 from typing import Dict
 
 import numpy as np
 from osgeo import gdal
 
-GEOCOSICORR3D_PACKAGE_DIR = Path(__file__).parent.parent
-GEOCOSICORR3D_SETUP_CFG = os.path.join(GEOCOSICORR3D_PACKAGE_DIR.parent, 'setup.cfg')
+GEOCOSICORR3D_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+GEOCOSICORR3D_SETUP_CFG = os.path.join(GEOCOSICORR3D_PACKAGE_DIR, 'setup.cfg')
+
 config = configparser.ConfigParser()
 config.read(GEOCOSICORR3D_SETUP_CFG)
 
@@ -25,16 +25,19 @@ class SOFTWARE:
     AUTHOR = 'saif@caltech.edu||saifaati@gmail.com'
     SOFTWARE_NAME = config['metadata']['name']
     VERSION = config['metadata']['version']
-    TILE_SIZE_MB = 128
+    TILE_SIZE_MB = 64
+    MEMORY_USAGE = 0.3
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
     WKDIR = os.path.join(os.path.dirname(GEOCOSICORR3D_PACKAGE_DIR), 'GEO_COSI_CORR_3D_WD/')
     geoCosiCorr3DOrientation = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
+    CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                          'geoCosiCorrBaseCfg/geo_3DDA_config.yaml')
     CORR_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'geoCosiCorrBaseCfg/correlation.yaml')
     CORR_PARAMS_CONFIG = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                       'geoCosiCorrBaseCfg/corr_params.json')
 
-    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER.parent, "lib/lfgeoCosiCorr3D.so")
+    GEO_COSI_CORR3D_LIB = os.path.join(PARENT_FOLDER, "lib/lfgeoCosiCorr3D.so")
 
 
 @dataclass(frozen=True)
@@ -44,9 +47,10 @@ class SATELLITE_MODELS:
 
 
 @dataclass(frozen=True)
-class SatScanDirection:
-    FORWARD = 'FORWARD'
-    BACKWARD = 'BACKWARD'
+class TransformationMethods:
+    RSM: str = SATELLITE_MODELS.RSM
+    RFM: str = SATELLITE_MODELS.RFM
+    IDENTITY: str = 'identity'
 
 
 class ResamplingMethods(Enum):
@@ -56,12 +60,48 @@ class ResamplingMethods(Enum):
 
 @dataclass(frozen=True)
 class Resampling_Methods:
-    SINC = ResamplingMethods.SINC.value
-    BILINEAR = ResamplingMethods.BILINEAR.value
+    SINC: str = ResamplingMethods.SINC.value
+    BILINEAR: str = ResamplingMethods.BILINEAR.value
 
 
-GEOCOSICORR3D_SATELLITE_MODELS = [SATELLITE_MODELS.RFM, SATELLITE_MODELS.RSM]
-GEOCOSICORR3D_RESAMLING_METHODS = [ResamplingMethods.SINC.value, ResamplingMethods.BILINEAR.value]
+GEOCOSICORR3D_SATELLITE_MODELS = [getattr(SATELLITE_MODELS, field.name) for field in fields(SATELLITE_MODELS)]
+GEOCOSICORR3D_RESAMLING_METHODS = [getattr(Resampling_Methods, field.name) for field in fields(Resampling_Methods)]
+
+
+@dataclass(frozen=True)
+class ConfigKeys:
+    FEATURE_PTS_PARAMS: str = 'feature_points_params'
+    SATMODEL_PARAMS: str = 'sat_model_params'
+    OPT_PARAMS: str = 'opt_params'
+    ORTHO_PARAMS: str = 'ortho_params'
+    OPT_CORR_CONFIG: str = 'opt_corr_config'
+
+
+@dataclass(frozen=True)
+class RfmKeys:
+    LINE_OFF = 'LINE_OFF'
+    SAMP_OFF = 'SAMP_OFF'
+
+    LAT_OFF = 'LAT_OFF'
+    LONG_OFF = 'LONG_OFF'
+
+    HEIGHT_SCALE = 'HEIGHT_SCALE'
+    HEIGHT_OFF = 'HEIGHT_OFF'
+
+    LINE_SCALE = 'LINE_SCALE'
+    SAMP_SCALE = 'SAMP_SCALE'
+    LAT_SCALE = 'LAT_SCALE'
+    LONG_SCALE = 'LONG_SCALE'
+
+    LINE_NUM_COEFF = 'LINE_NUM_COEFF'
+    LINE_DEN_COEFF = 'LINE_DEN_COEFF'
+    SAMP_NUM_COEFF = 'SAMP_NUM_COEFF'
+    SAMP_DEN_COEFF = 'SAMP_DEN_COEFF'
+
+    LON_NUM_COEFF = 'LON_NUM_COEFF'
+    LON_DEN_COEFF = 'LON_DEN_COEFF'
+    LAT_NUM_COEFF = 'LAT_NUM_COEFF'
+    LAT_DEN_COEFF = 'LAT_DEN_COEFF'
 
 
 @dataclass(frozen=True)
@@ -160,8 +200,8 @@ class CORR_METHODS(Enum):
 
 
 class CORR_LIBS(Enum):
-    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/lgeoFreqCorr_v1.so")
-    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/libgeoStatCorr.so.1")
+    FREQ_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/lgeoFreqCorr_v1.so")
+    STAT_CORR_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/libgeoStatCorr.so.1")
 
 
 @dataclass(frozen=True)
@@ -200,7 +240,14 @@ class ASIFT_TP_PARAMS:
     SCALE_FACTOR = 1 / 8
     MODE = 'All'
     IMG_SIZE = 1000
-    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER.parent, "lib/mmlibs/bin/mm3d")
+    MM_LIB = os.path.join(SOFTWARE.PARENT_FOLDER, "lib/mmlibs/bin/mm3d")
+
+
+@dataclass(frozen=True)
+class SatModelParams:
+    SAT_MODEL: str
+    METADATA: str
+    SENSOR: str
 
 
 class TEST_CONFIG:
@@ -224,41 +271,3 @@ class TEST_CONFIG:
                        }
     GCP_OPT_CONFIG = {'nb_loops': 3, 'snr_th': 0.9, 'mean_error_th': 1 / 20,
                       'resampling_method': Resampling_Methods.SINC}
-
-
-@dataclass(frozen=True)
-class RsmAncKeys:
-    NB_COLS = 'nbCols'
-    NB_ROWS = 'nbRows'
-    NB_BANDS = 'nbBands'
-    PLATFORM = 'platform'
-    SUN_AZ = 'sunAZ'
-    SUN_ELEV = 'sunElev'
-    SAT_ELEV = 'satElev'
-    VIEW_ANGLE = 'viewAngle'
-    INCIDENCE_ANGLE = 'incidenceAngle'
-    AVG_LINE_RATE = 'avgLineRate'
-    SCAN_DIRECTION = 'sacnDirection'
-
-    GSD_MEAN = 'meanGSD'
-    GSD_aTRACK = 'gsd_ACT'
-    GSD_xTRACK = 'gsd_ACT'
-    GSD = 'gsd'
-
-    TIME = 'time'
-    START_TIME = 'startTime'
-    DATE_TIME_OBJ = 'date_time_obj'
-
-    FOCAL = 'focal'
-    COL_SZ = 'szCol'
-    ROW_SZ = 'szRow'
-
-    INTERP_SAT_POS = 'interpSatPosition'
-    INTERP_SAT_VEL = 'interpSatVelocity'
-    CCD_LOOK_ANG = 'CCDLookAngle'
-    INTERP_QUAT_Q0 = 'Q0interp'
-    INTERP_QUAT_Q1 = 'Q1interp'
-    INTERP_QUAT_Q2 = 'Q2interp'
-    INTERP_QUAT_Q3 = 'Q3interp'
-
-    SAT_TO_NAV_Mat = 'satToNavMat'

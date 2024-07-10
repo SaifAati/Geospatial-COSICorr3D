@@ -1,7 +1,6 @@
 version: '3.4'
 services:
   geocosicorr3d:
-    # Use a more descriptive image name with a tag
     image: geocosicorr3d:latest
     platform: linux/amd64
     build:

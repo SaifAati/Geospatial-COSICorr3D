@@ -8,7 +8,6 @@ import logging
 from typing import Optional
 
 import numpy as np
-
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho import RSMOrtho
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import (
@@ -78,7 +77,8 @@ class RSMG2P:
         self.oArray = self.compute_pix_coords()
 
     def DEM_interpolation(self, demDims):
-        from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+        # from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+        from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
         self.h_new = HeightInterpolation.DEM_interpolation(demInfo=self.demInfo,
                                                            demDims=demDims,

@@ -3,31 +3,23 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+import sys, pandas
 import logging
-import os
-import sys
-from multiprocessing import Pool, cpu_count
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
 import matplotlib.pyplot as plt
+from pathlib import Path
+from typing import Optional, Dict, List, Tuple
+from multiprocessing import Pool, cpu_count
 import numpy as np
-import pandas
-
-import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarn
-import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
+import os
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoCore.constants import (CORRELATION,
-                                             GEOCOSICORR3D_SATELLITE_MODELS,
-                                             GEOCOSICORR3D_SENSORS_LIST,
-                                             SATELLITE_MODELS, SOFTWARE,
-                                             Resampling_Methods)
-from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator,
-                                                    SpatialCorrelator)
+import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
+import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarn
+import geoCosiCorr3D.geoCore.constants as C
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoOptimization.RSM_Refinement import cRSMRefinement
-from geoCosiCorr3D.geoOrthoResampling.GCPPatch import (GCPPatch, OrthoPatch,
-                                                       RawInverseOrthoPatch)
+from geoCosiCorr3D.geoCore.core_correlation import (FreqCorrelator, SpatialCorrelator)
+from geoCosiCorr3D.geoOrthoResampling.GCPPatch import (GCPPatch, OrthoPatch, RawInverseOrthoPatch)
+from geoCosiCorr3D.geoTiePoints.misc import opt_report
 
 geoWarn.wrIgnoreNotGeoreferencedWarning()
 
@@ -36,7 +28,10 @@ MULTIPROCS_2LOOP_DEBUG = False
 
 class cGCPOptimization:
     def __init__(self,
-                 gcp_file_path: str, raw_img_path: str, ref_ortho_path: str, sat_model_params: Dict,
+                 gcp_file_path: str,
+                 raw_img_path: str,
+                 ref_ortho_path: str,
+                 sat_model_params: C.SatModelParams,
                  dem_path: Optional[str] = None,
                  opt_params: Dict = None,
                  opt_gcp_file_path: Optional[str] = None,
@@ -51,7 +46,7 @@ class cGCPOptimization:
         self.sat_model_params = sat_model_params
         self.debug = debug
         self.opt_gcp_file = opt_gcp_file_path
-        self.svg_patches = True
+        self.svg_patches = True  # svg_patches
         if opt_params is None:
             self.opt_params = {}
         else:
@@ -62,6 +57,8 @@ class cGCPOptimization:
             self.corr_params = corr_config
         self.ingest()
         self.set_patch_sz()
+
+    def __call__(self, *args, **kwargs):
         self.optimize()
 
     def ingest(self):
@@ -84,32 +81,29 @@ class cGCPOptimization:
         self.snr_th = self.opt_params.get('snr_th', 0.9)
         self.snr_weighting = self.opt_params.get('snr_weighting', True)
         self.mean_error_th = self.opt_params.get('mean_error_th', 1 / 20)
-        self.resampling_method = self.opt_params.get('resampling_method', Resampling_Methods.SINC)
+        self.resampling_method = self.opt_params.get('resampling_method', C.Resampling_Methods.SINC)
         logging.info(f'opt_params:nb_loops={self.nb_loops}, snr_th={self.snr_th} , snr_weighting={self.snr_weighting}, '
                      f'mean_error_th={self.mean_error_th}, resampling_method:{self.resampling_method}')
 
-        self.sat_model_name = self.sat_model_params.get('sat_model', None)
-        if self.sat_model_name not in GEOCOSICORR3D_SATELLITE_MODELS:
-            msg = f'Sat_model: {self.sat_model_name} is not valid and not supported by {SOFTWARE.SOFTWARE_NAME} v{SOFTWARE.VERSION}'
+        self.sat_model_name = self.sat_model_params.SAT_MODEL
+        if self.sat_model_name not in C.GEOCOSICORR3D_SATELLITE_MODELS:
+            msg = f'Sat_model: {self.sat_model_name} is not valid and not supported by {C.SOFTWARE.SOFTWARE_NAME} v{C.SOFTWARE.VERSION}'
             logging.error(msg)
             sys.exit(msg)
         else:
             logging.info(f'Sat_model:{self.sat_model_name}')
 
-        self.sat_model_metadata = self.sat_model_params.get('metadata', None)
-        if self.sat_model_metadata is None:
-            msg = f'Sat_model_metadata:{self.sat_model_metadata} is not provided'
-            logging.error(msg)
-            sys.exit(msg)
-        elif os.path.exists(self.sat_model_metadata) == False:
+        self.sat_model_metadata = self.sat_model_params.METADATA
+
+        if os.path.exists(self.sat_model_metadata) == False:
             msg = f'Sat_model_metadata:{self.sat_model_metadata} does not exist !'
             logging.error(msg)
             sys.exit(msg)
 
-        self.sensor = self.sat_model_params.get("sensor", None)
-        if self.sat_model_name == SATELLITE_MODELS.RSM:
-            if self.sensor not in GEOCOSICORR3D_SENSORS_LIST:
-                msg = f'sensor: {self.sensor} is not valid and not supported by {SOFTWARE.SOFTWARE_NAME} v{SOFTWARE.VERSION}'
+        self.sensor = self.sat_model_params.SENSOR
+        if self.sat_model_name == C.SATELLITE_MODELS.RSM:
+            if self.sensor not in C.GEOCOSICORR3D_SENSORS_LIST:
+                msg = f'sensor: {self.sensor} is not valid and not supported by {C.SOFTWARE.SOFTWARE_NAME} v{C.SOFTWARE.VERSION}'
                 logging.error(msg)
                 sys.exit(msg)
             else:
@@ -118,7 +112,7 @@ class cGCPOptimization:
                                                debug=self.debug)
                 logging.info(f'{self.__class__.__name__}: {self.sat_model_name}')
 
-        if self.sat_model_name == SATELLITE_MODELS.RFM:
+        if self.sat_model_name == C.SATELLITE_MODELS.RFM:
             # TODO implement RFM
             raise NotImplementedError
 
@@ -213,7 +207,7 @@ class cGCPOptimization:
                          patches_folder,
                          gcp: pandas.DataFrame,
                          dem_path,
-                         sat_model_type=SATELLITE_MODELS.RSM,
+                         sat_model_type=C.SATELLITE_MODELS.RSM,
                          loop_nb=None) -> Tuple:
         # ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
         ref_ortho_patch: OrthoPatch = OrthoPatch(ortho_info=ortho_info,
@@ -233,7 +227,7 @@ class cGCPOptimization:
                                                                      patch_map_extent=ref_ortho_patch.ortho_patch_map_extent,
                                                                      dem_path=dem_path,
                                                                      model_type=sat_model_type,
-                                                                     resampling_method=Resampling_Methods.SINC,
+                                                                     resampling_method=C.Resampling_Methods.SINC,
                                                                      debug=False)
 
         # TOdo: change the patch writing to optional
@@ -247,7 +241,7 @@ class cGCPOptimization:
 
     @staticmethod
     def compute_patch_shift(patch_path, patch_gsd, gcp, patches_folder,
-                            corr_method=CORRELATION.FREQUENCY_CORRELATOR, debug=False, loop_nb=None):
+                            corr_method=C.CORRELATION.FREQUENCY_CORRELATOR, debug=False, loop_nb=None):
         # TODO change this function to take as input equal arrays and correlation params
         # TODO Move this function to the correlation package or to the image registration package
         ## what we can do also: this function will be a class function of GCP patch that call a higher level function geoImageCorrealtion package
@@ -258,7 +252,7 @@ class cGCPOptimization:
         raw_patch = patch_info.image_as_array(2)
         ref_patch = patch_info.image_as_array(1)
         corr_wz = 4 * [int(ref_patch.shape[0] / 2)]
-        if corr_method == CORRELATION.FREQUENCY_CORRELATOR:
+        if corr_method == C.CORRELATION.FREQUENCY_CORRELATOR:
             ew_array, ns_array, snr_array = FreqCorrelator.run_correlator(target_array=raw_patch,
                                                                           base_array=ref_patch,
                                                                           window_size=corr_wz,
@@ -267,7 +261,7 @@ class cGCPOptimization:
                                                                           mask_th=0.9)
             dx, dy, snr = ew_array[0, 0], ns_array[0, 0], snr_array[0, 0]
 
-        if corr_method == CORRELATION.SPATIAL_CORRELATOR:
+        if corr_method == C.CORRELATION.SPATIAL_CORRELATOR:
             ew_array, ns_array, snr_array = SpatialCorrelator.run_correlator(base_array=ref_patch,
                                                                              target_array=raw_patch,
                                                                              window_size=corr_wz,
@@ -389,15 +383,15 @@ class cGCPOptimization:
             X=self.gcp_df_corr[self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id']]['x_map'],
             Y=self.gcp_df_corr[self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id']]['y_map'],
             targetEPSG=4326,
-            sourceEPSG=int(self.gcp_df_corr[self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id']]['epsg']))
+            sourceEPSG=int(self.gcp_df_corr[self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id']]['epsg'].iloc[0]))
 
         self.gcp_df_corr['lon'] = np.where(self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id'],
                                            res[1][0], self.gcp_df_corr['lon'])
         self.gcp_df_corr['lat'] = np.where(self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id'],
                                            res[0][0], self.gcp_df_corr['lat'])
         if self.dem_info is not None:
-            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
-            alt = TPsTOGCPS.get_gcp_alt(lon=res[1][0], lat=res[0][0], dem_path=self.dem_path)
+            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
+            alt = tp2gcp.get_gcp_alt(lon=res[1][0], lat=res[0][0], dem_path=self.dem_path)
             self.gcp_df_corr['alt'] = np.where(self.gcp_df_corr['gcp_id'] == gcp_patch[1]['gcp_id'],
                                                alt, self.gcp_df_corr['alt'])
 
@@ -445,9 +439,9 @@ class cGCPOptimization:
 
         for loop in range(self.nb_loops):
             logging.info(f"--------------------- #Loop:{loop}-----------------------")
-            if self.sat_model_name == SATELLITE_MODELS.RSM:
+            if self.sat_model_name == C.SATELLITE_MODELS.RSM:
                 self.corr_model = self.compute_rsm_correction(self.sat_model, self.gcp_df_corr)
-            if self.sat_model_name == SATELLITE_MODELS.RFM:
+            if self.sat_model_name == C.SATELLITE_MODELS.RFM:
                 # TODO
                 continue
             self.corr_model_file = os.path.join(os.path.dirname(self.opt_gcp_file),
@@ -467,7 +461,7 @@ class cGCPOptimization:
                                                                patch_gsd=gcp_patch[2],
                                                                gcp=gcp_patch[1],
                                                                patches_folder=self.patches_folder,
-                                                               corr_method=CORRELATION.FREQUENCY_CORRELATOR,
+                                                               corr_method=C.CORRELATION.FREQUENCY_CORRELATOR,
                                                                debug=self.svg_patches,
                                                                loop_nb=loop)
 
@@ -516,11 +510,11 @@ class cGCPOptimization:
 
             logging.info(f'{self.__class__.__name__}:: mean_err[pix]:{mean_err_xy_pix} --  RMSE[pix]:{xy_rmse}')
 
-            if self.debug and self.svg_patches:
-                # TODO another plot will be the cumulative error plot, where we can compute the elbow thrshold and filter outliers
-                ## similar to what I have implemented for RFM with Skysat/PlanetScope.
-                self.plot_error_distribution(dx_pixs, dy_pixs, loop_nb=loop,
-                                             saving_folder=os.path.dirname(self.opt_gcp_file))
+            # if self.debug and self.svg_patches:
+            #     # TODO another plot will be the cumulative error plot, where we can compute the elbow thrshold and filter outliers
+            #     ## similar to what I have implemented for RFM with Skysat/PlanetScope.
+            #     self.plot_error_distribution(dx_pixs, dy_pixs, loop_nb=loop,
+            #                                  saving_folder=os.path.dirname(self.opt_gcp_file))
             # if mean_err_xy_pix <= self.mean_error_th:
             #     break
 
@@ -532,9 +526,8 @@ class cGCPOptimization:
                                             Path(self.opt_gcp_file).stem + ".opt_report.csv")
         df_report.to_csv(self.opt_report_path, index=False)
         self.opt_report_df = df_report
-        if self.debug:
-            from geoCosiCorr3D.geoTiePoints.misc import opt_report
-            opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)
+
+        opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)
         return
 
     @staticmethod
@@ -637,7 +630,7 @@ def generate_gcp_patches(nb_gcps, raw_img_info, sat_model, corr_model, patch_sz,
     # ref_ortho_info = geoRT.cRasterInfo(ref_ortho_img)
     for i in range(nb_gcps):
         arg = [raw_img_info, sat_model, corr_model, patch_sz, ref_ortho_info,
-               patches_folder, gcp_df_corr.iloc[i], dem_path, SATELLITE_MODELS.RSM, loop]
+               patches_folder, gcp_df_corr.iloc[i], dem_path, C.SATELLITE_MODELS.RSM, loop]
         arg_list.append(arg)
     # FIXME
     # pool = Pool()

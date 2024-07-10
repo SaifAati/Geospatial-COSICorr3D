@@ -293,9 +293,9 @@ class Correlate(RawCorrelation):
             _, im2 = show(ns_array, cmap=cmap, interpolation='none', vmin=vmin, vmax=vmax, ax=axs[1],
                           transform=corr_raster_info.geo_transform_affine)
 
-            axs[1].set_xlabel('lon[$^\circ$]', fontsize=12)
-            axs[0].set_xlabel('lon[$^\circ$]', fontsize=12)
-            axs[0].set_ylabel('lat[$^\circ$]', fontsize=12)
+            axs[1].set_xlabel(r'lon[$^\circ$]', fontsize=12)
+            axs[0].set_xlabel(r'lon[$^\circ$]', fontsize=12)
+            axs[0].set_ylabel(r'lat[$^\circ$]', fontsize=12)
 
             for ax, title_, im in zip(axs, ["E-W [m]", "N-S [m]"], [im1, im2]):
                 # ax.set_title(title_)

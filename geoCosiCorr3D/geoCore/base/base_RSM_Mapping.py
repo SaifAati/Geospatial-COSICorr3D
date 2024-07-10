@@ -7,8 +7,10 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
-
+from geoCosiCorr3D.geoConfig import cgeoCfg
 from geoCosiCorr3D.geoCore.constants import EARTH
+
+geoCfg = cgeoCfg()
 
 
 class BasePix2GroundDirectModel(ABC):

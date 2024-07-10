@@ -8,15 +8,15 @@ import datetime
 import logging
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial.transform import Slerp, Rotation
 from scipy.interpolate import interp1d, splev, splrep
 
+import geoCosiCorr3D.geoRSM.misc as misc
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoRSM.geoRSM_metadata.ReadSatMetadata import (
     cGetSpot15Metadata, cGetSpot67Metadata)
-from geoCosiCorr3D.geoRSM.misc import NormalizeArray, cSpatialRotations
 
 geoCosiCorr3DOrientation = SOFTWARE.geoCosiCorr3DOrientation
 
@@ -33,7 +33,6 @@ class cSpot67(RSM):
         self.debug = debug
         self.dmpFile = dmpXml
         self.file = self.dmpFile
-        # self.imgFilePath = os.path.join(os.path.dirname(dmpXml), "IMG_" + Path(dmpXml).stem.split("DIM_")[1] + ".tif")
         self.spotMetadata = cGetSpot67Metadata(self.dmpFile)
         self.date = self.spotMetadata.imagingDate
         self.time = self.spotMetadata.time
@@ -70,58 +69,31 @@ class cSpot67(RSM):
         self.szRow = self.spotMetadata.szRow
 
         self.lineOfSight = self.spotMetadata.lineOfSight
-        self.position = self.spotMetadata.position
-        self.velocity = self.spotMetadata.velocity
-        self.ephTime = self.spotMetadata.ephTime
-        self.Q0 = self.spotMetadata.Q0
-        self.Q1 = self.spotMetadata.Q1
-        self.Q2 = self.spotMetadata.Q2
-        self.Q3 = self.spotMetadata.Q3
-        self.QTime = self.spotMetadata.QTime
+        self.eph = self.spotMetadata.eph_tpv
+        self.quat_txyzs = self.spotMetadata.quat_txyzs
+
         self.linePeriod = self.spotMetadata.linePeriod
         if self.debug:
             logging.info("--- Computing " + self.platform + "  RSM:")
 
-        ##Date each line of the raw image :right now O-time is at first line
+        # Date each line of the raw image :right now O-time is at first line
         self.linesDate = np.arange(self.nbRows) * self.linePeriod
 
         self.interpSatPosition = np.empty((self.nbRows, 3))
         self.interpSatVelocity = np.empty((self.nbRows, 3))
-        self.Interpolate_position_velocity_attitude()
 
-        self.ComputeCCDLookAngles()
+        self.interp_eph()
 
-        self.ComputeAttitude()
+        self.compute_orbital_reference_system()
+
+        self.compute_look_direction()
+
+        self.interp_attitude()
+
+        self.sat_to_orb_rotation()
+
         if self.debug:
             logging.info(" Done!\n")
-        # print("CCD Look angle:{}\n{}".format(self.CCDLookAngle.shape, self.CCDLookAngle))
-
-    def Plot_interpolation(self):
-        fig1 = plt.figure("Position")
-        plt.scatter(self.ephTime, self.position[:, 0], label="X")
-        plt.scatter(self.ephTime, self.position[:, 1], label="Y")
-        plt.scatter(self.ephTime, self.position[:, 2], label="Z")
-        plt.xlabel("ephTime(s)")
-        plt.ylabel("carteCoord")
-        plt.legend()
-
-        fig2 = plt.figure("Interpolated sat position")
-
-        ax = plt.axes(projection='3d')
-        ax.scatter3D(self.position[:, 0] / 10000, self.position[:, 1] / 10000, self.position[:, 2] / 10000,
-                     cmap='Greens', marker="o", s=100)
-        ax.scatter3D(self.interpSatPosition[:, 0] / 10000, self.interpSatPosition[:, 1] / 10000,
-                     self.interpSatPosition[:, 2] / 10000)
-
-        fig3 = plt.figure("Interpolated satVelocity")
-
-        ax = plt.axes(projection='3d')
-        norm = 100
-        ax.scatter3D(self.velocity[:, 0] / norm, self.velocity[:, 1] / norm, self.velocity[:, 2] / norm,
-                     cmap='Greens', marker="o", s=100)
-        ax.scatter3D(self.interpSatVelocity[:, 0] / norm, self.interpSatVelocity[:, 1] / norm,
-                     self.interpSatVelocity[:, 2] / norm)
-        plt.show()
 
     @staticmethod
     def Quat_2_rot_airbus(quat):
@@ -145,46 +117,61 @@ class cSpot67(RSM):
 
         return res
 
-    def Interpolate_position_velocity_attitude(self):
+    @staticmethod
+    def quat_to_rot(quat):
         """
+        Convert rotation quaternions into a rotation matrix
+        Args:
+             quat: An Nx4 array of quaternions with N quaternions and each quaternion consisting of [q1,q2,q3,q4] with q4 as the scalar part.
 
         Returns:
-        Notes:
-            1- FOR SPOT-6&7:  we perform a spline 1D interpolation since the we have have a large number of ephemeris.
-            Therefore, interpolation using Lagrange is not required.
+            An Nx3x3 array of rotation matrices.
 
-            2-Orbital coordinate system definition for each line of the image are defined as follow:
-                Z = satPos/norm(satPos)
-                X = velSat ^ Z /norm( velSat ^ Z)
-                Y = Z ^ X
-        References:
-            equations: 7a-b-c p38
         """
+        quaternions_normalized = quat / np.linalg.norm(quat, axis=1, keepdims=True)
+        rotation = Rotation.from_quat(quaternions_normalized)
+        rotation_matrices = rotation.as_matrix()
 
-        self.ephTime = [elt - self.startTime for elt in self.ephTime]
-        if self.debug:
-            logging.info(" *")
-        for i in range(3):
-            f1 = interp1d(self.ephTime, self.position[:, i], kind='quadratic')
-            self.interpSatPosition[:, i] = f1(self.linesDate)
+        return rotation_matrices
 
-            f2 = interp1d(self.ephTime, self.velocity[:, i], kind='quadratic')
-            self.interpSatVelocity[:, i] = f2(self.linesDate)
-        # print(self.interpSatVelocity)
-        # self.Plot_interpolation()
+    def interp_eph(self):
 
-        # orbitalPos_z = self.interpSatPosition/np.linalg.norm(self.interpSatPosition,axis=0,ord=2)
-        # print(orbitalPos_z)
+        def interpolate_data(data):
+            return [interp1d(eph_time, data[:, i],
+                             kind='quadratic',
+                             bounds_error=False,
+                             fill_value="extrapolate")(self.linesDate) for i in range(3)]
 
-        self.orbitalPos_Z = NormalizeArray(self.interpSatPosition)
-        self.orbitalPos_X = NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
-        self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
+        eph_time = self.eph[:, 0] - self.startTime
+        num_elements_exceeding = np.sum(self.linesDate > eph_time[-1])
+
+        if num_elements_exceeding > 0:
+            logging.warning(
+                f"Performing EPH extrapolation for {num_elements_exceeding} line exceeding the maximum eph time")
+
+        self.interpSatPosition = np.array(interpolate_data(self.eph[:, 1:4])).T
+        self.interpSatVelocity = np.array(interpolate_data(self.eph[:, 4:7])).T
+
+        self.interp_sat_eph_tpv = np.hstack(
+            (self.linesDate[:, np.newaxis], self.interpSatPosition, self.interpSatVelocity))
+        logging.info(f"{self.__class__.__name__}: interp_sat_eph: {self.interp_sat_eph_tpv.shape}")
+
         return
 
-    def ComputeCCDLookAngles(self):
+    def compute_orbital_reference_system(self):
         """
+                Orbital coordinate system definition for each line of the image are defined as follow:
+                        Z = satPos/norm(satPos)
+                        X = velSat ^ Z /norm( velSat ^ Z)
+                        Y = Z ^ X
+                """
 
-        Returns:
+        self.orbitalPos_Z = misc.normalize_array(self.interpSatPosition)
+        self.orbitalPos_X = misc.normalize_array(np.cross(self.interpSatVelocity, self.orbitalPos_Z))
+        self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
+
+    def compute_look_direction(self):
+        """
         Notes:
             Pleiades/Spot orientation is:
                 +X along sat track movement
@@ -208,11 +195,11 @@ class cSpot67(RSM):
         self.CCDLookAngle[:, 0] = -(self.lineOfSight[0] + np.arange(self.nbCols) * self.lineOfSight[1])
         self.CCDLookAngle[:, 1] = (self.lineOfSight[2] + np.arange(self.nbCols) * self.lineOfSight[3])
         self.CCDLookAngle[:, 2] = -1
-        self.CCDLookAngle = NormalizeArray(inputArray=self.CCDLookAngle)
-
+        self.CCDLookAngle = misc.normalize_array(self.CCDLookAngle)
+        logging.info(f"{self.__class__.__name__}: look_angle: {self.CCDLookAngle.shape}")
         return
 
-    def ComputeAttitude(self):
+    def sat_to_orb_rotation(self):
         """
         Build the Matrix that change the reference system from satellite reference system to orbital reference system
         taking into account the satellite attitude: roll, pitch, yaw.
@@ -234,28 +221,26 @@ class cSpot67(RSM):
                 +Y along sat track movement
                 +Z up, away from Earth center
 
-            Therefore we add a transformation matrix referred to as:
+            Therefore, we add a transformation matrix referred to as:
             airbus_2_cosi_rot = np.array([[0, 1, 0], [1., 0, 0], [0, 0, -1]])
             earthRotation_sat[i, :, :] = quat_i @ airbus_2_cosi_rot
             ==> satToNavMat[i, :, :] = R @ earthRotation_sat[i, :, :]
         """
-        self.QTime = [elt - self.startTime for elt in self.QTime]
+        quat_xyzs = self.interp_quat_txyzs[:, 1:]
 
-        f1 = interp1d(self.QTime, self.Q0, kind='quadratic')
-        self.Q0interp = f1(self.linesDate)
-        f1 = interp1d(self.QTime, self.Q1, kind='quadratic')
-        self.Q1interp = f1(self.linesDate)
-        f1 = interp1d(self.QTime, self.Q2, kind='quadratic')
-        self.Q2interp = f1(self.linesDate)
-        f1 = interp1d(self.QTime, self.Q3, kind='quadratic')
-        self.Q3interp = f1(self.linesDate)
-        # print(self.Q1interp.shape)
         earthRotation_sat = np.empty((self.nbRows, 3, 3))
-        # airbus_2_cosi_rot = np.array([[0, 1, 0], [1., 0, 0], [0, 0, -1]])
         airbus_2_cosi_rot = np.copy(geoCosiCorr3DOrientation)
         for i in range(self.nbRows):
-            quat_i = np.array([self.Q1interp[i], self.Q2interp[i], self.Q3interp[i], self.Q0interp[i]])
+            quat_i = np.array(
+                [self.interp_quat_txyzs[:, 1][i],
+                 self.interp_quat_txyzs[:, 2][i],
+                 self.interp_quat_txyzs[:, 3][i],
+                 self.interp_quat_txyzs[:, 4][i]])
+
             earthRotation_sat[i, :, :] = self.Quat_2_rot_airbus(quat=quat_i) @ airbus_2_cosi_rot
+
+        # airbus_2_cosi_rot = np.copy(geoCosiCorr3DOrientation)
+        # earthRotation_sat = np.einsum('ij,kjl->kil', airbus_2_cosi_rot, self.quat_to_rot(quat_xyzs))
 
         self.satToNavMat = np.empty((self.nbRows, 3, 3))
         for i in range(self.nbRows):
@@ -263,6 +248,67 @@ class cSpot67(RSM):
                  [self.orbitalPos_Y[i, 0], self.orbitalPos_Y[i, 1], self.orbitalPos_Y[i, 2]],
                  [self.orbitalPos_Z[i, 0], self.orbitalPos_Z[i, 1], self.orbitalPos_Z[i, 2]]]
             self.satToNavMat[i, :, :] = np.dot(R, earthRotation_sat[i, :, :])
+
+        # R = np.stack((self.orbitalPos_X, self.orbitalPos_Y, self.orbitalPos_Z), axis=-1)
+        # self.satToNavMat = np.einsum('ijk,ikl->ijl', R, earthRotation_sat)
+
+    def interp_attitude(self, slerp_method=False):
+        """
+        Build the Matrix that change the reference system from satellite reference system to orbital reference system
+        taking into account the satellite attitude: roll, pitch, yaw.
+
+        Notes:
+            Computing satellite to orbital systems rotation matrices for each line of the image.
+            As follow:
+                        R= [[orbitalPos_X[i,0],orbitalPos_X[i,1],orbitalPos_X[i,2]]
+                           [orbitalPos_Y[i,0],orbitalPos_Y[i,1],orbitalPos_Y[i,2]]
+                           [orbitalPos_Z[i,0],orbitalPos_Z[i,1],orbitalPos_Z[i,2]]]
+
+            Pleiades/Spot orientation is:
+                +X along sat track movement
+                +Y left of +X
+                +Z down, towards Earth center
+
+            geoCosiCorr3D orientation is:
+                +X right or +Y
+                +Y along sat track movement
+                +Z up, away from Earth center
+
+            Therefore, we add a transformation matrix referred to as:
+            airbus_2_cosi_rot = np.array([[0, 1, 0], [1., 0, 0], [0, 0, -1]])
+            earthRotation_sat[i, :, :] = quat_i @ airbus_2_cosi_rot
+            ==> satToNavMat[i, :, :] = R @ earthRotation_sat[i, :, :]
+        """
+        interp_times = self.linesDate
+        quat_time = self.quat_txyzs[:, 0] - self.startTime
+        num_elements_exceeding = np.sum(interp_times > quat_time[-1])
+
+        if num_elements_exceeding > 0:
+            logging.warning(
+                f"Performing ATT extrapolation for {num_elements_exceeding} line exceeding the maximum quat time")
+
+        interp_quat_components = np.zeros((len(interp_times), 4))
+        if not slerp_method:
+
+            for i in range(1, 5):
+                f = interp1d(quat_time, self.quat_txyzs[:, i],
+                             kind='quadratic', bounds_error=False, fill_value="extrapolate")
+                interp_quat_components[:, i - 1] = f(interp_times)
+        else:
+            quaternions = self.quat_txyzs[:, 1:]
+            rotations = Rotation.from_quat(quaternions)
+            slerp = Slerp(quat_time, rotations)
+
+            for i, time in enumerate(interp_times):
+                if time <= quat_time[-1]:
+                    interp_quat_components[i] = slerp(time).as_quat()
+                else:
+                    # Extrapolation with the last valid quaternion
+                    interp_quat_components[i] = rotations.as_quat()[-1]
+
+        self.interp_quat_txyzs = np.hstack((interp_times[:, np.newaxis], interp_quat_components))
+        logging.info(f"{self.__class__.__name__}: interp_quat: {self.interp_quat_txyzs.shape}")
+
         return
 
 
@@ -312,22 +358,24 @@ class cSpot15(RSM):
         ## Before ephemeris interpolation, ephemeris value that are inside the image acquisition are discarded so
         ## that it doesn't weight too  much in the Lagrange interpolation.
 
-        time_, position_, velocity_ = self.__DiscardEphemeris(inf=self.linesDates[0],
-                                                              sup=self.linesDates[-1],
-                                                              time=self.spotMetadata.ephTime,
-                                                              position=self.spotMetadata.satPosition,
-                                                              velocity=self.spotMetadata.satVelocity)
+        time_, position_, velocity_ = self.discard_eph(inf=self.linesDates[0],
+                                                       sup=self.linesDates[-1],
+                                                       time=self.spotMetadata.ephTime,
+                                                       position=self.spotMetadata.satPosition,
+                                                       velocity=self.spotMetadata.satVelocity)
         self.ephTime = time_
         self.satPosition = position_
         self.satVelocity = velocity_
 
-        ##Ephemeris (position and velocity) interpolation for all line of
-        ## the image. Use of the Lagrange interpolation (SPOT geometry handbook)
-        self.Interpolate_position_velocity_attitude()
+        self.interp_eph()
 
-        self.ComputeCCDLookAngles(lookAngles=self.spotMetadata.lookAngles)
+        self.compute_orbital_reference_system()
 
-        self.ComputeAttitude()
+        self.compute_look_direction()
+
+        self.interp_attitude()
+
+        self.sat_to_orb_rotation()
 
         self.sunAz = self.spotMetadata.sunAz
         self.sunElev = self.spotMetadata.sunElev
@@ -358,7 +406,7 @@ class cSpot15(RSM):
             raise ValueError("Only whole SPOT1-5 scene can be processed (no subset)")
 
     @staticmethod
-    def __DiscardEphemeris(inf, sup, time, position, velocity):
+    def discard_eph(inf, sup, time, position, velocity):
         """
         AUTHORS:
             Sylvain Barbot (sbarbot@gps.caltech.edu)
@@ -426,7 +474,7 @@ class cSpot15(RSM):
         spot4HRV1CorrectionArray = np.loadtxt(Spot4_HRV1_correctionFile)
         return spot4HRV1CorrectionArray
 
-    def Interpolate_position_velocity_attitude(self):
+    def interp_eph(self):
         if self.debug:
             logging.info("Sat position and velocity interpolation ...")
         self.interpSatPosition = np.empty((self.nbRows, 3))
@@ -440,18 +488,14 @@ class cSpot15(RSM):
                                                                       self.satVelocity[:, i],
                                                                       self.ephTime)
 
-        # plt.plot(self.linesDates,self.interpSatPosition)
-        # plt.show()
-
+    def compute_orbital_reference_system(self):
         ###Compute for each scan line the coordinates in Orbital coordinate system
-        self.orbitalPos_Z = NormalizeArray(self.interpSatPosition)
-        self.orbitalPos_X = NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
+        self.orbitalPos_Z = misc.NormalizeArray(self.interpSatPosition)
+        self.orbitalPos_X = misc.NormalizeArray(inputArray=np.cross(self.interpSatVelocity, self.orbitalPos_Z))
         self.orbitalPos_Y = np.cross(self.orbitalPos_Z, self.orbitalPos_X)
-        # plt.plot(self.linesDates,self.orbitalPos_Y)
-        # plt.show()
         return
 
-    def ComputeCCDLookAngles(self, lookAngles):
+    def compute_look_direction(self, ):
         """
         Compute the satellite look angle from the on board measures
         Args:
@@ -462,11 +506,12 @@ class cSpot15(RSM):
         """
         if self.debug:
             logging.info("Computing sat look angles ...")
+        lookAngles = self.spotMetadata.lookAngles
         CCDLookAngle = np.empty((lookAngles.shape[0], 3))
         CCDLookAngle[:, 0] = -1 * np.tan(lookAngles[:, 1])  # PsyX
         CCDLookAngle[:, 1] = np.tan(lookAngles[:, 0])  # PsyY
         CCDLookAngle[:, 2] = -1  # the Z direction
-        CCDLookAngle = NormalizeArray(inputArray=CCDLookAngle)
+        CCDLookAngle = misc.NormalizeArray(inputArray=CCDLookAngle)
 
         if self.spotMetadata.mission == 5:
             self.CCDLookAngle = CCDLookAngle
@@ -522,7 +567,7 @@ class cSpot15(RSM):
                 logging.info(msg)
             return np.zeros((1, 1))
 
-    def ComputeAttitude(self):
+    def interp_attitude(self):
         if self.debug:
             logging.info("Computing Sat Attitude ...")
 
@@ -621,9 +666,13 @@ class cSpot15(RSM):
         yawInterp = splev(self.linesDates, fYaw, der=0)
         fRoll = splrep(self.attitudeTime, rollSmoothed, k=3)
         rollInterp = splev(self.linesDates, fRoll, der=0)
+        self.interp_rot_angles = np.vstack((pitchInterp, yawInterp, rollInterp)).T
 
+    def sat_to_orb_rotation(self):
         ## Computing satellite to orbital systems rotation matrices
-        self.satToNavMat = self.__SpotSat2NavMatrix(pitch=pitchInterp, yaw=yawInterp, roll=rollInterp)
+        self.satToNavMat = self.__SpotSat2NavMatrix(pitch=self.interp_rot_angles[:, 0],
+                                                    yaw=self.interp_rot_angles[:, 1],
+                                                    roll=self.interp_rot_angles[:, 2])
         if self.debug:
             logging.info("satToNavMat:{}".format(self.satToNavMat.shape))
             logging.info("Attitude:{}".format(self.satToNavMat.shape))
@@ -740,34 +789,6 @@ class cSpot15(RSM):
 
         oArray = np.empty((self.nbRows, 3, 3))
         for i in range(nb):
-            oArray[i, :, :] = cSpatialRotations().R_opk_xyz(omg=-pitch[i], phi=-roll[i], kpp=yaw[i])
+            oArray[i, :, :] = misc.cSpatialRotations().R_opk_xyz(omg=-pitch[i], phi=-roll[i], kpp=yaw[i])
 
         return oArray
-
-    # def Plot_interpolation(self):
-    #
-    #     fig1 = plt.figure("Position")
-    #     plt.scatter(self.ephTime, self.position[:, 0], label="X")
-    #     plt.scatter(self.ephTime, self.position[:, 1], label="Y")
-    #     plt.scatter(self.ephTime, self.position[:, 2], label="Z")
-    #     plt.xlabel("ephTime(s)")
-    #     plt.ylabel("carteCoord")
-    #     plt.legend()
-    #
-    #     fig2 = plt.figure("Interpolated sat position")
-    #
-    #     ax = plt.axes(projection='3d')
-    #     ax.scatter3D(self.position[:, 0] / 10000, self.position[:, 1] / 10000, self.position[:, 2] / 10000,
-    #                  cmap='Greens', marker="o", s=100)
-    #     ax.scatter3D(self.interpSatPosition[:, 0] / 10000, self.interpSatPosition[:, 1] / 10000,
-    #                  self.interpSatPosition[:, 2] / 10000)
-    #
-    #     fig3 = plt.figure("Interpolated satVelocity")
-    #
-    #     ax = plt.axes(projection='3d')
-    #     norm = 100
-    #     ax.scatter3D(self.velocity[:, 0] / norm, self.velocity[:, 1] / norm, self.velocity[:, 2] / norm,
-    #                  cmap='Greens', marker="o", s=100)
-    #     ax.scatter3D(self.interpSatVelocity[:, 0] / norm, self.interpSatVelocity[:, 1] / norm,
-    #                  self.interpSatVelocity[:, 2] / norm)
-    #     plt.show()

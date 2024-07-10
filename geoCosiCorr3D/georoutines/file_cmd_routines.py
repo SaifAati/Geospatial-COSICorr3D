@@ -405,21 +405,3 @@ def ContentOfFolder(folderPath):
 
     return fileList, dirPathList
 
-
-if __name__ == '__main__':
-    tmpPath = "/home/cosi/2-Data/4-Shishper/3-PostProcessing_Joint_LC_SL/ShishperSide/2-S2_and_L8/"
-    file1 = tmpPath + "log_not_filtered.txt"
-    file2 = tmpPath + "log_filtered.txt"
-
-    # CompareTwoFiles(file1, file2)
-
-    # UncompressFile(compressedFilePath="C:\\temp\\13JUL19WV031300019JUL13191105-P1BS-503388194040_01_P001_________AAE_0AAAAABPAIW0.tar")
-
-    # UncompressBatch(directoryInput="G:\Data\Ridgecrest\WV_Data_ridgecrest_Chris\cont_",
-    #                 directoryOutput="G:\Data\Ridgecrest\WV_Data_ridgecrest_Chris\cont_\\Unzipped")
-
-    # Copyfiles(inputdirectory="G:\Data\Ridgecrest\WV_Data_ridgecrest_Chris\cont_\\Unzipped\Post_eq\\",
-    #           destinationDirectory="G:\Data\Ridgecrest\WV_Data_ridgecrest_Chris\cont_\\Unzipped\All_NTF_Post_pan\\")
-    rsmList = [
-        "/media/cosicorr/storage/Saif/1-Ridgecrest/Data/1-WV/P1BS_sorted/Before_eq/Before_eq/2017-11-30-WV2/503916437010_01_P004_PAN"]
-    ContentOfFolder(rsmList[0])

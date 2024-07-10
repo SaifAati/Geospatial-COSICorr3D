@@ -5,6 +5,8 @@
 """
 import numpy as np
 
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
+
 
 class cRSMOptimization:
     def __init__(self, rsmModel, gcps, debug=True):
@@ -132,24 +134,23 @@ class cRSMOptimization:
         return P
 
     def Plot_Error(self):
+        import geoCosiCorr3D.georoutines.georoutines as geoRT
         import matplotlib.pyplot as plt
-        from matplotlib.ticker import AutoMinorLocator
-
-        import geoCosiCorr3D.georoutines.geo_utils as geoRT
+        from matplotlib.ticker import (AutoMinorLocator)
         dU_est = np.dot(self.cartCoordPlaneCoefs.T,
                         np.array([self.gcps[:, 3], self.gcps[:, 4], self.gcps.shape[0] * [1]])).T
         dU_res = self.dU - dU_est
         dU_norm = np.sqrt(self.dU[:, 0] ** 2 + self.dU[:, 1] ** 2 + self.dU[:, 2] ** 2)
         dU_est_norm = np.sqrt(dU_est[:, 0] ** 2 + dU_est[:, 1] ** 2 + dU_est[:, 2] ** 2)
 
-        stat_dU = geoRT.geoStat(in_array=dU_norm, display_values=False)
+        stat_dU = geoRT.cgeoStat(inputArray=dU_norm, displayValue=False)
 
         print("Pointing Error Ini :mean:{:.3f} ,median:{:.3f}, std:{:.3f}, RMSE:{:.3f}".format(float(stat_dU.mean),
                                                                                                float(stat_dU.median),
                                                                                                float(stat_dU.std),
                                                                                                float(stat_dU.RMSE)))
 
-        stat_dU_est = geoRT.geoStat(in_array=dU_est_norm, display_values=False)
+        stat_dU_est = geoRT.cgeoStat(inputArray=dU_est_norm, displayValue=False)
 
         print("Pointing Error opt_est :mean:{:.3f} ,median:{:.3f}, std:{:.3f}, RMSE:{:.3f}".format(
             float(stat_dU_est.mean),
@@ -193,7 +194,7 @@ class cRSMOptimization:
         for pixCoord, gcpItem in zip(list(self.gcpPixCoords), list(self.gcps)):
             # print(gcpItem)
             gcpInitLookDirection = self.ComputeLookDirection(self.rsmModel, pixCoord)
-            gcpCartCoords = geoRT.ConvertGeo2Cartesian(Lon=[gcpItem[0]], Lat=[gcpItem[1]], Alt=[gcpItem[2]])
+            gcpCartCoords = geoRT.Convert.geo_2_cartesian(Lon=[gcpItem[0]], Lat=[gcpItem[1]], Alt=[gcpItem[2]])
 
             gcpLookDirection = self.ComputeLookDirectionofGCPs(rsmModel=self.rsmModel,
                                                                gcpPixCoords=pixCoord,

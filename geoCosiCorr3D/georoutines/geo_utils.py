@@ -57,8 +57,15 @@ class cRasterInfo(BaseRasterInfo):
                               self.geo_transform_affine[4]]
         self.rpcs = self.raster.tags(ns='RPC')
         self.bbox_map = self.raster.bounds
-        self.raster_array = self.raster.read()  # all bands
-        self.raster = None
+        # self.raster_array = self.raster.read()  # all bands
+        self._raster_array = None  # Initialize a private attribute to None to return all bands
+        # self.raster = None
+
+    @property
+    def raster_array(self):
+        if self._raster_array is None:  # Check if the raster data has been loaded
+            self._raster_array = self.raster.read()  # Read & store the data
+        return self._raster_array
 
     def image_as_array_subset(self,
                               col_off_min: int,
@@ -75,17 +82,22 @@ class cRasterInfo(BaseRasterInfo):
         https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html
         """
         from rasterio.windows import Window
-        raster = rasterio.open(self.get_raster_path)
+
+        # raster = self.raster  # = rasterio.open(self.get_raster_path)
         width = (col_off_max - col_off_min) + 1
         height = (row_off_max - row_off_min) + 1
-        array = raster.read(band_number,
-                            window=Window(col_off=col_off_min, row_off=row_off_min, width=width, height=height))
-        raster = None
-        return array
+        # Note: This operation is performed each time the method is called and will allocate memory
+        # for the subset array that is being read
+        # raster = None
+        return self.raster.read(band_number,
+                                window=Window(col_off=col_off_min,
+                                              row_off=row_off_min,
+                                              width=width,
+                                              height=height))
 
     def image_as_array(self, band: Optional[int] = 1, read_masked=False):
-        raster = rasterio.open(self.get_raster_path)
-        return raster.read(band, masked=read_masked)
+        # raster = rasterio.open(self.get_raster_path)
+        return self.raster.read(band, masked=read_masked)
 
     @staticmethod
     def write_raster(output_raster_path,
@@ -254,7 +266,7 @@ class cRasterInfo(BaseRasterInfo):
             y: yMap coordinate: int or float
 
         Returns: coordinate in image space : tuple in pix
-
+            in case of WGS84: x=lon,y=lat --> x,y <--> col,lin
         """
 
         ## Apply inverse affine transformation
@@ -273,7 +285,8 @@ class cRasterInfo(BaseRasterInfo):
             warnings.warn("xPix outside the image dimension", DeprecationWarning, stacklevel=2)
         if yPx < 0 or yPx > self.raster_height:
             warnings.warn("yPix outside the image dimension", DeprecationWarning, stacklevel=2)
-        # NOTE using RASTERIO         print(rasterio.transform.rowcol(info_rasterio.transform, map_coord[0], map_coord[1])) --> we dont have the sub-pixel info
+        # NOTE using RASTERIO
+        # print(rasterio.transform.rowcol(info_rasterio.transform, map_coord[0], map_coord[1])) --> we dont have the sub-pixel info
         return (xPx, yPx)
 
     def Map2Pixel_Batch(self, X: List, Y: List):
@@ -389,9 +402,10 @@ class cRasterInfoGDAL:
         width = (col_off_max - col_off_min) + 1
         height = (row_off_max - row_off_min) + 1
         raster = gdal.Open(input_raster_path)
-        array = np.array(
-            raster.GetRasterBand(band_number).ReadAsArray(int(col_off_min), int(row_off_min), int(width),
-                                                          int(height)))
+        array = np.array(raster.GetRasterBand(band_number).ReadAsArray(int(col_off_min),
+                                                                       int(row_off_min),
+                                                                       int(width),
+                                                                       int(height)))
         raster = None
         return array
 
@@ -425,21 +439,18 @@ def WriteRaster(oRasterPath,
     global outband
     driver = gdal.GetDriverByName(driver)
     rows, cols = np.shape(arrayList[0])
-    # print(oRasterPath, cols, rows, len(arrayList), dtype)
     outRaster = driver.Create(oRasterPath, cols, rows, len(arrayList), dtype,
                               options=["TILED=YES", "BIGTIFF=YES", "COMPRESS=LZW"])
     outRaster.SetGeoTransform((geoTransform[0], geoTransform[1], geoTransform[2], geoTransform[3], geoTransform[4],
                                geoTransform[5]))
-    # dst_ds = driver.CreateCopy(dst_filename, src_ds, strict=0,
-    #                            options=["TILED=YES", "COMPRESS=PACKBITS"])
-    ## Set the projection
     if epsg is not None:
         outRasterSRS = osr.SpatialReference()
         outRasterSRS.ImportFromEPSG(epsg)
         outRaster.SetProjection(outRasterSRS.ExportToWkt())
 
     outRaster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
-    ## Set the metadata
+
+    # Set the metadata
     metaData_ = []
     if metaData is not None:
         if isinstance(metaData, dict):
@@ -450,7 +461,6 @@ def WriteRaster(oRasterPath,
             metaData_ = metaData
 
         for mm in metaData_:
-            # print("mm    ",mm)
             if not isinstance(mm[1], dict):
                 if not isinstance(mm[1], str):
                     str_ = str(mm[1])
@@ -710,7 +720,7 @@ class Convert:
 
 
 def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data: Optional[float] = None,
-                                   mask_vls: Optional[List] = None, band_idx=1, dtype = 'uint16') -> str:
+                                   mask_vls: Optional[List] = None, band_idx=1, dtype='uint16') -> str:
     """
     Notes: we assume the input raster have the same resolution and projection system
     """
@@ -732,7 +742,7 @@ def multi_bands_form_multi_rasters(raster_list: List, output_path: str, no_data:
         band_description.append("Band" + str(index + 1) + "_" + Path(img_).stem)
 
     cRasterInfo.write_raster(output_raster_path=output_path, array_list=array_list, geo_transform=info.geo_transform,
-                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data, dtype= dtype)
+                             epsg_code=info.epsg_code, descriptions=band_description, no_data=no_data, dtype=dtype)
     return output_path
 
 

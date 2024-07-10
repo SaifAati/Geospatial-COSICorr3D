@@ -3,40 +3,41 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+
 import ctypes
-import ctypes.util
 import logging
 import os
 import sys
-import warnings
 from inspect import currentframe
 from typing import Dict, Optional
 
-import goto
-import numpy as np
-import psutil
-from dominate.tags import label
-from goto import with_goto
-
+import geoCosiCorr3D.geoCore.constants as C
+import geoCosiCorr3D.geoCore.geoCosiCorrBaseCfg.BaseReadConfig as rcfg
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
-from geoCosiCorr3D.geoCore.constants import (EARTH, GEOCOSICORR3D_SENSORS_LIST,
-                                             SOFTWARE)
+import numpy as np
+
+import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.core_RSM import RSM
 from geoCosiCorr3D.geoCore.geoRawInvOrtho import RawInverseOrtho
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import \
     EstimateGeoTransformation
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling
 from geoCosiCorr3D.geoRFM.RFM import RFM
 
+CONFIG_FN = C.SOFTWARE.CONFIG
 geoWarns.wrIgnoreNotGeoreferencedWarning()
-process = psutil.Process(os.getpid())
-G2P_LIB_Path = SOFTWARE.GEO_COSI_CORR3D_LIB
 
+G2P_LIB_Path = C.SOFTWARE.GEO_COSI_CORR3D_LIB
 
 # TODO CHANGE RSM class location
+Converter = geoRT.Convert()
+
+
+class Ortho():
+    pass
 
 
 class RSMOrtho(RawInverseOrtho):
@@ -45,75 +46,95 @@ class RSMOrtho(RawInverseOrtho):
                  input_l1a_path: str,
                  output_ortho_path: str,
                  ortho_params: Optional[Dict] = None,
-                 output_trans_path: Optional[str] = None,
-                 dem_path: Optional[str] = None,
-                 debug: bool = True):
-        self.hMean = None
+                 **kwargs):
+
         if ortho_params is None:
             ortho_params = {}
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
         self.check_sensor_type()
-        self.orthorectify()
+
         return
 
+    def __call__(self, *args, **kwargs):
+        self.orthorectify()
+
     def orthorectify(self):
-        self.rsm_model = self._get_rsm_model()
+        self.model = self._get_rsm_model()
+
         self._get_correction_model()
         self.ortho_grid = self._set_ortho_grid()
+        if self.debug:
+            self.ortho_grid.grid_fp(o_folder=None)  # TODO set wd_folder
+            logging.info(f'{self.__class__.__name__}:{repr(self.ortho_grid)}')
         self._check_dem_prj()
         self.ortho_geo_transform = self.set_ortho_geo_transform()
         if self.debug:
-            logging.info("ortho_geo_transform:{}".format(self.ortho_geo_transform))
-        need_loop = 1
+            logging.info(f'{self.__class__.__name__}:ortho_geo_transform:{self.ortho_geo_transform}')
+
+        need_loop = True
         index = 1
-        init_data = None
         yOff = 0
 
-        self.compute_tiles()
+        self.compute_num_tiles()
         if self.debug:
-            logging.info("oRasterW:{}, oRasterH:{}, nbTiles:{}".format(self.oRasterW, self.oRasterH, self.nbTiles))
-
-        if self.nbTiles > 1:
+            logging.info(
+                f'{self.__class__.__name__}:Raster: W:{self.o_raster_w}, H:{self.o_raster_h}, #tiles:{self.n_tiles}')
+        if self.n_tiles > 1:
             self.write_ortho_per_tile()
+        dem_dims, easting, northing, num_tiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nb_rows_per_tile,
+                                                                          nbRowsOut=self.o_raster_h,
+                                                                          nbColsOut=self.o_raster_w,
+                                                                          need_loop=need_loop,
+                                                                          oUpLeftEW=self.ortho_grid.o_up_left_ew,
+                                                                          oUpLeftNS=self.ortho_grid.o_up_left_ns,
+                                                                          xRes=self.ortho_grid.o_res,
+                                                                          yRes=self.ortho_grid.o_res,
+                                                                          demInfo=self.dem_raster_info,
+                                                                          )
 
-        while need_loop != 0:
+        init_x_pix, init_y_pix = self.compute_initial_approx(modelData=self.model,
+                                                             oGrid=self.ortho_grid,
+                                                             easting=easting,
+                                                             northing=northing,
+                                                             oRasterW=self.o_raster_w)
+        ortho_data = {"easting": easting,
+                      "northing": northing,
+                      "current_tile": 0,
+                      "xPixInit": init_x_pix,
+                      "yPixInit": init_y_pix,
+                      "dem_dims": dem_dims,
+                      "nbTiles": num_tiles,
+                      "tiles": tiles,
+                      }
+        misc.log_available_memory(component_name=self.__class__.__name__)
+
+        while need_loop is True:
             if self.debug:
                 if self.debug:
-                    logging.info("========= Tile:{} /{} =============".format(index, self.nbTiles))
-            matTile, need_loop, init_data, nbTiles = self.compute_transformation_matrix(need_loop=need_loop,
-                                                                                        init_data=init_data)
-            if self.debug:
-                logging.info('matTile.shape:{}'.format(matTile.shape))
-                logging.info("... Resampling::{} ...".format(self.resampling_method))
+                    logging.info(f'========= Tile:{index} / {self.n_tiles} =============')
+            tile_tr_mat, need_loop, ortho_data = self.compute_transformation_matrix(ortho_data=ortho_data)
 
-            resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
-                                  resampling_params={'method': self.resampling_method})
+            if self.debug:
+                logging.info(f'{self.__class__.__name__}: tile_tr :{tile_tr_mat.shape}')
+                logging.info(f'{self.__class__.__name__}: Resampling::{self.resampling_method}')
+                logging.info(
+                    f'{self.__class__.__name__}: L1A tile img_extent --> '
+                    f'X: {np.nanmin(tile_tr_mat[0]), np.nanmax(tile_tr_mat[0])},'
+                    f'Y: {np.nanmin(tile_tr_mat[1]), np.nanmax(tile_tr_mat[1])}')
+
+            resample = Resampling(input_raster_info=self.l1a_raster_info,
+                                  transformation_mat=tile_tr_mat,
+                                  resampling_params={'method': self.resampling_method},
+                                  tile_num=index)
             oOrthoTile = resample.resample()
 
-            if self.debug:
-                logging.info("---> rss = {} Mb".format(process.memory_info().rss * 1e-6))
-                # plt.imshow(oOrthoTile, origin="lower", cmap="gray")
-                # plt.show()
-            # sys.exit()
-            yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=matTile, yOff=yOff)
+            yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=tile_tr_mat, yOff=yOff)
             index = index + 1
 
-        if self.nbTiles > 1:
+        if self.n_tiles > 1:
             self.oOrthoRaster = None
             self.oTranRaster = None
         return
-
-    def _set_ortho_grid(self) -> cGetSatMapGrid:
-        ortho_grid = cGetSatMapGrid(rasterInfo=self.l1a_raster_info,
-                                    modelData=self.rsm_model,
-                                    modelType=self.ortho_type,
-                                    rDEM=self.dem_path,
-                                    newRes=self.o_res,
-                                    modelCorr=self.corr_model,
-                                    debug=self.debug)
-        if self.debug:
-            logging.info(repr(ortho_grid))
-        return ortho_grid
 
     def _get_rsm_model(self):
         return RSM.build_RSM(metadata_file=self.metadata, sensor_name=self.sensor, debug=self.debug)
@@ -142,124 +163,60 @@ class RSMOrtho(RawInverseOrtho):
 
         return
 
-    @with_goto
-    def compute_transformation_matrix(self, need_loop, init_data):
+    def compute_transformation_matrix(self, ortho_data):
         """
         Core process of computing the orthorectification matrices of satellite images.
         Inputs are in-memory whereas output can be  written onto a file or returned in memory
-        Args:
-            need_loop
-            init_data
-
-        Returns:
-
         """
 
-        if need_loop != 0:
-            # print("----- Potential GOTO ----")
-            if need_loop == 1 and init_data is not None:
-                ## ++> the first loop and step --> we need initialize
-                # print("----- GOTO, inTiling ----")
-                goto.inTiling
+        easting = ortho_data["easting"]
+        northing = ortho_data["northing"]
+        xPixInit = ortho_data["xPixInit"]
+        yPixInit = ortho_data["yPixInit"]
+        tiles = ortho_data["tiles"]
+        current_tile = ortho_data["current_tile"]
+        if self.debug:
+            logging.info(f'{self.__class__.__name__}: current tile_num: {current_tile + 1}')
+
+        tile_nb_rows = tiles[current_tile + 1] - tiles[current_tile]
+        east_arr = np.tile(easting, (tile_nb_rows, 1))
+
+        tmp_northing = [northing[tiles[current_tile] + i] for i in range(tile_nb_rows)]
+        north_arr = np.tile(tmp_northing, (self.o_raster_w, 1)).T
+
+        hNew = self.elev_interpolation(ortho_data['dem_dims'], current_tile, east_arr, north_arr)
+
+        out_x, out_y, tile_nb_rows = self.rsm_g2p_minimization(rsmModel=self.model,
+                                                               rsmCorrectionArray=self.corr_model,
+                                                               nbColsOut=self.o_raster_w,
+                                                               xPixInit=xPixInit,
+                                                               yPixInit=yPixInit,
+                                                               eastArr=east_arr,
+                                                               northArr=north_arr,
+                                                               nbRowsOut=tile_nb_rows,
+                                                               hNew=hNew,
+                                                               debug=self.debug,
+                                                               target_epsg=self.ortho_grid.grid_epsg)
+        if current_tile != self.n_tiles - 1:
+            need_loop = True
+
+            ortho_data["current_tile"] = current_tile + 1
+            ortho_data["xPixInit"] = out_x[tile_nb_rows - 1, :]
+            ortho_data["yPixInit"] = out_y[tile_nb_rows - 1, :]
         else:
-            need_loop = 0
-        ## From the oGrid, define the matrix size
-        demDims, easting, northing, nbTiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nbRowsPerTile,
-                                                                       nbRowsOut=self.oRasterH,
-                                                                       nbColsOut=self.oRasterW,
-                                                                       need_loop=need_loop,
-                                                                       oUpLeftEW=self.ortho_grid.oUpLeftEW,
-                                                                       oUpLeftNS=self.ortho_grid.oUpLeftNS,
-                                                                       xRes=self.ortho_grid.oRes,
-                                                                       yRes=self.ortho_grid.oRes,
-                                                                       demInfo=self.dem_raster_info, )
+            need_loop = False
 
-        xPixInit, yPixInit = self.compute_initial_approx(modelData=self.rsm_model,
-                                                         oGrid=self.ortho_grid,
-                                                         easting=easting,
-                                                         northing=northing,
-                                                         oRasterW=self.oRasterW)
+        o_arr = np.zeros((2, out_x.shape[0], out_x.shape[1]))
+        o_arr[0, :, :] = out_x
+        o_arr[1, :, :] = out_y
 
-        if self.debug:
-            logging.info(f'initial_approx xPixIinit:{xPixInit} {len(xPixInit)} ')
-            logging.info(f'initial_approx yPixInit: {yPixInit} {len(yPixInit)}')
+        ## Create a geojson file for the footprint of the tile for debug purposes
+        # misc.compute_tile_fp(east_arr, north_arr, self.ortho_grid.grid_epsg, current_tile)
 
-        init_data = {"nbColsOut": self.oRasterW,
-                     "easting": easting,
-                     "northing": northing,
-                     "xPixInit": xPixInit,
-                     "yPixInit": yPixInit,
-                     "demInfo": self.dem_raster_info,
-                     "demDims": demDims,
-                     "ancillary": self.rsm_model,
-                     "nbTiles": nbTiles,
-                     "tiles": tiles,
-                     "tileCurrent": 0}
+        if np.isnan(out_x).all() or np.isnan(out_y).all():
+            raise ValueError("MATRIX_X or MATRIX_Y ALL NANs")
 
-        label.inTiling
-
-        nbColsOut = init_data["nbColsOut"]
-        easting = init_data["easting"]
-        northing = init_data["northing"]
-        xPixInit = init_data["xPixInit"]
-        yPixInit = init_data["yPixInit"]
-        demInfo = init_data["demInfo"]
-        demDims = init_data["demDims"]
-        nbTiles = init_data["nbTiles"]
-        tiles = init_data["tiles"]
-        tileCurrent = init_data["tileCurrent"]
-        if self.debug:
-            logging.info("Current Tile:{}".format(tileCurrent + 1))
-        ## We assume that eastArry and northArray are in the same coordinate system as the DEM if exist.
-        ## No conversion or proj system is needed
-        nbRowsOut = tiles[tileCurrent + 1] - tiles[tileCurrent]
-        eastArr = np.tile(easting, (nbRowsOut, 1))
-
-        tempNorthing = [northing[tiles[tileCurrent] + i] for i in range(nbRowsOut)]
-        northArr = np.tile(tempNorthing, (nbColsOut, 1)).T
-        hNew = self.DEM_interpolation(demInfo, demDims, tileCurrent, eastArr, northArr, self.rsm_model)
-        outX, outY, nbRowsOut = self.rsm_g2p_minimization(rsmModel=self.rsm_model,
-                                                          rsmCorrectionArray=self.corr_model,
-                                                          nbColsOut=nbColsOut,
-                                                          xPixInit=xPixInit,
-                                                          yPixInit=yPixInit,
-                                                          eastArr=eastArr,
-                                                          northArr=northArr,
-                                                          nbRowsOut=nbRowsOut,
-                                                          hNew=hNew,
-                                                          debug=self.debug,
-                                                          target_epsg=self.ortho_grid.gridEPSG)
-        if tileCurrent != nbTiles - 1:
-            need_loop = 1
-
-            init_data["tileCurrent"] = tileCurrent + 1
-            init_data["xPixInit"] = outX[nbRowsOut - 1, :]
-            init_data["yPixInit"] = outY[nbRowsOut - 1, :]
-        else:
-            need_loop = 0
-            init_data = None
-        oArray = np.zeros((2, outX.shape[0], outX.shape[1]))
-        oArray[0, :, :] = outX
-        oArray[1, :, :] = outY
-        return oArray, need_loop, init_data, nbTiles
-
-    def DEM_interpolation(self, demInfo, demDims, tileCurrent, eastArr, northArr, modelData):
-        from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
-        if self.debug:
-            logging.info("  H (rDEM) interpolation ...")
-        h_new = HeightInterpolation.DEM_interpolation(demInfo=demInfo, demDims=demDims, tileCurrent=tileCurrent,
-                                                      eastArr=eastArr, northArr=northArr)
-        if h_new is None:
-            if self.hMean is not None:
-                h_new = np.ones(eastArr.shape) * self.hMean
-                warnings.warn("H will be set to hMean:{}".format(self.hMean))
-                logging.warning(f'H will be set to the provided hMean {self.hMean}')
-            else:
-                h_new = np.zeros(eastArr.shape)
-                logging.warning('H will be set to 0')
-                warnings.warn("H will be set to 0")
-
-        return h_new
+        return o_arr, need_loop, ortho_data
 
     @staticmethod
     def rsm_g2p_minimization(rsmModel,
@@ -337,16 +294,10 @@ class RSMOrtho(RawInverseOrtho):
         outX = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
         outY = np.zeros((nbRowsOut, nbColsOut), dtype=np.float64)
 
-        libPath_ = ctypes.util.find_library(G2P_LIB_Path)
-        if not libPath_:
-            msg = "Unable to find the specified library:" + G2P_LIB_Path
-            sys.exit(msg)
         try:
-            fLib = ctypes.CDLL(libPath_)
+            fLib = ctypes.CDLL(G2P_LIB_Path)
         except OSError:
             sys.exit("Unable to load the system C library")
-        if debug:
-            logging.info(f'lib path:{G2P_LIB_Path}')
 
         nbColsOut_f = ctypes.c_int(nbColsOut)
         nbRowsOut_f = ctypes.c_int(nbRowsOut)
@@ -358,8 +309,8 @@ class RSMOrtho(RawInverseOrtho):
         longArr_f = np.array(longArr * (np.pi / 180), dtype=np.float64).T
         latArr_f = np.array(latArr * (np.pi / 180), dtype=np.float64).T
         h_f = np.array(hNew, dtype=np.float64).T
-        semiMajor_f = ctypes.c_double(EARTH.SEMIMAJOR)
-        semiMinor_f = ctypes.c_double(EARTH.SEMIMINOR)
+        semiMajor_f = ctypes.c_double(C.EARTH.SEMIMAJOR)
+        semiMinor_f = ctypes.c_double(C.EARTH.SEMIMINOR)
         outX_f = outX.T
         outY_f = outY.T
         fLib.ground2pixel_(ctypes.byref(nbColsOut_f),
@@ -409,21 +360,19 @@ class RSMOrtho(RawInverseOrtho):
         return outX, outY, nbRowsOut
 
     @staticmethod
-    def compute_initial_approx(modelData, oGrid, easting, northing, oRasterW):
+    def compute_initial_approx(modelData, oGrid: SatMapGrid, easting, northing, oRasterW):
         """
         Define an array of corresponding pixel coordinates 1A <--> Ground coordinates UTM
         Compute the 2D-affine transformation <==> geotrans for this task we don't need the h component
-
-
         """
 
         xBBox = [0, modelData.nbCols - 1, 0, modelData.nbCols - 1]
         yBBox = [0, 0, modelData.nbRows - 1, modelData.nbRows - 1]
 
-        topLeftGround = [oGrid.upLeftEW, oGrid.upLeftNS]
-        topRightGround = [oGrid.upRightEW, oGrid.upRightNS]
-        bottomLeftGround = [oGrid.botLeftEW, oGrid.botLeftNS]
-        bottomRightGround = [oGrid.botRightEW, oGrid.botRightNS]
+        topLeftGround = [oGrid.up_left_ew, oGrid.up_left_ns]
+        topRightGround = [oGrid.up_right_ew, oGrid.up_right_ns]
+        bottomLeftGround = [oGrid.bot_left_ew, oGrid.bot_left_ns]
+        bottomRightGround = [oGrid.bot_right_ew, oGrid.bot_right_ns]
 
         pixObs = np.array([xBBox, yBBox]).T
         groundObs = np.array([topLeftGround, topRightGround, bottomLeftGround, bottomRightGround])
@@ -434,16 +383,13 @@ class RSMOrtho(RawInverseOrtho):
         xPixInit = xyPixelInit[:, 0]
         yPixInit = xyPixelInit[:, 1]
 
-        # eastingMat = np.tile(easting,(self.oRasterH,1))
-        # northingMat = np.tile(northing, (self.oRasterW, 1)).T
-
         return xPixInit, yPixInit
 
     def check_sensor_type(self):
-        if self.sensor in GEOCOSICORR3D_SENSORS_LIST:
+        if self.sensor in C.GEOCOSICORR3D_SENSORS_LIST:
             logging.info(f'Satellite sensor:{self.sensor}')
         else:
-            msg = f'Satellite sensor:{self.sensor} not supported by {SOFTWARE.SOFTWARE_NAME}_v{SOFTWARE.VERSION}'
+            msg = f'Satellite sensor:{self.sensor} not supported by {C.SOFTWARE.SOFTWARE_NAME}_v{C.SOFTWARE.VERSION}'
             logging.error(msg)
             sys.exit(msg)
         pass
@@ -454,74 +400,84 @@ class RFMOrtho(RawInverseOrtho):
                  input_l1a_path: str,
                  output_ortho_path: str,
                  ortho_params: Optional[Dict] = None,
-                 output_trans_path: Optional[str] = None,
-                 dem_path: Optional[str] = None):
+                 **kwargs):
         if ortho_params is None:
             ortho_params = {}
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path)
-        self.orthorectify()
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
+
         return
+
+    def __call__(self, *args, **kwargs):
+        self.orthorectify()
 
     def orthorectify(self):
 
-        self.rfm_model = RFM(self.metadata, debug=True)
-
+        self.model = RFM(self.metadata, dem_fn=self.dem_path, debug=self.debug)
+        self.mean_h = self.model.altOff
         self._get_correction_model()
 
         self.ortho_grid = self._set_ortho_grid()
+        if self.debug:
+            self.ortho_grid.grid_fp(o_folder=None)  # TODO set wd_folder
+            logging.info(f'{self.__class__.__name__}:{repr(self.ortho_grid)}')
         self._check_dem_prj()
         self.ortho_geo_transform = self.set_ortho_geo_transform()
-        logging.info("ortho_geo_transform:{}".format(self.ortho_geo_transform))
+        logging.info(f'{self.__class__.__name__}:ortho_geo_transform:{self.ortho_geo_transform}')
 
-        need_loop = 1
+        need_loop = True
         index = 1
-        init_data = None
         yOff = 0
-        self.compute_tiles()
+        self.compute_num_tiles()
         if self.debug:
-            logging.info("oRasterW:{}, oRasterH:{}, nbTiles:{}".format(self.oRasterW, self.oRasterH, self.nbTiles))
+            logging.info(
+                f'{self.__class__.__name__}:Raster: W:{self.o_raster_w}, H:{self.o_raster_h}, #tiles:{self.n_tiles}')
 
-        if self.nbTiles > 1:
+        if self.n_tiles > 1:
             self.write_ortho_per_tile()
 
-        while need_loop != 0:
+        dem_dims, easting, northing, nbTiles, tiles = self.ortho_tiling(
+            nbRowsPerTile=self.nb_rows_per_tile,
+            nbRowsOut=self.o_raster_h,
+            nbColsOut=self.o_raster_w,
+            need_loop=need_loop,
+            oUpLeftEW=self.ortho_grid.o_up_left_ew,
+            oUpLeftNS=self.ortho_grid.o_up_left_ns,
+            xRes=self.ortho_grid.o_res,
+            yRes=self.ortho_grid.o_res,
+            demInfo=self.dem_raster_info,
+        )
+
+        ortho_data = {"easting": easting,
+                      "northing": northing,
+                      "current_tile": 0,
+                      "xPixInit": None,
+                      "yPixInit": None,
+                      "dem_dims": dem_dims,
+                      "nbTiles": nbTiles,
+                      "tiles": tiles,
+                      }
+
+        while need_loop is True:
             if self.debug:
-                logging.info("========= Tile:{} /{} =============".format(index, self.nbTiles))
-            matTile, need_loop, init_data, nbTiles = self.compute_transformation_matrix(need_loop=need_loop,
-                                                                                        init_data=init_data)
+                logging.info(f'========= Tile:{index} /{self.n_tiles} =============')
+
+            matTile, need_loop, ortho_data = self.compute_transformation_matrix(ortho_data=ortho_data)
 
             if self.debug:
-                logging.info('matTile.shape:{}'.format(matTile.shape))
-            if self.debug:
-                logging.info("... Resampling::{} ...".format(self.resampling_method))
+                logging.info(f'{self.__class__.__name__}:mat_tile.shape:{matTile.shape}')
+                logging.info(f'{self.__class__.__name__}:Resampling::{self.resampling_method}')
             resample = Resampling(input_raster_info=self.l1a_raster_info, transformation_mat=matTile,
                                   resampling_params={'method': self.resampling_method})
             oOrthoTile = resample.resample()
-            if self.debug:
-                logging.info("---> rss = {} Mb".format(process.memory_info().rss * 1e-6))
-                # plt.imshow(oOrthoTile, origin="lower", cmap="gray")
-                # plt.show()
-            # sys.exit()
+
             yOff = self.write_ortho_rasters(oOrthoTile=oOrthoTile, matTile=matTile, yOff=yOff)
             index = index + 1
 
-        if self.nbTiles > 1:
+        if self.n_tiles > 1:
             self.oOrthoRaster = None
             self.oTranRaster = None
 
         return
-
-    def _set_ortho_grid(self):
-        ortho_grid = cGetSatMapGrid(rasterInfo=self.l1a_raster_info,
-                                    modelData=self.rfm_model,
-                                    modelType=self.ortho_type,
-                                    rDEM=self.dem_path,
-                                    newRes=self.o_res,
-                                    modelCorr=self.corr_model,
-                                    debug=self.debug)
-        if self.debug:
-            logging.info(repr(ortho_grid))
-        return ortho_grid
 
     def _get_correction_model(self):
         if self.corr_model_file is None:
@@ -536,118 +492,128 @@ class RFMOrtho(RawInverseOrtho):
                 geoErrors.erReadCorrectionFile()
         return
 
-    @with_goto
-    def compute_transformation_matrix(self, need_loop, init_data):
+    def compute_transformation_matrix(self, ortho_data):
         """
         Core process of computing the orthorectification matrices of satellite images.
-        Inputs are in-memory whereas output can be  written onto a file or returned in memory
-        Returns:
-
+        Inputs are in-memory whereas output can be written onto a file or returned in memory
         """
-
-        if need_loop != 0:
-            # print("----- Potential GOTO ----")
-            if need_loop == 1 and init_data is not None:
-                ## ++> the first loop and step --> we need initialize
-                # print("----- GOTO, inTiling ----")
-                goto.inTiling
-        else:
-            need_loop = 0
-        ## From the oGrid, define the matrix size
-        demDims, easting, northing, nbTiles, tiles = self.ortho_tiling(nbRowsPerTile=self.nbRowsPerTile,
-                                                                       nbRowsOut=self.oRasterH,
-                                                                       nbColsOut=self.oRasterW,
-                                                                       need_loop=need_loop,
-                                                                       oUpLeftEW=self.ortho_grid.oUpLeftEW,
-                                                                       oUpLeftNS=self.ortho_grid.oUpLeftNS,
-                                                                       xRes=self.ortho_grid.oRes,
-                                                                       yRes=self.ortho_grid.oRes,
-                                                                       demInfo=self.dem_raster_info, )
-
-        xPixInit = None
-        yPixInit = None
-
-        init_data = {"nbColsOut": self.oRasterW,
-                     "easting": easting,
-                     "northing": northing,
-                     "xPixInit": xPixInit,
-                     "yPixInit": yPixInit,
-                     "demInfo": self.dem_raster_info,
-                     "demDims": demDims,
-                     "ancillary": self.rfm_model,
-                     "nbTiles": nbTiles,
-                     "tiles": tiles,
-                     "tileCurrent": 0}
-
-        label.inTiling
-
-        nbColsOut = init_data["nbColsOut"]
-        easting = init_data["easting"]
-        northing = init_data["northing"]
-        xPixInit = init_data["xPixInit"]
-        yPixInit = init_data["yPixInit"]
-        demInfo = init_data["demInfo"]
-        demDims = init_data["demDims"]
-        nbTiles = init_data["nbTiles"]
-        tiles = init_data["tiles"]
-        tileCurrent = init_data["tileCurrent"]
+        current_tile = ortho_data['current_tile']
+        easting = ortho_data['easting']
+        northing = ortho_data['northing']
+        tiles = ortho_data['tiles']
         if self.debug:
-            logging.info("Current Tile:{}".format(tileCurrent + 1))
+            logging.info(f'{self.__class__.__name__}:Current Tile:{current_tile + 1}')
         ## We assume that eastArry and northArray are in the same coordinate system as the DEM if exist.
         ## No conversion or proj system is needed
-        nbRowsOut = tiles[tileCurrent + 1] - tiles[tileCurrent]
+        nbRowsOut = tiles[current_tile + 1] - tiles[current_tile]
         eastArr = np.tile(easting, (nbRowsOut, 1))
 
-        tempNorthing = [northing[tiles[tileCurrent] + i] for i in range(nbRowsOut)]
-        northArr = np.tile(tempNorthing, (nbColsOut, 1)).T
+        tempNorthing = [northing[tiles[current_tile] + i] for i in range(nbRowsOut)]
+        northArr = np.tile(tempNorthing, (self.o_raster_w, 1)).T
 
-        hNew = self.DEM_interpolation(demInfo, demDims, tileCurrent, eastArr, northArr, self.rfm_model)
+        hNew = self.elev_interpolation(ortho_data['dem_dims'], current_tile, eastArr, northArr)
 
         eastArr_flat = eastArr.flatten()
         northArr_flat = northArr.flatten()
         hNew_flatten = list(hNew.flatten())
         if self.debug:
             logging.info(">>> converting UTM --> WGS84")
-
-        (lat_flat, lon_flat, alt_flat) = geoRT.ConvCoordMap1ToMap2_Batch(X=eastArr_flat,
-                                                                         Y=northArr_flat,
-                                                                         Z=hNew_flatten,
-                                                                         sourceEPSG=self.ortho_grid.gridEPSG,
-                                                                         targetEPSG=4326)
+        (lat_flat, lon_flat, alt_flat) = Converter.coord_map1_2_map2(X=eastArr_flat,
+                                                                     Y=northArr_flat,
+                                                                     Z=hNew_flatten,
+                                                                     sourceEPSG=self.ortho_grid.grid_epsg,
+                                                                     targetEPSG=4326)
         if self.debug:
             logging.info(">>> RFM Ground 2 Pix >>> ")
-        x_pix, y_pix = self.rfm_model.Ground2Img_RFM(lon=lon_flat,
-                                                     lat=lat_flat,
-                                                     alt=alt_flat,
-                                                     corrModel=self.corr_model)
+        x_pix, y_pix = self.model.g2i(lon=lon_flat,
+                                      lat=lat_flat,
+                                      alt=alt_flat)
 
         outX = np.reshape(x_pix, eastArr.shape)
         outY = np.reshape(y_pix, northArr.shape)
 
-        if tileCurrent != nbTiles - 1:
-            need_loop = 1
+        if current_tile != self.n_tiles - 1:
+            need_loop = True
 
-            init_data["tileCurrent"] = tileCurrent + 1
-            init_data["xPixInit"] = outX[nbRowsOut - 1, :]
-            init_data["yPixInit"] = outY[nbRowsOut - 1, :]
+            ortho_data["current_tile"] = current_tile + 1
+            ortho_data["xPixInit"] = outX[nbRowsOut - 1, :]
+            ortho_data["yPixInit"] = outY[nbRowsOut - 1, :]
         else:
-            need_loop = 0
-            init_data = None
+            need_loop = False
         oArray = np.zeros((2, outX.shape[0], outX.shape[1]))
         oArray[0, :, :] = outX
         oArray[1, :, :] = outY
-        return oArray, need_loop, init_data, nbTiles
 
-    def DEM_interpolation(self, demInfo: geoRT.cRasterInfo, demDims, tileCurrent, eastArr, northArr, modelData):
-        from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
-        if self.debug:
-            logging.info("  H (rDEM) interpolation ...")
+        return oArray, need_loop, ortho_data
 
-        h_new = HeightInterpolation.DEM_interpolation(demInfo=demInfo, demDims=demDims, tileCurrent=tileCurrent,
-                                                      eastArr=eastArr, northArr=northArr)
-        if h_new is None:
-            h_new = np.ones(eastArr.shape) * modelData.altOff
-            msg = "H will be set to alfOffset:{} m".format(modelData.altOff)
-            warnings.warn(msg)
 
-        return h_new
+def orthorectify(input_l1a_path: str,
+                 output_ortho_path: str,
+                 ortho_params: Optional[Dict] = None,
+                 output_trans_path: Optional[str] = None,
+                 dem_path: Optional[str] = None,
+                 refine: bool = False,
+                 gcp_fn: Optional[str] = None,
+                 ref_img_path: Optional[str] = None,
+                 debug: bool = False,
+                 show=True):
+    sat_model = C.SatModelParams(ortho_params['method']['method_type'],
+                                 ortho_params['method']['metadata'],
+                                 ortho_params['method'].get('sensor', None))
+    logging.info(f'sat_model:{sat_model}')
+    config = rcfg.ConfigReader(config_file=CONFIG_FN).get_config
+    if refine:
+        workspace_folder = os.path.dirname(output_ortho_path)
+        if gcp_fn is None:
+            from geoCosiCorr3D.geoOptimization.gcpOptimization import \
+                cGCPOptimization
+            from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
+            from geoCosiCorr3D.geoTiePoints.wf_features import features
+            if ref_img_path is None:
+                raise ValueError('ref_img_path cannot be None')
+            match_file = features(img1=ref_img_path,
+                                  img2=input_l1a_path,
+                                  tp_params=config[C.ConfigKeys.FEATURE_PTS_PARAMS],
+                                  output_folder=workspace_folder,
+                                  show=False)
+            gcps = tp2gcp(in_tp_file=match_file,
+                          base_img_path=input_l1a_path,
+                          ref_img_path=ref_img_path,
+                          dem_path=dem_path,
+                          debug=show)
+            gcps()
+            opt = cGCPOptimization(gcp_file_path=gcps.output_gcp_path,
+                                   raw_img_path=input_l1a_path,
+                                   ref_ortho_path=ref_img_path,
+                                   sat_model_params=sat_model,
+                                   dem_path=dem_path,
+                                   opt_params=config[C.ConfigKeys.OPT_PARAMS],
+                                   debug=debug)
+            opt()
+            logging.info(f'correction model file:{opt.corr_model_file}')
+            ortho_params['method']['corr_model'] = opt.corr_model_file
+
+    if sat_model.SAT_MODEL == C.SATELLITE_MODELS.RFM:
+        ortho = RFMOrtho(input_l1a_path=input_l1a_path,
+                         output_ortho_path=output_ortho_path,
+                         dem_path=dem_path,
+                         ortho_params=ortho_params,
+                         output_trans_path=output_trans_path,
+                         debug=debug)
+        ortho()
+    if sat_model.SAT_MODEL == C.SATELLITE_MODELS.RSM:
+        ortho = RSMOrtho(input_l1a_path=input_l1a_path,
+                         output_ortho_path=output_ortho_path,
+                         output_trans_path=output_trans_path,
+                         dem_path=dem_path,
+                         ortho_params=ortho_params,
+                         debug=debug)
+        ortho()
+
+        return
+
+    if __name__ == '__main__':
+        config = rcfg.ConfigReader(config_file=CONFIG_FN).get_config
+        print(config)
+
+

@@ -8,18 +8,19 @@ import math
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+from typing import List, Type
 
-import gdal
 import numpy as np
-import osr
+import psutil
+from osgeo import gdal, osr
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import geoCosiCorr3D.utils.misc as misc
 from geoCosiCorr3D.geoCore.base.base_orthorectification import (
     BaseInverseOrtho, BaseOrthoGrid, SatModel)
 from geoCosiCorr3D.geoCore.constants import SATELLITE_MODELS, SOFTWARE
 from geoCosiCorr3D.geoOrthoResampling.geoOrtho_misc import get_dem_dims
-from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import cGetSatMapGrid
+from geoCosiCorr3D.geoOrthoResampling.geoOrthoGrid import SatMapGrid
 
 
 class InvalidOutputOrthoPath(Exception):
@@ -27,16 +28,12 @@ class InvalidOutputOrthoPath(Exception):
 
 
 class RawInverseOrtho(BaseInverseOrtho):
-    def __init__(self,
-                 input_l1a_path: str,
-                 output_ortho_path: str,
-                 output_trans_path: Optional[str],
-                 ortho_params: Dict,
-                 dem_path: Optional[str],
-                 debug: bool = True):
-        # self.ortho_grid = None
-        super().__init__(input_l1a_path, output_ortho_path, output_trans_path, ortho_params, dem_path, debug)
+    def __init__(self, input_l1a_path, output_ortho_path, ortho_params, **kwargs):
+
+        super().__init__(input_l1a_path, output_ortho_path, ortho_params, **kwargs)
+        misc.log_available_memory(self.__class__.__name__)
         self._ingest()
+        misc.log_available_memory(f'{self.__class__.__name__}: ingest')
 
     def _ingest(self):
         self.l1a_raster_info = geoRT.cRasterInfo(self.input_l1a_path)
@@ -47,7 +44,7 @@ class RawInverseOrtho(BaseInverseOrtho):
             self.dem_raster_info = None
 
         self.o_res = self.ortho_params.get("GSD", None)
-        self.ortho_method = self.ortho_params.get("method", None)
+        self.ortho_method = self.ortho_params.get("method", {})
 
         self.ortho_type = self.ortho_method.get("method_type", None)
 
@@ -71,27 +68,22 @@ class RawInverseOrtho(BaseInverseOrtho):
         pass
 
     def _get_correction_model(self):
-        """
-
-        Returns:
-
-        """
         pass
 
     def _check_dem_prj(self):
 
         if self.dem_raster_info is not None:
-            if self.ortho_grid.gridEPSG != self.dem_raster_info.epsg_code:
+            if self.ortho_grid.grid_epsg != self.dem_raster_info.epsg_code:
                 msg = "Reproject DEM from {}-->{}".format(self.dem_raster_info.epsg_code,
-                                                          self.ortho_grid.gridEPSG)
+                                                          self.ortho_grid.grid_epsg)
                 warnings.warn(msg)
 
                 self.dem_path = geoRT.ReprojectRaster(input_raster_path=self.dem_raster_info.input_raster_path,
-                                                      o_prj=self.ortho_grid.gridEPSG,
+                                                      o_prj=self.ortho_grid.grid_epsg,
                                                       output_raster_path=os.path.join(
                                                           os.path.dirname(self.output_ortho_path),
                                                           Path(self.dem_raster_info.input_raster_path).stem + "_" + str(
-                                                              self.ortho_grid.gridEPSG) + ".vrt"),
+                                                              self.ortho_grid.grid_epsg) + ".vrt"),
                                                       vrt=True)
 
                 self.dem_raster_info = geoRT.cRasterInfo(self.dem_path)
@@ -99,30 +91,54 @@ class RawInverseOrtho(BaseInverseOrtho):
 
     def set_ortho_geo_transform(self) -> List[float]:
 
-        # TODO transform to affine transformation, to ba compatible with rasterio
-        return [self.ortho_grid.oUpLeftEW, self.ortho_grid.oRes, 0, self.ortho_grid.oUpLeftNS, 0,
-                -1 * self.ortho_grid.oRes]
+        # TODO transform to affine transformation, to be compatible with rasterio
+        return [self.ortho_grid.o_up_left_ew, self.ortho_grid.o_res, 0, self.ortho_grid.o_up_left_ns, 0,
+                -1 * self.ortho_grid.o_res]
 
-    def compute_tiles(self):
+    @staticmethod
+    def compute_nb_rows_per_tile(o_raster_w, memory_usage_percent=0.5, bit_depth=32):
+        """
+        Dynamically computes the number of rows per tile based on available system memory and desired memory usage percentage.
+
+        Args:
+        - o_raster_w: The width of the raster.
+        - memory_usage_percent: The percentage of available memory to use for computing the number of rows per tile.
+        - bit_depth: The bit depth of the raster.
+
+        Returns:
+        - The number of rows per tile.
+        """
+        # Get available memory
+        available_memory = psutil.virtual_memory().available
+        memory_to_use = available_memory * memory_usage_percent
+        bytes_per_pixel = 4 * 2
+        # Calculate the number of pixels that can fit into the desired memory usage
+        num_pixels = memory_to_use // bytes_per_pixel
+        nb_rows_per_tile = num_pixels // (o_raster_w * bit_depth * 2)
+
+        return math.floor(nb_rows_per_tile)
+
+    def compute_num_tiles(self):
         """
         Compute the required number of tiles.
-        Returns:
 
         """
-        oNbCols = round(((self.ortho_grid.oBotRightEW - self.ortho_grid.oUpLeftEW) / self.ortho_grid.oRes) + 1)
-        oNbRows = round(((self.ortho_grid.oUpLeftNS - self.ortho_grid.oBotRightNS) / self.ortho_grid.oRes) + 1)
-        self.oRasterW = oNbCols
-        self.oRasterH = oNbRows
-        self.nbRowsPerTile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (oNbCols * 32 * 2))
-        if self.debug:
-            logging.info("nbRowsPerTile: {}".format(self.nbRowsPerTile))
-        self.nbTiles = int(oNbRows / self.nbRowsPerTile)
 
-        if (self.nbTiles != 0):
-            if oNbRows % self.nbRowsPerTile != 0:
-                self.nbTiles += 1
+        self.o_raster_w = round(
+            ((self.ortho_grid.o_bot_right_ew - self.ortho_grid.o_up_left_ew) / self.ortho_grid.o_res) + 1)
+        self.o_raster_h = round(
+            ((self.ortho_grid.o_up_left_ns - self.ortho_grid.o_bot_right_ns) / self.ortho_grid.o_res) + 1)
+        # self.nb_rows_per_tile = math.floor((SOFTWARE.TILE_SIZE_MB * 8 * 1024 * 1024) / (self.o_raster_w * 32 * 2))
+        self.nb_rows_per_tile = self.compute_nb_rows_per_tile(self.o_raster_w, SOFTWARE.MEMORY_USAGE)
+        if self.debug:
+            logging.info(f'{self.__class__.__name__}: nb_rows_per_tile: {self.nb_rows_per_tile}')
+        self.n_tiles = int(self.o_raster_h / self.nb_rows_per_tile)
+
+        if (self.n_tiles != 0):
+            if self.o_raster_h % self.nb_rows_per_tile != 0:
+                self.n_tiles += 1
         else:
-            self.nbTiles = 1
+            self.n_tiles = 1
 
         return
 
@@ -130,35 +146,37 @@ class RawInverseOrtho(BaseInverseOrtho):
 
         driver = gdal.GetDriverByName("GTiff")
         outRasterSRS = osr.SpatialReference()
-        outRasterSRS.ImportFromEPSG(self.ortho_grid.gridEPSG)
+        outRasterSRS.ImportFromEPSG(self.ortho_grid.grid_epsg)
 
         if self.output_trans_path is not None:
-            self.oTranRaster = driver.Create(self.output_trans_path, self.oRasterW, self.oRasterH, 2, gdal.GDT_Float32,
-                                             options=["TILED=YES", "COMPRESS=LZW", "BIGTIFF=YES"])
+            self.o_trf_raster = driver.Create(self.output_trans_path, self.o_raster_w, self.o_raster_h, 2,
+                                              gdal.GDT_Float32,
+                                              options=["TILED=YES", "COMPRESS=LZW", "BIGTIFF=YES"])
 
-            self.oTranRaster.SetGeoTransform(
+            self.o_trf_raster.SetGeoTransform(
                 (self.ortho_geo_transform[0], self.ortho_geo_transform[1], self.ortho_geo_transform[2],
                  self.ortho_geo_transform[3],
                  self.ortho_geo_transform[4], self.ortho_geo_transform[5]))
-            self.oTranRaster.SetProjection(outRasterSRS.ExportToWkt())
-            self.xMatBand = self.oTranRaster.GetRasterBand(1)
-            self.yMatBand = self.oTranRaster.GetRasterBand(2)
-            self.xMatBand.SetDescription("Transformation xMat")
-            self.yMatBand.SetDescription("Transformation yMat")
-            self.oTranRaster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
+            self.o_trf_raster.SetProjection(outRasterSRS.ExportToWkt())
+            self.x_trf_band = self.o_trf_raster.GetRasterBand(1)
+            self.y_trf_band = self.o_trf_raster.GetRasterBand(2)
+            self.x_trf_band.SetDescription("Transformation xMat")
+            self.y_trf_band.SetDescription("Transformation yMat")
+            self.o_trf_raster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
 
-        self.oOrthoRaster = driver.Create(self.output_ortho_path, self.oRasterW, self.oRasterH, 1, gdal.GDT_UInt16,
-                                          options=["TILED=YES", "COMPRESS=LZW", "BIGTIFF=YES"])
-        self.oOrthoRaster.SetGeoTransform(
+        self.o_ortho_raster = driver.Create(self.output_ortho_path, self.o_raster_w, self.o_raster_h, 1,
+                                            gdal.GDT_UInt16,
+                                            options=["COMPRESS=LZW", "PREDICTOR=2", "BIGTIFF=YES"])
+        self.o_ortho_raster.SetGeoTransform(
             (self.ortho_geo_transform[0], self.ortho_geo_transform[1], self.ortho_geo_transform[2],
              self.ortho_geo_transform[3],
              self.ortho_geo_transform[4],
              self.ortho_geo_transform[5]))
 
-        self.oOrthoRaster.SetProjection(outRasterSRS.ExportToWkt())
-        self.oOrthoBand = self.oOrthoRaster.GetRasterBand(1)
-        self.oOrthoBand.SetDescription("Ortho:" + str(self.ortho_grid.oRes) + "m")
-        self.oOrthoRaster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
+        self.o_ortho_raster.SetProjection(outRasterSRS.ExportToWkt())
+        self.o_ortho_band = self.o_ortho_raster.GetRasterBand(1)
+        self.o_ortho_band.SetDescription("Ortho:" + str(self.ortho_grid.o_res) + "m")
+        self.o_ortho_raster.SetMetadataItem("Author", "SAIF AATI saif@caltech.edu")
 
         return
 
@@ -177,19 +195,19 @@ class RawInverseOrtho(BaseInverseOrtho):
         Returns:
 
         """
-        logging.info(f"yOff:{yOff}")
-        if self.nbTiles > 1:
+        logging.info(f'{self.__class__.__name__}:y_off:{yOff}')
+        if self.n_tiles > 1:
             if self.debug:
                 logging.info("... Tile saving ...")
                 logging.info(oOrthoTile.shape)
             if self.output_trans_path is not None:
-                self.xMatBand.WriteArray(matTile[0, :, :], xoff=0, yoff=yOff)
-                self.yMatBand.WriteArray(matTile[1, :, :], xoff=0, yoff=yOff)
-                self.xMatBand.FlushCache()
-                self.yMatBand.FlushCache()
-            self.oOrthoBand.WriteArray(oOrthoTile, xoff=0, yoff=yOff)
-            self.oOrthoBand.FlushCache()
-            self.oOrthoBand.SetNoDataValue(0)
+                self.x_trf_band.WriteArray(matTile[0, :, :], xoff=0, yoff=yOff)
+                self.y_trf_band.WriteArray(matTile[1, :, :], xoff=0, yoff=yOff)
+                self.x_trf_band.FlushCache()
+                self.y_trf_band.FlushCache()
+            self.o_ortho_band.WriteArray(oOrthoTile, xoff=0, yoff=yOff)
+            self.o_ortho_band.FlushCache()
+            self.o_ortho_band.SetNoDataValue(0)
             yOff += oOrthoTile.shape[0]
 
         else:
@@ -204,50 +222,45 @@ class RawInverseOrtho(BaseInverseOrtho):
                                   geoTransform=self.ortho_geo_transform,
                                   arrayList=[oMat_x, oMat_y],
                                   descriptions=["Transformation xMat", "Transformation yMat"],
-                                  epsg=self.ortho_grid.gridEPSG,
+                                  epsg=self.ortho_grid.grid_epsg,
                                   progress=progress,
                                   dtype=gdal.GDT_Float32)
+
             geoRT.WriteRaster(oRasterPath=self.output_ortho_path,
                               geoTransform=self.ortho_geo_transform,
                               arrayList=[oOrtho],
-                              descriptions=["Ortho:" + str(self.ortho_grid.oRes) + "m"],
-                              epsg=self.ortho_grid.gridEPSG,
+                              descriptions=["Ortho:" + str(self.ortho_grid.o_res) + "m"],
+                              epsg=self.ortho_grid.grid_epsg,
                               progress=progress,
                               dtype=gdal.GDT_UInt16,
                               noData=0)
         return yOff
 
-    def _set_ortho_grid(self) -> cGetSatMapGrid:
-        pass
+    def _set_ortho_grid(self) -> SatMapGrid:
+        ortho_grid = SatMapGrid(raster_info=self.l1a_raster_info,
+                                model_data=self.model,
+                                model_type=self.ortho_type,
+                                dem_fn=self.dem_path,
+                                new_res=self.o_res,
+                                corr_model=self.corr_model,
+                                debug=self.debug)
+        return ortho_grid
 
     @staticmethod
     def ortho_tiling(nbRowsPerTile, nbRowsOut, nbColsOut, need_loop, oUpLeftEW, oUpLeftNS, xRes, yRes, demInfo):
         """
         Define the grid for each tile
-        Args:
-            oUpLeftEW:
-            oUpLeftNS:
-            nbRowsOut:
-            nbColsOut:
-            need_loop:
-
-            xRes:
-            yRes:
-            demInfo:
-
-        Returns:
 
         """
         # # Define number max of lines per "tile"
-        # self.nbRowsPerTile = math.floor((self.__imgTileSizemb * 8 * 1024 * 1024) / (nbColsOut * 32 * 2))
-        nbTiles = int(nbRowsOut / nbRowsPerTile)
-        if (nbTiles != 0) and (need_loop == 1):  # if needLoop=0 -> compute full matrix in memory
-            tiles = list(np.arange(nbTiles + 1) * nbRowsPerTile)
+        n_tiles = int(nbRowsOut / nbRowsPerTile)
+        if (n_tiles != 0) and (need_loop == 1):  # if needLoop=0 -> compute full matrix in memory
+            tiles = list(np.arange(n_tiles + 1) * nbRowsPerTile)
             if nbRowsOut % nbRowsPerTile != 0:
                 tiles.append(nbRowsOut)
-                nbTiles += 1
+                n_tiles += 1
         else:
-            nbTiles = 1
+            n_tiles = 1
             tiles = [0, nbRowsOut]
 
         # Easting and Nothing array for the whole matrix
@@ -255,52 +268,44 @@ class RawInverseOrtho(BaseInverseOrtho):
         northing = oUpLeftNS - np.arange(nbRowsOut) * yRes
 
         ## Definition for all the matrice tiles of the necessary DEM subset
-        demDims = np.zeros((nbTiles, 4))  # initialization in case no dem
+        demDims = np.zeros((n_tiles, 4))  # initialization in case no dem
 
         if demInfo is not None:
-            demDims = np.zeros((nbTiles, 4))
-            for tile_ in range(nbTiles):
+            demDims = np.zeros((n_tiles, 4))
+            for tile_ in range(n_tiles):
                 xBBox = [easting[0], easting[nbColsOut - 1], easting[0], easting[nbColsOut - 1]]
                 yBBox = [northing[tiles[tile_]], northing[tiles[tile_]], northing[tiles[tile_ + 1] - 1],
                          northing[tiles[tile_ + 1] - 1]]
                 dims = get_dem_dims(xBBox=xBBox, yBBox=yBBox, demInfo=demInfo)
                 demDims[tile_, :] = dims
 
-        return demDims, easting, northing, nbTiles, tiles
+        return demDims, easting, northing, n_tiles, tiles
 
-    def DEM_interpolation(self, demInfo, demDims, tileCurrent, eastArr, northArr, modelData):
-        """
+    def elev_interpolation(self, demDims, tileCurrent, eastArr, northArr):
+        from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
+        if self.debug:
+            logging.info(f"{self.__class__.__name__}: Elev interpolation ...")
+        h_new = HeightInterpolation.DEM_interpolation(demInfo=self.dem_raster_info,
+                                                      demDims=demDims,
+                                                      tileCurrent=tileCurrent,
+                                                      eastArr=eastArr,
+                                                      northArr=northArr)
+        if h_new is None:
 
+            if self.mean_h is not None:
+                h_new = np.ones(eastArr.shape) * self.mean_h
+                logging.warning(f'H will be set to the mean_h {self.mean_h}')
+            else:
+                h_new = np.zeros(eastArr.shape)
+                logging.warning('H will be set to 0')
+        return h_new
 
-        Args:
-            demInfo:
-            demDims:
-            tileCurrent:
-            eastArr:
-            northArr:
-            modelData:
-
-        Returns:
-
-        """
-        pass
-
-    def compute_transformation_matrix(self, need_loop, init_data):
-        """
-
-        Args:
-            need_loop:
-            init_data:
-
-        Returns:
-
-        """
+    def compute_transformation_matrix(self, ortho_data):
         pass
 
 
 class RawOrthoGrid(BaseOrthoGrid):
     def __init__(self, sat_model: Type['SatModel'], grid_epsg: int = None, gsd: float = None):
-        # rasterInfo,
         super().__init__(sat_model, grid_epsg, gsd)
 
 # TODO Notes:

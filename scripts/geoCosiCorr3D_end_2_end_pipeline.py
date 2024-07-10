@@ -1,4 +1,8 @@
-
+"""
+# Author : Saif Aati
+# Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
+# Copyright (C) 2023
+"""
 import logging
 import os.path
 import shutil
@@ -6,16 +10,13 @@ import warnings
 from pathlib import Path
 from typing import List, Optional
 
+import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
 import pandas
-from tqdm import tqdm
-
-from geoCosiCorr3D.geoCore.constants import (GEOCOSICORR3D_SENSOR_DG,
-                                             GEOCOSICORR3D_SENSOR_SPOT_15,
-                                             SATELLITE_MODELS, SOFTWARE)
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
 from geoCosiCorr3D.georoutines.file_cmd_routines import \
     get_files_based_on_extension
+from tqdm import tqdm
 
 
 class GeoCosiCorr3DPipeline:
@@ -35,7 +36,7 @@ class GeoCosiCorr3DPipeline:
         self.sensor = sensor
         self.dem_file = dem_file
         self.ref_ortho = ref_ortho
-        self.workspace_dir = os.path.join(SOFTWARE.WKDIR,
+        self.workspace_dir = os.path.join(C.SOFTWARE.WKDIR,
                                           self.__class__.__name__) if workspace_dir is None else workspace_dir
         Path(self.workspace_dir).mkdir(parents=True, exist_ok=True)
         geoCosiCorr3DLog(self.__class__.__name__, self.workspace_dir)
@@ -64,7 +65,7 @@ class GeoCosiCorr3DPipeline:
         self.data_dic = {"Name": [], "Date": [], "Time": [], "Platform": [], "GSD": [], "ImgPath": [], "DIM": [],
                          "RSM": [], "Fp": [], "Tp": [], "MatchFile": [], "GCPs": [], 'RSM_Refinement': []}
         if self.config_file is None:
-            self.config_file = os.path.join(SOFTWARE.PARENT_FOLDER,
+            self.config_file = os.path.join(C.SOFTWARE.PARENT_FOLDER,
                                             'geoCosiCorr3D/geoCore/geoCosiCorrBaseCfg/geo_ortho_config.yaml')
         shutil.copy(self.config_file, os.path.join(self.workspace_dir, os.path.basename(self.config_file)))
         logging.info(f'config file:{self.config_file}')
@@ -109,9 +110,9 @@ class GeoCosiCorr3DPipeline:
         errorList = []
         for raw_img in tqdm(self.img_list, desc="Computing RSM model"):
 
-            if self.sensor in GEOCOSICORR3D_SENSOR_SPOT_15:
+            if self.sensor in C.GEOCOSICORR3D_SENSOR_SPOT_15:
                 dmp_file = get_files_based_on_extension(os.path.dirname(raw_img), "*.DIM")[0]
-            elif self.sensor in GEOCOSICORR3D_SENSOR_DG:
+            elif self.sensor in C.GEOCOSICORR3D_SENSOR_DG:
                 dmp_file = get_files_based_on_extension(os.path.dirname(raw_img), "*.XML")[0]
             else:
                 dmp_file = None
@@ -195,7 +196,7 @@ class GeoCosiCorr3DPipeline:
         return
 
     def gcp_generation(self, data_file):
-        from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TPsTOGCPS
+        from geoCosiCorr3D.geoTiePoints.Tp2GCPs import TpsToGcps as tp2gcp
         def isNaN(string):
             return string != string
 
@@ -207,11 +208,12 @@ class GeoCosiCorr3DPipeline:
             logging.info(f'{self.__class__.__name__}:-- GCP generation--: [{item + 1}]/[{len(validIndexList)}]')
             match_file = dataDf.loc[index, "MatchFile"]
             if match_file is not None and isNaN(match_file) == False and dataDf.loc[index, "Tp"] > min_tps:
-                gcp = TPsTOGCPS(in_tp_file=match_file,
+                gcp = tp2gcp(in_tp_file=match_file,
                                 base_img_path=dataDf.loc[index, "ImgPath"],
                                 ref_img_path=self.ref_ortho,
                                 dem_path=self.dem_file,
                                 debug=True)
+                gcp()
                 dataDf.loc[index, "GCPs"] = gcp.output_gcp_path
                 logging.info(
                     f'{self.__class__.__name__}: GCP GENERATION: GCPs for:{dataDf.loc[index, "ImgPath"]} --> {gcp.output_gcp_path}')
@@ -242,12 +244,13 @@ class GeoCosiCorr3DPipeline:
             logging.info(
                 f'{self.__class__.__name__}: -- RSM refinement --[{item + 1}]/[{len(validIndexList)}]:{gcp_file}')
             if isNaN(gcp_file) == False and str(gcp_file) is not None:
-                sat_model_params = {'sat_model': SATELLITE_MODELS.RSM, 'metadata': dataDf.loc[validIndex, "DIM"],
-                                    'sensor': self.sensor}
+                # sat_model_params = {'sat_model': C.SATELLITE_MODELS.RSM, 'metadata': dataDf.loc[validIndex, "DIM"],
+                #                     'sensor': self.sensor}
+                sat_model_params = C.SatModelParams(C.SATELLITE_MODELS.RSM, dataDf.loc[validIndex, "DIM"], self.sensor)
                 logging.info(
-                    f"{self.__class__.__name__}:RSM refinement:{sat_model_params['metadata']}")
+                    f"{self.__class__.__name__}:RSM refinement:{sat_model_params.METADATA}")
                 rsm_refinement_dir = os.path.join(self.rsm_refinement_folder,
-                                                  f"{dataDf.loc[validIndex, 'Name']}_{Path(sat_model_params['metadata']).stem}")
+                                                  f"{dataDf.loc[validIndex, 'Name']}_{Path(sat_model_params.METADATA).stem}")
                 Path(rsm_refinement_dir).mkdir(parents=True, exist_ok=True)
                 opt = cGCPOptimization(gcp_file_path=gcp_file,
                                        raw_img_path=dataDf.loc[validIndex, "ImgPath"],
@@ -260,6 +263,7 @@ class GeoCosiCorr3DPipeline:
                                        corr_config=self.config['opt_corr_config'],
                                        debug=False,
                                        svg_patches=False)
+                opt()
                 dataDf.loc[validIndex, "RSM_Refinement"] = opt.opt_report_path
             else:
                 msg = "RSM optimization and correction files exists for img :{}".format(dataDf.loc[validIndex, "Name"])
@@ -294,11 +298,12 @@ class GeoCosiCorr3DPipeline:
                 get_files_based_on_extension(os.path.dirname(dataDf.loc[validIndex, "RSM_Refinement"]),
                                              f"*_{loop_min_err}_correction.txt")[0]
             self.config['ortho_params']['GSD'] = ortho_gsd
-            RSMOrtho(input_l1a_path=dataDf.loc[validIndex, "ImgPath"],
+            ortho = RSMOrtho(input_l1a_path=dataDf.loc[validIndex, "ImgPath"],
                      ortho_params=self.config['ortho_params'],
                      output_ortho_path=output_ortho_path,
                      output_trans_path=output_trans_path,
                      dem_path=self.dem_file)
+            ortho()
             dataDf.loc[validIndex, "Orthos"] = output_ortho_path
             dataDf.loc[validIndex, "Trxs"] = output_trans_path
             # break
@@ -586,14 +591,13 @@ class GeoCosiCorr3DPipeline:
         import datetime
 
         import pandas
-
         from geoCosiCorr3D.geo3DDA.main_geo3DDA import cCombination3DD
         from geoCosiCorr3D.geo3DDA.misc import generate_3DD_set_combination
         Path(self.o_3DD_folder).mkdir(parents=True, exist_ok=True)
         set_data = pandas.read_csv(self.sets_path)
 
         for set_idx, row in set_data.iterrows():
-            logging.info("_________________SET:{}/{}_____________".format(set_idx + 1, set_data.shape[0]))
+            logging.info(f"_________________SET:{set_idx + 1}/{set_data.shape[0]}_____________")
             set_dir = os.path.join(self.o_3DD_folder, f'3DDA_Set_{set_idx + 1}')
             Path(set_dir).mkdir(parents=True, exist_ok=True)
             set = [row["pre_i"], row["pre_j"], row["post_i"], row["post_j"]]

@@ -11,19 +11,22 @@ from typing import Dict, Optional
 import pandas
 from osgeo import gdal
 
+import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.georoutines.file_cmd_routines as fileRT
-from geoCosiCorr3D.geoCore.constants import (ASIFT_TP_PARAMS, RASTER_TYPE,
-                                             SOFTWARE)
 from geoCosiCorr3D.geoCore.geoRawTp import RawMMTP
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
 
 class cMicMacTp(RawMMTP):
 
-    def __init__(self, ref_img_path: str, raw_img_path: str, o_dir: Optional[str] = None,
-                 mode: str = ASIFT_TP_PARAMS.MODE, scale_factor: Optional[float] = None,
+    def __init__(self, ref_img_path: str,
+                 raw_img_path: str,
+                 o_dir: Optional[str] = None,
+                 mode: str = C.ASIFT_TP_PARAMS.MODE,
+                 scale_factor: Optional[float] = None,
                  tmp_dir: Optional[str] = None,
-                 plot_tps: bool = False, tp_format: str = "COSI-Corr",
+                 plot_tps: bool = False,
+                 tp_format: str = "COSI-Corr",
                  max_pts: Optional[int] = None):
 
         config = {"method": "mmSIFT", "scale_factor": scale_factor, "mode": mode,
@@ -44,7 +47,7 @@ class cMicMacTp(RawMMTP):
 
         if self.tmp_dir is None:
             import tempfile
-            with tempfile.TemporaryDirectory(dir=SOFTWARE.WKDIR, suffix='mm_temp_tp') as tmp_dir:
+            with tempfile.TemporaryDirectory(dir=C.SOFTWARE.WKDIR, suffix='mm_temp_tp') as tmp_dir:
                 self.tmp_dir = tmp_dir
                 self.run_mm_tp()
         else:
@@ -52,8 +55,8 @@ class cMicMacTp(RawMMTP):
 
     def generate_tmp_raster(self, input_raster_path):
         tmp_raster_path = os.path.join(self.tmp_dir, f"{Path(input_raster_path).stem}.tif")
-        gdal.Translate(destName=tmp_raster_path, srcDS=input_raster_path, options=ASIFT_TP_PARAMS.CONV_PARAMS,
-                       outputType=RASTER_TYPE.GDAL_UINT16)
+        gdal.Translate(destName=tmp_raster_path, srcDS=input_raster_path, options=C.ASIFT_TP_PARAMS.CONV_PARAMS,
+                       outputType=C.RASTER_TYPE.GDAL_UINT16)
 
         return tmp_raster_path
 
@@ -72,7 +75,7 @@ class cMicMacTp(RawMMTP):
                                                              img_j=tmp_raw_img_path,
                                                              homol_dir=homol_path,
                                                              format_cosi_corr=self.cosi_corr_format,
-                                                             max_tps=self.max_pts)
+                                                             max_tps = self.max_pts)
             if self.tp_report_dic is not None:
                 self.tp: pandas.DataFrame = self.tp_report_dic["DataFrame"]
                 self.o_tp_path = fileRT.CopyFile(inputFilePath=self.tp_report_dic["TpFile"], outputFolder=self.o_dir)

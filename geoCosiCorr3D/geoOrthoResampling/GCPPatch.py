@@ -9,9 +9,8 @@ import math
 from abc import abstractmethod
 from typing import Dict, List, Optional
 
-import numpy as np
-
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import numpy as np
 from geoCosiCorr3D.geoCore.constants import (SATELLITE_MODELS,
                                              Resampling_Methods)
 from geoCosiCorr3D.geoOrthoResampling.geoResampling import Resampling

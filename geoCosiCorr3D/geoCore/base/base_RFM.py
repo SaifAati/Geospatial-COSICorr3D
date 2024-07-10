@@ -10,6 +10,7 @@ import numpy as np
 
 class BaseRFM(ABC):
     def __init__(self):
+        self.NB_NUM_COEF = 20
         self.init_RFM()
 
     def init_RFM(self):
@@ -24,14 +25,14 @@ class BaseRFM(ABC):
         self.lonScale = np.nan
         self.altScale = np.nan
 
-        self.lonNum = [np.nan] * 20
-        self.lonDen = [np.nan] * 20
-        self.latNum = [np.nan] * 20
-        self.latDen = [np.nan] * 20
-        self.linNum = [np.nan] * 20
-        self.linDen = [np.nan] * 20
-        self.colNum = [np.nan] * 20
-        self.colDen = [np.nan] * 20
+        self.lonNum = [np.nan] * self.NB_NUM_COEF
+        self.lonDen = [np.nan] * self.NB_NUM_COEF
+        self.latNum = [np.nan] * self.NB_NUM_COEF
+        self.latDen = [np.nan] * self.NB_NUM_COEF
+        self.linNum = [np.nan] * self.NB_NUM_COEF
+        self.linDen = [np.nan] * self.NB_NUM_COEF
+        self.colNum = [np.nan] * self.NB_NUM_COEF
+        self.colDen = [np.nan] * self.NB_NUM_COEF
 
     def __repr__(self):
         return """

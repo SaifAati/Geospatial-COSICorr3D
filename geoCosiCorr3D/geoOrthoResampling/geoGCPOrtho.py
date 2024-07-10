@@ -4,7 +4,6 @@
 # Copyright (C) 2022
 """
 import numpy as np
-
 from geoCosiCorr3D.geoRSM.Ground2Pixel import RSMG2P
 
 

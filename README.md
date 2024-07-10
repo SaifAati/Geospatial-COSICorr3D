@@ -1,86 +1,330 @@
 Copyright 2021 Saif Aati (saif@caltech.edu || saifaati@gmail.com)
 
+[![Linux-Conda-Install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_conda_run_install_ubuntu.yaml)
+[![Linux-Docker-install (CI- GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/test_docker_run_install_ubuntu.yaml)
+[![Correlation-conda (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_correlation.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_correlation.yaml)
+[![Ortho-conda (CI-GHA)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml/badge.svg)](https://github.com/SaifAati/Geospatial-COSICorr3D/actions/workflows/geocosicorr3d_conda_env_test_ortho.yaml)
+
 # geoCosiCorr3D
 
-Free and open source tools & libraries for processing satellite images (push-broom, frame and push-frame), including rigorous sensor model (RSM) refinement, rational function model (RFM) refinement, orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
+`geoCosiCorr3D` is an innovative, free and open-source software tailored for satellite image processing.
+`geoCosiCorr3D` is adept at handling various types of satellite imagery, including push-broom, frame, and push-frame sensors.
+At its core, `geoCoiCorr3D` excels in rigorous sensor model (RSM) refinement,
+rational function model (RFM) refinement, and offers advanced processing features: including
+orthorectification, sub-pixel image correlation, and 3D surface displacement extraction.
+
+Designed for researchers in remote sensing.
+`geoCosiCorr3D` serves as a critical bridge linking complex data processing requirements
+with real-world applicability.
+It is particularly beneficial for projects focused on change detection, time series analysis,
+and applications in diverse scientific fields such as geology, geomorphology,
+glaciology, planetology, as well as in the assessment and mitigation of natural disasters.
 
 See the [NEWS](NEWS.md) for the most recent additions and upgrades.
 
-Contact Information
+Contact Information, Support & Contributions
 -------------------
+We welcome your questions, comments, and reports of any issues you encounter! Here's how you can reach out to us or
+contribute to the project.
+For direct inquiries or specific questions, feel free to reach out to [Saif Aati](mailto:saif@caltech.edu): (
+saif@caltech.edu (Preferred) || saifaati@gmail.com)
 
-Questions, comments, and bug reports can be sent to:
-[Saif Aati](mailto:saif@caltech.edu)
+If you encounter any problems or bugs, please report them
+by [submitting an issue](https://github.com/SaifAati/Geospatial-COSICorr3D/issues)
+on our GitHub project page.
+This helps us track and address issues efficiently.
+Your feedback and contributions are invaluable to us, and we look forward to hearing from you!
 
-    - saif@caltech.edu
-    - saifaati@gmail.com
-# Introduction 
+# Workflow
 
-
-# Workflow 
 ![Alt text](Figs/WorkFlow.png?raw=true "Title")
 
+# Installation
 
-# Installation and dependencies
---------------
-To install `geoCosiCorr3D` from source:
-### Option 1: 
+There are two methods available to install `geoCosiCorr3D`: using Conda or Docker. Follow the instructions below based
+on your preferred installation method.
 
-1- Set and activate `geoCosiCorr3D` environment:
+## Option 1: Installing with Conda
 
-    conda env create --file geoCosiCorr3D.yml
+1. To install using Conda, execute the following script in your terminal:
+    ```bash
+    ./install_cosicorr.sh --conda
+    ```
+   If Conda (or Miniconda) is not already installed on your machine, the script will attempt to install Miniconda
+   automatically.
+2. Once the installation is complete, you can activate the `geoCosiCorr3D` environment with:
+    ```bash
     conda activate geoCosiCorr3D
+    ```
+   Alternatively, you can run Python scripts within the environment without activating it by using:
+    ```bash
+    conda run -n geoCosiCorr3D your_script.py
+    ```
+   Replace `your_script.py` with the name of the Python script you wish to run.
 
-2- Set shared libraries:
+## Option 2: Installing with Docker
 
-For Linux, you have to append the path to the [lib](https://github.com/SaifAati/geoCosiCorr3D/blob/main/geoCosiCorr3D/lib/) directory to LD_LIBRARY_PATH in .bashrc to be able to use geoCosiCorr3D shared libraries,  
-by adding the following line: 
-    
-    LD_LIBRARY_PATH=~/geoCosiCorr3D/lib/:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH
+For Docker installation, execute the following command:
+
+```bash
+./install_cosicorr.sh --docker
+```
+
+This command will attempt to install Docker if it's not already installed on your system, start the Docker service, and
+then pull the base `geoCosiCorr3D` Docker image. Ensure you have the necessary permissions to install software on your
+system when using this option.
+
+---
+
+**Note:** Please follow these steps for a smooth installation process.
+If you encounter any issues or need further assistance,
+refer to the documentation (the documentation is still under construction 🚧) or submit an issue on the project's GitHub
+page.
+
+### Important Note on Environment Variables
+
+⚠️ Sometimes, environment variables are not automatically picked up and set during the installation process. To ensure the software operates correctly, it is recommended to manually set these variables. For example, to set the `LD_LIBRARY_PATH` environment variable, you can use the following command in your terminal:
+
+```bash
+export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatial-COSICorr3D/lib/:$LD_LIBRARY_PATH
+```
+Add this line to your .bashrc or .bash_profile (depending on your shell and OS) to make the change permanent:
+```bash
+echo 'export LD_LIBRARY_PATH=<absolute_path_of_installation_directory>/Geospatial-COSICorr3D/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
+```
+
+# geoCosiCorr3D: CLI
 
 
-Third party libraries and packages (optional):
-
-1- Ames Stereo Pipeline ([ASP](https://github.com/NeoGeographyToolkit/StereoPipeline.git)) for WV1 and WV2 CCD correction using [wv_correct] : set the binary path of ASP in the configuration file ('geoConfig.py')
-
-
-Note:
-
-To update the `geoCosiCorr3D` env you can use the following cmd:
-
-    conda env update --file geoCosiCorr3D.yml --prune
-
-### Option 2: Docker
+The primary entry point for the `geoCosiCorr3D` command line interface (CLI) is accessible through the Python script
+located at `scripts/cosicorr.py`. 
+To explore the available commands and their options, you can use the `-h` or `--help` flag.
+Below is a brief overview of how to use the GeoCosiCorr3D CLI:
 
 
-1- Build the image:
+```bash
+python3 scripts/cosicorr.py -h
+usage: cosicorr3d [-h] <module> ...
 
-    docker-compose -f  docker-compose.yml build geocosicorr3d
-2- Run a container:
+GeoCosiCorr3D CLI
 
-    docker-compose -f  docker-compose.yml run geocosicorr3d
+optional arguments:
+  -h, --help  show this help message and exit
 
-Note: To install docker in your machine follow the instrubction in this link https://docs.docker.com/engine/install/
-# geoCosiCorr3D: CLI + GUI
-[CLI + GUI doc](Doc/GUI_DOC.md)
+modules:
+  <module>
+    ortho      Orthorectification
+    transform  Transformation
+    correlate  Correlation
+```
+### Correlation
 
+For detailed usage of the `correlate` module, execute the following command:
+
+```bash
+python3 scripts/cosicorr.py correlate -h
+```
+
+<details>
+<summary>Correlate Module Usage</summary>
+
+```bash
+usage: cosicorr3d correlate [-h] [--base_band BASE_BAND] [--target_band TARGET_BAND] [--output_path OUTPUT_PATH] [--method {frequency,spatial}] [--window_size WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE]
+                            [--step STEP STEP] [--grid] [--show] [--pixel_based] [--vmin VMIN] [--vmax VMAX] [--mask_th MASK_TH] [--nb_iters NB_ITERS] [--search_range SEARCH_RANGE SEARCH_RANGE]
+                            base_image target_image
+
+positional arguments:
+  base_image            Path to the base image.
+  target_image          Path to the target image.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --base_band BASE_BAND
+                        Base image band.
+  --target_band TARGET_BAND
+                        Target image band.
+  --output_path OUTPUT_PATH
+                        Output correlation path.
+  --method {frequency,spatial}
+                        Correlation method to use.
+  --window_size WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE WINDOW_SIZE
+                        Window size. (Default [64])
+  --step STEP STEP      Step size. (Default [8,8])
+  --grid                Use grid.
+  --show                Show correlation. (Default False)
+  --pixel_based         Enable pixel-based correlation.
+  --vmin VMIN           Minimum value for correlation plot. (Default -1)
+  --vmax VMAX           Maximum value for correlation plot. (Default 1)
+
+Frequency method arguments:
+  --mask_th MASK_TH     Mask threshold (only for frequency method).
+  --nb_iters NB_ITERS   Number of iterations (only for frequency method).
+
+Spatial method arguments:
+  --search_range SEARCH_RANGE SEARCH_RANGE
+                        Search range (only for spatial method).
+```
+Example:
+```bash
+python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test_dataset/TARGET_IMG.TIF --show  --vmin -3 --vmax 3
+```
+![Alt text](Figs/BASE_IMG_VS_TARGET_IMG_frequency_wz_64_step_8.png?raw=true "Title")
+</details>
+
+### Transform
+
+For detailed usage of the `transfrom` module, execute the following command:
+
+```bash
+python3 scripts/cosicorr.py transform -h
+```
+
+<details>
+<summary>Transform Module Usage</summary>
+
+#### Example Usage of the `transform` Command:
+
+This section demonstrates how to use the `transform` command within the `geoCosiCorr3D` CLI to perform coordinate transformations. 
+The examples show how to convert pixel coordinates to geographic coordinates (longitude, latitude, and altitude) and vice versa.
+
+```bash
+usage: cosicorr3d transform [-h] [--inv] [--dem_fn DEM_FN] x y <model_name> ...
+
+positional arguments:
+  x                list: x=cols and if with invert flag: lon
+  y                list: y=lines and if with invert flag: lat
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --inv            Transform form ground to image space.
+  --dem_fn DEM_FN  DEM file name (None)
+
+model:
+  <model_name>
+    RFM            RFM model specific arguments
+    RSM            RSM model specific arguments
+
+```
+#### Converting Pixel Coordinates to Geographic Coordinates
+
+To convert pixel coordinates to geographic coordinates using a Rational Function Model (RFM), use the following command:
+
+```bash
+python3 scripts/cosicorr.py transform 0,1000 0,500 RFM tests/test_dataset/test_ortho_dataset/SP2_RPC.txt
+```
+
+**Output:**
+
+- `lons`: [30.52895296 30.65688292]
+- `lat`: [41.24090926 41.16826844]
+- `alt`: [1102.49239388 1102.49239388]
+
+
+#### Inverse Transformation: Converting Geographic Coordinates to Pixel Coordinates
+
+For the inverse operation: converting geographic coordinates back to pixel coordinates, use the `--inv` flag:
+
+```bash
+python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.16826844 --inv RFM tests/test_dataset/test_ortho_dataset/SP2_RPC.txt
+```
+
+**Output:**
+
+- `cols`: [9.70195697e-06 999.999998e+02]
+- `lines`: [5.07104141e-06 500.000045e+02]
+
+
+</details>
+
+### Orthorectification and model refinement
+For detailed usage of the `ortho` module, execute the following command:
+
+```bash
+python3 scripts/cosicorr.py ortho -h
+```
+
+<details>
+<summary>Ortho Module Usage</summary>
+
+```bash
+usage: cosicorr3d ortho [-h] [--o_ortho O_ORTHO] [--corr_model CORR_MODEL] [--dem DEM] [--gsd GSD] [--resampling_method {sinc,bilinear}] [--debug] [--show] [--refine]
+                        [--ref_img REF_IMG] [--gcps GCPS]
+                        input_img <model_name> ...
+
+positional arguments:
+  input_img             Input file for ortho
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --o_ortho O_ORTHO     Output path for ortho. Defaults to the current working directory.
+  --corr_model CORR_MODEL
+                        Correction model path (None)
+  --dem DEM             DEM path (None)
+  --gsd GSD             Output file for ortho (None)
+  --resampling_method {sinc,bilinear}
+                        Resampling method (SINC)
+  --debug
+  --show
+  --refine              Refine model, this require GCPs or reference imagery to collect GCPs
+  --ref_img REF_IMG     Reference Ortho image (None)
+  --gcps GCPS           GCPs file (None)
+
+model:
+  <model_name>
+    RFM                 RFM model specific arguments
+    RSM                 RSM model specific arguments
+```
+##### RSM model
+```bash
+usage: cosicorr3d ortho input_img RSM [-h] {Spot1,Spot2,Spot3,Spot4,Spot5,Spot15,Spot6,Spot7,Spot67,WV1,WV2,WV3,WV4,GE,QB,DG} rsm_fn
+
+positional arguments:
+  {Spot1,Spot2,Spot3,Spot4,Spot5,Spot15,Spot6,Spot7,Spot67,WV1,WV2,WV3,WV4,GE,QB,DG}
+                        Sat-name
+  rsm_fn                Specifies the path to the .xml DMP file. Additional formats are supported in GeoCosiCorr3D.pro.
+```
+
+##### RFM model
+```bash
+usage: cosicorr3d ortho input_img RFM [-h] rfm_fn
+
+positional arguments:
+  rfm_fn      RFM file name (.tiff or .TXT)
+```
+
+</details>
+
+##### Upcoming Release Information
+
+- **Scheduled Release Date**: May 2024
+- **Features to be Included**:
+  - **`ortho` Module**
+  - **RSM Transformation module**
+
+# geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
 # License
+
 [License](LICENSE)
 
 # Citation
+
 If you are using this software for academic research or publications we ask that you please cite this software as:
 
-<a id="1">[1]</a> Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of ground deformation from optimized registration and correlation of optical images and ICA-based filtering of image geometry artifacts. Remote Sensing of Environment 277, 113038. https://doi.org/10.1016/j.rse.2022.113038
-
-
+<a id="1">[1]</a> Aati, S., Milliner, C., Avouac, J.-P., 2022. A new approach for 2-D and 3-D precise measurements of
+ground deformation from optimized registration and correlation of optical images and ICA-based filtering of image
+geometry artifacts. Remote Sensing of Environment 277, 113038. https://doi.org/10.1016/j.rse.2022.113038
 
 # References
 
-<a id="1">[2]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification, Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements," in IEEE Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
+<a id="1">[2]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification,
+Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements," in IEEE
+Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
 
-<a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12, 3418. https://doi.org/10.3390/rs12203418
+<a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography
+Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12,
+
+3418. https://doi.org/10.3390/rs12203418
 
 
 

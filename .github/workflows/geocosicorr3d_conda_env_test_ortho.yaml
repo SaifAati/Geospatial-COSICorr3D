@@ -1,0 +1,48 @@
+name: Ortho-conda-tests (CI-GHA)
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.9
+        activate-environment: geoCosiCorr3D
+        environment-file: geoCosiCorr3D.yml
+        auto-activate-base: false
+
+    - name: Configure LD_LIBRARY_PATH
+      run: echo "LD_LIBRARY_PATH=$(pwd)/lib/:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+    - name: Activate Conda Environment
+      shell: bash
+      run: |
+        CONDA_PATH=$(which conda)
+         echo "Conda executable path: $CONDA_PATH"
+        
+        CONDA_DIR=$(dirname $(dirname $CONDA_PATH))
+        echo "Conda directory: $CONDA_DIR"
+        
+        source $CONDA_DIR/etc/profile.d/conda.sh
+        conda activate geoCosiCorr3D
+
+    - name: Check conda env
+      run: conda env list
+
+    - name: Check Env
+      run: echo $LD_LIBRARY_PATH
+
+    - name : Run Tests
+      run: |
+        conda run -n geoCosiCorr3D pytest tests/test_geoOrtho.py
+        

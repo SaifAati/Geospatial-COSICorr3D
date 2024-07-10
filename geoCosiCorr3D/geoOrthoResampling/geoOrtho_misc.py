@@ -8,10 +8,9 @@ import os.path
 import warnings
 
 import affine6p
+import geoCosiCorr3D.georoutines.geo_utils as geoRT
 import numpy as np
 import pandas
-
-import geoCosiCorr3D.georoutines.geo_utils as geoRT
 
 
 def EstimateGeoTransformation(pixObs, groundObs):
@@ -206,7 +205,7 @@ def GetDEM_subsetDim(bboxCoords, demInfo: geoRT.cRasterInfo, margin=5):
         return [1, xDemMinPix, xDemMaxPix, yDemMinPix, yDemMaxPix]
 
 
-def Decimalmod(value, param, precision=None):
+def decimal_mod(value, param, precision=None):
     if precision is None:
         precision = 1e-5
 
@@ -215,84 +214,6 @@ def Decimalmod(value, param, precision=None):
     if (np.abs(result) < precision) or (param - np.abs(result) < precision):
         result = 0
     return result
-
-
-def ComputeoMapGrid(upLeftEW, upLeftNS, botRightEW, botRightNS, oRes, grid_precision=1e5):
-    """
-    Compute regular output grid.
-    """
-
-    oUpLeftEW = upLeftEW
-    oBotRightEW = botRightEW
-
-    oUpLeftNS = upLeftNS
-    oBotRightNS = botRightNS
-
-    if Decimalmod(upLeftEW, oRes, oRes / grid_precision) != 0:
-        if (upLeftEW - (upLeftEW % oRes)) > upLeftEW:
-            oUpLeftEW = upLeftEW - (upLeftEW % oRes)
-        else:
-            oUpLeftEW = (upLeftEW - (upLeftEW % oRes) + oRes)
-
-    if Decimalmod(botRightEW, oRes, oRes / grid_precision) != 0:
-        if (botRightEW - (botRightEW % oRes)) < botRightEW:
-            oBotRightEW = botRightEW - (botRightEW % oRes)
-        else:
-            oBotRightEW = (botRightEW - (botRightEW % oRes) + oRes)
-
-    if Decimalmod(upLeftNS, oRes, oRes / grid_precision) != 0:
-        if (upLeftNS - (upLeftNS % oRes)) < upLeftNS:
-            oUpLeftNS = upLeftNS - (upLeftNS % oRes)
-        else:
-            oUpLeftNS = (upLeftNS - (upLeftNS % oRes) + oRes)
-
-    if Decimalmod(botRightNS, oRes, oRes / grid_precision) != 0:
-        if (botRightNS - (botRightNS % oRes)) > botRightNS:
-            oBotRightNS = botRightNS - (botRightNS % oRes)
-        else:
-            oBotRightNS = (botRightNS - (botRightNS % oRes) + oRes)
-
-    return oUpLeftEW, oUpLeftNS, oBotRightEW, oBotRightNS
-
-
-def ComputeoGridFp(oGrid):
-    """
-    Compute and write the footprint of the raw image (i.e., L1A img) using the orientation model (RFM ||RSM)
-    Returns:
-
-    """
-
-    import geojson
-    xBBox_UTM = [oGrid.oUpLeftEW,
-                 oGrid.botRightEW,
-                 oGrid.oBotRightEW,
-                 oGrid.oUpLeftEW,
-                 oGrid.oUpLeftEW]
-    yBBox_UTM = [oGrid.oUpLeftNS,
-                 oGrid.oUpLeftNS,
-                 oGrid.oBotRightNS,
-                 oGrid.oBotRightNS,
-                 oGrid.oUpLeftNS]
-
-    crs_UTM = {"type": "name", "properties": {"name": "EPSG:" + str(oGrid.gridEPSG)}}
-    crs_geo = {"type": "name", "properties": {"name": "EPSG:4326"}}
-
-    lats, lons = geoRT.ConvCoordMap1ToMap2_Batch(X=xBBox_UTM,
-                                                 Y=yBBox_UTM,
-                                                 sourceEPSG=oGrid.gridEPSG,
-                                                 targetEPSG=4326)
-
-    footprint_utm = geojson.Feature(geometry=geojson.Polygon([list(zip(xBBox_UTM, yBBox_UTM))]),
-                                    properties={"name": "oFP_UTM"}, crs=crs_UTM)
-    footprint_geo = geojson.Feature(geometry=geojson.Polygon([list(zip(lons, lats))]),
-                                    properties={"name": "oFP_UTM"}, crs=crs_geo)
-
-    # WriteJson(features=footprint_utm, outputFile=os.path.join(os.path.dirname(self.oOrthoPath),
-    #                                                           Path(self.oOrthoPath).stem + "_oFP_UTM"))
-    # WriteJson(features=footprint_geo, outputFile=os.path.join(os.path.dirname(self.oOrthoPath),
-    #                                                           Path(self.oOrthoPath).stem + "_oFP_WG84"))
-
-    return footprint_geo, footprint_utm
 
 
 def get_dem_dims(xBBox, yBBox, demInfo: geoRT.cRasterInfo, margin=2):
@@ -314,12 +235,12 @@ def get_dem_dims(xBBox, yBBox, demInfo: geoRT.cRasterInfo, margin=2):
     demCol, demRow = demInfo.Map2Pixel_Batch(X=xBBox, Y=yBBox)
 
     ## Get the needed subset to cover the input values.
-    if np.int(np.min(demCol)) - margin > 0:
-        dims[0] = np.int(np.min(demCol)) - margin
+    if int(np.min(demCol)) - margin > 0:
+        dims[0] = int(np.min(demCol)) - margin
     if (np.ceil(np.max(demCol)) + margin) < demInfo.raster_width:
         dims[1] = np.ceil(np.max(demCol)) + margin
-    if (np.int(np.min(demRow)) - margin) > 0:
-        dims[2] = (np.int(np.min(demRow)) - margin)
+    if (int(np.min(demRow)) - margin) > 0:
+        dims[2] = (int(np.min(demRow)) - margin)
     if (np.ceil(np.max(demRow)) + margin) < demInfo.raster_height:
         dims[3] = np.ceil(np.max(demRow)) + margin
 
@@ -329,13 +250,13 @@ def get_dem_dims(xBBox, yBBox, demInfo: geoRT.cRasterInfo, margin=2):
     ## or, more likely, when ortho is parallelized, the firsts or lasts tiles could be out of the dem.
     ## Need to handle that situation with other thing than an error message
     if (dims[0] > dims[1]) or (dims[2] > dims[3]):
-        if (np.int(np.min(demCol)) - 1) > demInfo.raster_width:
+        if (int(np.min(demCol)) - 1) > demInfo.raster_width:
             dims[0] = demInfo.raster_width - 4
             dims[1] = demInfo.raster_height
         if (np.ceil(np.max(demCol)) + 1) < 0:
             dims[0] = 0
             dims[1] = 4
-        if (np.int(np.min(demRow)) - 1) > demInfo.raster_height:
+        if (int(np.min(demRow)) - 1) > demInfo.raster_height:
             dims[2] = demInfo.raster_height - 4
             dims[3] = demInfo.raster_height
         if (np.ceil(np.max(demRow)) + 1) < 0:
@@ -365,12 +286,12 @@ def GetDEM_dims_old(xBBox, yBBox, demInfo, margin=2):
     demCol, demRow = demInfo.Map2Pixel_Batch(X=xBBox, Y=yBBox)
 
     ## Get the needed subset to cover the input values.
-    if np.int(np.min(demCol)) - margin > 0:
-        dims[0] = np.int(np.min(demCol)) - margin
+    if int(np.min(demCol)) - margin > 0:
+        dims[0] = int(np.min(demCol)) - margin
     if (np.ceil(np.max(demCol)) + margin) < demInfo.rasterWidth:
         dims[1] = np.ceil(np.max(demCol)) + margin
-    if (np.int(np.min(demRow)) - margin) > 0:
-        dims[2] = (np.int(np.min(demRow)) - margin)
+    if (int(np.min(demRow)) - margin) > 0:
+        dims[2] = (int(np.min(demRow)) - margin)
     if (np.ceil(np.max(demRow)) + margin) < demInfo.rasterHeight:
         dims[3] = np.ceil(np.max(demRow)) + margin
 
@@ -380,13 +301,13 @@ def GetDEM_dims_old(xBBox, yBBox, demInfo, margin=2):
     ## or, more likely, when ortho is parallelized, the firsts or lasts tiles could be out of the dem.
     ## Need to handle that situation with other thing than an error message
     if (dims[0] > dims[1]) or (dims[2] > dims[3]):
-        if (np.int(np.min(demCol)) - 1) > demInfo.rasterWidth:
+        if (int(np.min(demCol)) - 1) > demInfo.rasterWidth:
             dims[0] = demInfo.rasterWidth - 4
             dims[1] = demInfo.rasterWidth
         if (np.ceil(np.max(demCol)) + 1) < 0:
             dims[0] = 0
             dims[1] = 4
-        if (np.int(np.min(demRow)) - 1) > demInfo.rasterHeight:
+        if (int(np.min(demRow)) - 1) > demInfo.rasterHeight:
             dims[2] = demInfo.rasterHeight - 4
             dims[3] = demInfo.rasterHeight
         if (np.ceil(np.max(demRow)) + 1) < 0:

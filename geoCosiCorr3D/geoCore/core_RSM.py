@@ -3,6 +3,7 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+
 import logging
 import os
 import pickle
@@ -10,11 +11,14 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+import geopandas
 import numpy as np
+from shapely import Polygon
 
-import geoCosiCorr3D.geoCore.constants as geoCst
+import geoCosiCorr3D.geoCore.constants as C
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 from geoCosiCorr3D.geoCore.base.base_RSM import BaseRSM
+from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import cPix2GroundDirectModel
 
 
 class RSM(BaseRSM):
@@ -26,10 +30,10 @@ class RSM(BaseRSM):
         self.platform = None
         self.date_time_obj = None
 
-    def ComputeAttitude(self):
+    def interp_eph(self):
         pass
 
-    def Interpolate_position_velocity_attitude(self):
+    def interp_attitude(self):
         pass
 
     @staticmethod
@@ -40,12 +44,12 @@ class RSM(BaseRSM):
         if metadata_file is None:
             geoErrors.erRSMmodel()
 
-        if sensor_name in geoCst.GEOCOSICORR3D_SENSOR_DG:
+        if sensor_name in C.GEOCOSICORR3D_SENSOR_DG:
             from geoCosiCorr3D.geoRSM.DigitalGlobe_RSM import cDigitalGlobe
             rsm_sensor_model = cDigitalGlobe(dgFile=metadata_file, debug=True)
             rsm_file = os.path.join(os.path.dirname(metadata_file), Path(metadata_file).stem + ".pkl")
             RSM.write_rsm(rsm_file, rsm_sensor_model)
-        elif sensor_name in geoCst.GEOCOSICORR3D_SENSOR_SPOT_67:
+        elif sensor_name in C.GEOCOSICORR3D_SENSOR_SPOT_67:
             # "model Path should be the XML file "
             from geoCosiCorr3D.geoRSM.Spot_RSM import cSpot67
             logging.info(f'{metadata_file}')
@@ -55,15 +59,14 @@ class RSM(BaseRSM):
                                     "IMG_" + Path(metadata_file).stem.split("DIM_")[1] + ".tif")
             rsm_file = os.path.join(os.path.dirname(metadata_file), Path(img_path).stem + ".pkl")
             RSM.write_rsm(rsm_file, rsm_sensor_model)
-        elif sensor_name in geoCst.GEOCOSICORR3D_SENSOR_SPOT_15:
+        elif sensor_name in C.GEOCOSICORR3D_SENSOR_SPOT_15:
             # "model Path should be the XML file "
             from geoCosiCorr3D.geoRSM.Spot_RSM import cSpot15
             rsm_sensor_model = cSpot15(dmpFile=metadata_file, debug=debug)
             rsm_file = os.path.join(os.path.dirname(metadata_file), Path(metadata_file).stem + ".pkl")
             RSM.write_rsm(rsm_file, rsm_sensor_model)
         else:
-            raise sys.exit(
-                f'Sensor {sensor_name} not supported by {geoCst.SOFTWARE.SOFTWARE_NAME} v{geoCst.SOFTWARE.VERSION}')
+            raise sys.exit(f'Sensor {sensor_name} not supported by {C.SOFTWARE.SOFTWARE_NAME} v{C.SOFTWARE.VERSION}')
 
         with open(rsm_file, 'rb') as f:
             rsm_model = pickle.load(f)
@@ -79,11 +82,7 @@ class RSM(BaseRSM):
     @staticmethod
     def compute_rsm_footprint(rsm_model, dem_file: Optional[str] = None,
                               rsm_corr_model: Optional[np.ndarray] = None, hMean: Optional[float] = None):
-        import geopandas
-        from shapely import Polygon
 
-        from geoCosiCorr3D.geoRSM.Pixel2GroundDirectModel import \
-            cPix2GroundDirectModel
         if rsm_corr_model is None:
             rsm_corr_model = np.zeros((3, 3))
 
@@ -114,5 +113,3 @@ class RSM(BaseRSM):
         with open(pkl_file, "rb") as output:
             geocosicorr3d_rsm_model = pickle.load(output)
         return geocosicorr3d_rsm_model
-
-

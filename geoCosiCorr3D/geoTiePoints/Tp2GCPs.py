@@ -7,23 +7,23 @@ import logging
 import os
 import uuid
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 import pandas
 
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
 from geoCosiCorr3D.geoCore.core_geoGCPs import RawTP2GCP
-from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
 
-class TPsTOGCPS(RawTP2GCP):
-    def __init__(self, in_tp_file: str, ref_img_path: str, base_img_path: str,
-                 dem_path: Optional[str] = None, output_gcp_path: Optional[str] = None, debug: bool = False):
+class TpsToGcps(RawTP2GCP):
+    def __init__(self, **kwargs) -> None:
 
-        super().__init__(in_tp_file, ref_img_path, base_img_path, dem_path, output_gcp_path, debug)
+        super().__init__(**kwargs)
         self.ingest()
 
+    def __call__(self, *args, **kwargs):
         self.run_tp_to_gcp()
 
     def run_tp_to_gcp(self) -> None:

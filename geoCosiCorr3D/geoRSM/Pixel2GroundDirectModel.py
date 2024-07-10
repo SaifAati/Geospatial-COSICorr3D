@@ -7,11 +7,10 @@ import logging
 import warnings
 from typing import List, Optional
 
-import numpy as np
-
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
 import geoCosiCorr3D.geoErrorsWarning.geoWarnings as geoWarns
 import geoCosiCorr3D.georoutines.geo_utils as geoRT
+import numpy as np
 from geoCosiCorr3D.geoCore.constants import EARTH
 from geoCosiCorr3D.geoCore.geoRawRSMMapping import RawPix2GroundDirectModel
 
@@ -66,15 +65,16 @@ class cPix2GroundDirectModel(RawPix2GroundDirectModel):
             geoWarns.wrInvaliDEM()
             self.demInfo = None
             self.oProjEPSG = 4326
-        # if self.xPix != 0:
-        #     self.xPix = self.xPix - 1
-        # if self.yPix != 0:
-        #     self.yPix = self.yPix - 1
+        if self.xPix != 0:
+            self.xPix = self.xPix - 1
+        if self.yPix != 0:
+            self.yPix = self.yPix - 1
 
         if self.xPix < 0 or self.xPix > self.rsmModel.nbCols:
             logging.warning(' NEED TO EXTRAPOLATE!!')
             geoErrors.erNotImplemented(routineName="Extrapolation")
         u1 = self.compute_U1(xPix=self.xPix, rsm_model=self.rsmModel)
+
         if self.debug:
             logging.info(f'u1:{u1}')
         u2, u2_norm = self.compute_U2(yPix=self.yPix,
@@ -82,14 +82,13 @@ class cPix2GroundDirectModel(RawPix2GroundDirectModel):
                                       u1=u1)
         if self.debug:
             logging.info(" u2:{}  -->  u2_norm:{}".format(u2, u2_norm))
-
         u3 = self.compute_U3(yPix=self.yPix,
                              rsm_model=self.rsmModel,
                              u2=u2,
                              u2_norm=u2_norm)
         if self.debug:
             logging.info(f'u3:{u3}')
-        print(u3)
+
         corr = self.compute_Dl_correction(rsmCorrectionArray=self.rsmCorrection,
                                           rsm_model=self.rsmModel,
                                           xPix=self.xPix,

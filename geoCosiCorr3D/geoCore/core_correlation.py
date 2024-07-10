@@ -3,6 +3,7 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+
 import logging
 import os
 import sys
@@ -11,18 +12,17 @@ from ctypes import cdll
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-
+import geoCosiCorr3D.geoCore.constants as const
 import geoCosiCorr3D.geoImageCorrelation.misc as misc
+import numpy as np
 from geoCosiCorr3D.geoCore.base.base_correlation import (BaseCorrelation,
                                                          BaseCorrelationEngine,
                                                          BaseFreqCorr,
                                                          BaseSpatialCorr)
-from geoCosiCorr3D.geoCore.constants import CORRELATION
 from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
 
-FREQ_CORR_LIB = CORRELATION.FREQ_CORR_LIB
-STAT_CORR_LIB = CORRELATION.STAT_CORR_LIB
+FREQ_CORR_LIB = const.CORRELATION.FREQ_CORR_LIB
+STAT_CORR_LIB = const.CORRELATION.STAT_CORR_LIB
 
 
 # TODO:
@@ -31,6 +31,7 @@ STAT_CORR_LIB = CORRELATION.STAT_CORR_LIB
 #  3- Support: Optical flow correlation, MicMac, ASP, Sckit-image, OpenCV corr, ....
 #  4- Data sets: geometry artifacts (PS, HiRISE,WV, GF), glacier , cloud detection, earthquake, landslide, dune
 
+# define Python user-defined exceptions
 class InvalidCorrLib(Exception):
     pass
 
@@ -100,8 +101,7 @@ class RawFreqCorr(BaseFreqCorr):
 
     # TODO: change to static method or adapt to class method
     @classmethod
-    def run_correlator(cls,
-                       base_array: np.ndarray,
+    def run_correlator(cls, base_array: np.ndarray,
                        target_array: np.ndarray,
                        window_size: List[int],
                        step: List[int],
@@ -284,7 +284,7 @@ class RawCorrelationEngine(BaseCorrelationEngine):
         self.correlator_name = correlator_name
 
         if self.correlator_name is None:
-            self.correlator_name = CORRELATION.FREQUENCY_CORRELATOR
+            self.correlator_name = const.CORRELATION.FREQUENCY_CORRELATOR
         self.corr_params = params
         self.debug = debug
         self.corr_bands: List[str] = ["East/West", "North/South", "SNR"]
@@ -292,7 +292,7 @@ class RawCorrelationEngine(BaseCorrelationEngine):
         self._get_corr_params()
 
     def _get_corr_params(self):
-        if self.correlator_name == CORRELATION.FREQUENCY_CORRELATOR:
+        if self.correlator_name == const.CORRELATION.FREQUENCY_CORRELATOR:
             if self.corr_params is None:
                 self.corr_params = self.get_freq_params()
             else:
@@ -301,7 +301,7 @@ class RawCorrelationEngine(BaseCorrelationEngine):
                                                         mask_th=self._ingest_params()[2],
                                                         nb_iters=self._ingest_params()[3],
                                                         grid=self._ingest_params()[4])
-        if self.correlator_name == CORRELATION.SPATIAL_CORRELATOR:
+        if self.correlator_name == const.CORRELATION.SPATIAL_CORRELATOR:
             if self.corr_params is None:
                 self.corr_params = self.get_spatial_params()
             else:
@@ -327,9 +327,9 @@ class RawCorrelationEngine(BaseCorrelationEngine):
         return RawFreqCorr(window_size, step, mask_th, resampling, nb_iters, grid)
 
     def _ingest_params(self):
-        if self.correlator_name == CORRELATION.FREQUENCY_CORRELATOR:
+        if self.correlator_name == const.CORRELATION.FREQUENCY_CORRELATOR:
             return RawFreqCorr.ingest_freq_corr_params(params=self.corr_params)
-        if self.correlator_name == CORRELATION.SPATIAL_CORRELATOR:
+        if self.correlator_name == const.CORRELATION.SPATIAL_CORRELATOR:
             return RawSpatialCorr.ingest_spatial_corr_params(params=self.corr_params)
 
     def correlate(self):
@@ -355,7 +355,7 @@ class RawCorrelation(BaseCorrelation):
                  base_band: Optional[int] = 1,
                  target_band: Optional[int] = 1,
                  output_corr_path: Optional[str] = None,
-                 tile_size_mb: Optional[int] = CORRELATION.TILE_SIZE_MB,
+                 tile_size_mb: Optional[int] = const.CORRELATION.TILE_SIZE_MB,
                  visualize: Optional[bool] = False,
                  debug: Optional[bool] = True,
                  pixel_based_correlation: Optional[bool] = None):
@@ -421,10 +421,10 @@ class RawCorrelation(BaseCorrelation):
         return
 
     def set_margins(self) -> List[int]:
-        if self.corr_engine.correlator_name == CORRELATION.FREQUENCY_CORRELATOR:
+        if self.corr_engine.correlator_name == const.CORRELATION.FREQUENCY_CORRELATOR:
             return RawFreqCorr.set_margins(self.corr_engine.corr_params.resampling,
                                            self.corr_engine.corr_params.window_size)
-        if self.corr_engine.correlator_name == CORRELATION.SPATIAL_CORRELATOR:
+        if self.corr_engine.correlator_name == const.CORRELATION.SPATIAL_CORRELATOR:
             return self.corr_engine.corr_params.search_range
 
     def check_same_projection_system(self):
@@ -678,10 +678,12 @@ class RawCorrelation(BaseCorrelation):
             # correlator
             self.border_col_left: int = int(np.ceil(
                 (self.base_dims_pix[1] - self.base_original_dims[1] + self.corr_engine.corr_params.window_size[0] / 2 +
-                 self.margins[0]) / float(self.corr_engine.corr_params.step[0])))
+                 self.margins[
+                     0]) / float(self.corr_engine.corr_params.step[0])))
             self.border_row_top: int = int(np.ceil(
                 (self.base_dims_pix[3] - self.base_original_dims[3] + self.corr_engine.corr_params.window_size[1] / 2 +
-                 self.margins[1]) / float(self.corr_engine.corr_params.step[1])))
+                 self.margins[
+                     1]) / float(self.corr_engine.corr_params.step[1])))
             if self.debug:
                 logging.info("borderColLeft:{}, borderRowTop:{}".format(self.border_col_left, self.border_row_top))
             # From the borders in col and row, compute the necessary cropping of the master and slave in row and col,
@@ -727,6 +729,8 @@ class RawCorrelation(BaseCorrelation):
             self.output_col_right_blank = self._blank_array_func(nbVals=self.border_col_right)
 
     def tiling(self):
+        # TODO refactor this function and create a base class to generate Tiles
+        #  see Tile from Jihao python code
         # Get number of pixel in column and row of the file subset to tile
         self.nb_col_img: int = int(self.base_dims_pix[2] - self.base_dims_pix[1] + 1)
         self.nb_row_img: int = int(self.base_dims_pix[4] - self.base_dims_pix[3] + 1)
@@ -735,7 +739,8 @@ class RawCorrelation(BaseCorrelation):
 
         # Define number max of lines per tile
         self.max_rows_roi: int = int(
-            np.floor((self.tile_size_mb * 8 * 1024 * 1024) / (self.nb_col_img * CORRELATION.PIXEL_MEMORY_FOOTPRINT)))
+            np.floor(
+                (self.tile_size_mb * 8 * 1024 * 1024) / (self.nb_col_img * const.CORRELATION.PIXEL_MEMORY_FOOTPRINT)))
         if self.debug:
             logging.info("maxRowsROI:{}".format(self.max_rows_roi))
         # Define number of correlation column and lines computed for one tile
@@ -814,7 +819,7 @@ class RawCorrelation(BaseCorrelation):
         return
 
     def write_blank_pixels(self):
-        # In case of non-gridded correlation,write the top blank correlation lines
+        ## In case of non-gridded correlation,write the top blank correlation lines
         # Define a "blank" (i.e., invalid) correlation line
         temp_add = np.empty((self.border_row_top, self.ew_output.shape[1]))
         temp_add[:] = np.nan

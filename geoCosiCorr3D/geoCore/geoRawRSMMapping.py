@@ -3,14 +3,14 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
-import numpy as np
-
 import geoCosiCorr3D.geoErrorsWarning.geoErrors as geoErrors
+import numpy as np
 from geoCosiCorr3D.geoCore.base.base_RSM_Mapping import \
     BasePix2GroundDirectModel
 from geoCosiCorr3D.geoCore.constants import EARTH
 from geoCosiCorr3D.geoRSM.Interpol import LinearIterpolation
-from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+# from geoCosiCorr3D.geoRSM.misc import HeightInterpolation
+from geoCosiCorr3D.geoCore.geoDEM import HeightInterpolation
 
 
 class RawPix2GroundDirectModel(BasePix2GroundDirectModel):
@@ -28,7 +28,7 @@ class RawPix2GroundDirectModel(BasePix2GroundDirectModel):
         angle_y = LinearIterpolation(array=rsm_model.CCDLookAngle[:, 1], location=xPix)
         angle_z = LinearIterpolation(array=rsm_model.CCDLookAngle[:, 2], location=xPix)
         u1 = np.array([angle_x, angle_y, angle_z]).T
-        # print(rsm_model.CCDLookAngle)
+
         return u1
 
     @staticmethod

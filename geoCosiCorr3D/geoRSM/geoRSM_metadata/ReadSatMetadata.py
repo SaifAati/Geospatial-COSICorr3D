@@ -12,7 +12,21 @@ from pathlib import Path
 import numpy as np
 
 from geoCosiCorr3D.georoutines.file_cmd_routines import FilesInDirectory
-from geoCosiCorr3D.geoRSM.misc import ConvertTime2Second
+import geoCosiCorr3D.geoRSM.misc as misc
+
+
+class SatMetadata:
+    def __init__(self, md_fn: str, debug: bool = False):
+        self.debug = debug
+        self.md_fn = md_fn
+
+        self.platform = None
+        self.imaging_time = None
+        self.imaging_date = None
+        self.sun_az = None
+        self.sun_elev = None
+
+        pass
 
 
 class cGetSpot15Metadata:
@@ -152,7 +166,7 @@ class cGetSpot15Metadata:
         except:
             sceneCenterTime = datetime.datetime.strptime(sceneCenterTime, '%Y-%m-%dT%H:%M:%S.%f')
 
-        self.sceneCenterTime = ConvertTime2Second(sceneCenterTime)
+        self.sceneCenterTime = misc.time_to_second(sceneCenterTime)
         self.sceneCenterLine = [int(elem.text) for elem in
                                 self.root.findall(".//Sensor_Configuration//Time_Stamp//SCENE_CENTER_LINE")][0]
         if self.debug:
@@ -189,7 +203,7 @@ class cGetSpot15Metadata:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%fZ')
             except:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%f')
-            self.ephTime.append(ConvertTime2Second(t__))
+            self.ephTime.append(misc.time_to_second(t__))
         if self.debug:
             logging.info("dorisUsed:{},satPosition:{} ,satVelocity:{},ephTime:{}".format(self.dorisUsed,
                                                                                          self.satPosition.shape,
@@ -241,7 +255,7 @@ class cGetSpot15Metadata:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%fZ')
             except:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%f')
-            self.timeAttAng.append(ConvertTime2Second(t__))
+            self.timeAttAng.append(misc.time_to_second(t__))
         self.outOfRangeAttAng = [elem.text for elem in
                                  self.root.findall(
                                      ".//Satellite_Attitudes//Raw_Attitudes//Aocs_Attitude//Angles_List//Angles//OUT_OF_RANGE")]
@@ -274,7 +288,7 @@ class cGetSpot15Metadata:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%fZ')
             except:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%f')
-            self.timeSpeedAtt.append(ConvertTime2Second(t__))
+            self.timeSpeedAtt.append(misc.time_to_second(t__))
         self.outOfRangeSpeedAtt = [elem.text for elem in
                                    self.root.findall(
                                        ".//Satellite_Attitudes//Raw_Attitudes//Aocs_Attitude//Angular_Speeds_List//Angular_Speeds//OUT_OF_RANGE")]
@@ -313,7 +327,7 @@ class cGetSpot15Metadata:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%fZ')
             except:
                 t__ = datetime.datetime.strptime(t_, '%Y-%m-%dT%H:%M:%S.%f')
-            self.attitudeTime.append(ConvertTime2Second(t__))
+            self.attitudeTime.append(misc.time_to_second(t__))
 
         if self.debug:
             logging.info("starTrackerUsed:{} , yaw:{} , pitch:{} , roll:{} , outOfRange:{} , attitudeTime:{}".format(
@@ -331,7 +345,8 @@ class cGetSpot67Metadata():
         # get root element
         self.root = self.tree.getroot()
         self.childTags = [elem.tag for elem in self.root]
-        logging.info(self.childTags)
+        logging.info(f"{self.__class__.__name__}: {self.childTags}")
+
         self.instrument = None
         self.instrumentIndex = None
         self.imagingTime = None
@@ -339,7 +354,6 @@ class cGetSpot67Metadata():
         self.sunAz = None
         self.sunElev = None
         self.mission = None
-        self.instrument = None
         self.GetSourceInformation()
 
         self.nbCols = None
@@ -356,17 +370,19 @@ class cGetSpot67Metadata():
         self.GetSpotSensorConfig()
 
         self.lineOfSight = np.empty((4, 1))
-        self.position = None
-        self.velocity = None
-        self.ephTime = None
-        self.GetSpotEphemeris()
+        # self.position = None
+        # self.velocity = None
+        # self.ephTime = None
+        self.get_eph()
+
         self.lookAngles = np.copy(self.lineOfSight)
-        self.Q0 = None
-        self.Q1 = None
-        self.Q2 = None
-        self.Q3 = None
-        self.QTime = None
-        self.GetAttitude()
+        # self.Q0 = None
+        # self.Q1 = None
+        # self.Q2 = None
+        # self.Q3 = None
+        # self.QTime = None
+
+        self.get_attitude()
 
     def GetSourceInformation(self):
         if 'Dataset_Sources' in self.childTags:
@@ -425,10 +441,10 @@ class cGetSpot67Metadata():
 
         startTime = [elem.text for elem in self.root.findall(".//Refined_Model/Time/Time_Range/START")][0]
         startTime = datetime.datetime.strptime(startTime, '%Y-%m-%dT%H:%M:%S.%fZ')
-        self.startTime = ConvertTime2Second(startTime)
+        self.startTime = misc.time_to_second(startTime)
         endTime = [elem.text for elem in self.root.findall(".//Refined_Model/Time/Time_Range/END")][0]
         endTime = datetime.datetime.strptime(endTime, '%Y-%m-%dT%H:%M:%S.%fZ')
-        self.endTime = ConvertTime2Second(endTime)
+        self.endTime = misc.time_to_second(endTime)
         ##linePeriod in microsecond, need to convert it to second
         self.linePeriod = float(
             [elem.text for elem in self.root.findall(".//Refined_Model/Time/Time_Stamp/LINE_PERIOD")][0]) / 1000000
@@ -445,9 +461,8 @@ class cGetSpot67Metadata():
 
         return
 
-    def GetSpotEphemeris(self):
+    def get_eph(self):
         logging.info("--- Get Look angles ----")
-
         self.lineOfSight[0, 0] = float(
             [elem.text for elem in self.root.findall(".//Refined_Model//Polynomial_Look_Angles/XLOS_0")][0])
         self.lineOfSight[1, 0] = float(
@@ -456,33 +471,40 @@ class cGetSpot67Metadata():
             [elem.text for elem in self.root.findall(".//Refined_Model//Polynomial_Look_Angles/YLOS_0")][0])
         self.lineOfSight[3, 0] = float(
             [elem.text for elem in self.root.findall(".//Refined_Model//Polynomial_Look_Angles/YLOS_1")][0])
-
         logging.info("Look_Angles:\n{}".format(self.lineOfSight))
-        temp_XYZ = [elem.text for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/LOCATION_XYZ")]
-        temp_V_XYZ = [elem.text for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/VELOCITY_XYZ")]
-        temp_ephTime = [elem.text for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/TIME")]
-        self.position = np.empty((len(temp_XYZ), 3))
-        self.velocity = np.empty((len(temp_V_XYZ), 3))
-        self.ephTime = []
-        line = 0
-        for pos_, vel_, ephTime_ in zip(temp_XYZ, temp_V_XYZ, temp_ephTime):
-            self.position[line, :] = np.array(pos_.split(" "), dtype=float)
-            self.velocity[line, :] = np.array(vel_.split(" "), dtype=float)
-            ephTime__ = datetime.datetime.strptime(ephTime_, '%Y-%m-%dT%H:%M:%S.%fZ')
-            ephTime__ = ConvertTime2Second(ephTime__)
-            self.ephTime.append(ephTime__)
-            line += 1
 
+        temp_XYZ = np.array(
+            [elem.text.split(" ") for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/LOCATION_XYZ")],
+            dtype=float)
+        temp_V_XYZ = np.array(
+            [elem.text.split(" ") for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/VELOCITY_XYZ")],
+            dtype=float)
+        temp_ephTime = np.array([elem.text for elem in self.root.findall(".//Refined_Model/Ephemeris//Point/TIME")])
+
+        eph_time = np.array(
+            [(datetime.datetime.strptime(t, '%Y-%m-%dT%H:%M:%S.%fZ') - datetime.datetime(1950, 1, 1)).total_seconds()
+             for t in temp_ephTime])
+        self.eph_tpv = np.hstack((eph_time[:, np.newaxis], temp_XYZ, temp_V_XYZ))
+
+        logging.info(f"{self.__class__.__name__}: input ephemeris: {self.eph_tpv.shape}")
         return
 
-    def GetAttitude(self):
+    def get_attitude(self):
+        quat_time_str = np.array(
+            [elem.text for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/TIME")])
 
-        self.Q0 = [float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q0")]
-        self.Q1 = [float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q1")]
-        self.Q2 = [float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q2")]
-        self.Q3 = [float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q3")]
-        self.QTime = [ConvertTime2Second(datetime.datetime.strptime(elem.text, '%Y-%m-%dT%H:%M:%S.%fZ')) for elem in
-                      self.root.findall(".//Refined_Model/Attitudes//Quaternion/TIME")]
+        quat_time = np.array(
+            [(datetime.datetime.strptime(t, '%Y-%m-%dT%H:%M:%S.%fZ') - datetime.datetime(1950, 1, 1)).total_seconds()
+             for t in quat_time_str])
+
+        Q0 = np.array([float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q0")])
+        Q1 = np.array([float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q1")])
+        Q2 = np.array([float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q2")])
+        Q3 = np.array([float(elem.text) for elem in self.root.findall(".//Refined_Model/Attitudes//Quaternion/Q3")])
+
+        self.quat_txyzs = np.vstack([quat_time, Q1, Q2, Q3, Q0]).T
+
+        logging.info(f"{self.__class__.__name__}: Optimized input attitude: {self.quat_txyzs.shape}")
 
 
 class cGetDGMetadata():
@@ -635,7 +657,7 @@ class cGetDGMetadata():
         self.time = item_.split("T")[1]
         self.date_time_obj = datetime.datetime.strptime(item_, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        self.startTime = ConvertTime2Second(timeIn=self.date_time_obj, yearOrigin=2000)
+        self.startTime = misc.time_to_second(self.date_time_obj, 2000)
         self.avgLineRate = [float(elem.text) for elem in self.root.findall(".//AVGLINERATE")][0]
 
         self.sunAz = [float(elem.text) for elem in self.root.findall(".//MEANSUNAZ")][0]
@@ -654,7 +676,7 @@ class cGetDGMetadata():
 
         item_ = [elem.text for elem in self.root.findall(".//EPH//STARTTIME")][0]
         date_time_obj = datetime.datetime.strptime(item_, '%Y-%m-%dT%H:%M:%S.%fZ')
-        self.startTimeEph = ConvertTime2Second(timeIn=date_time_obj, yearOrigin=2000)
+        self.startTimeEph = misc.time_to_second(date_time_obj, 2000)
         self.dtEph = [float(elem.text) for elem in self.root.findall(".//EPH//TIMEINTERVAL")][0]
         self.nbPoints = [int(elem.text) for elem in self.root.findall(".//EPH//NUMPOINTS")][0]
         self.ephemeris = np.zeros((self.nbPoints, 6))
@@ -679,7 +701,7 @@ class cGetDGMetadata():
         # self.dtEph = [float(elem.text) for elem in self.root.findall(".//EPH//TIMEINTERVAL")][0]
         item_ = [elem.text for elem in self.root.findall(".//ATT//STARTTIME")][0]
         date_time_obj = datetime.datetime.strptime(item_, '%Y-%m-%dT%H:%M:%S.%fZ')
-        self.startTimeAtt = ConvertTime2Second(timeIn=date_time_obj, yearOrigin=2000)
+        self.startTimeAtt = misc.time_to_second(date_time_obj, 2000)
         self.dtAtt = [float(elem.text) for elem in self.root.findall(".//ATT//TIMEINTERVAL")][0]
         self.nbPointsAtt = [int(elem.text) for elem in self.root.findall(".//ATT//NUMPOINTS")][0]
         self.attitude = np.zeros((self.nbPointsAtt, 4))
@@ -700,6 +722,7 @@ class cGetDGMetadata():
             self.attitude[int(float(index)) - 1, 1] = float(q2)
             self.attitude[int(float(index)) - 1, 2] = float(q3)
             self.attitude[int(float(index)) - 1, 3] = float(q4)
+
         """
             RETRIEVE CAMERA GEOMETRY INFO:
             detOrigin: two elements array representing the location of the first CCD in the camera reference system (in millimeters)
@@ -811,7 +834,7 @@ class cGetDGMetadata():
                     self.nbCols = int(item_)
                 if lookup_ == "firstLineTime":
                     self.date_time_obj = datetime.datetime.strptime(item_, ' %Y-%m-%dT%H:%M:%S.%fZ')
-                    self.startTime = ConvertTime2Second(timeIn=self.date_time_obj, yearOrigin=2000)
+                    self.startTime = misc.time_to_second(self.date_time_obj, 2000)
                 if "avgLineRate" == lookup_:
                     self.avgLineRate = float(item_)
                 if "sunAz" == lookup_:
@@ -859,7 +882,7 @@ class cGetDGMetadata():
             line, num, item_ = self.__LookupInfile(file=self.ephFilePath, lookup=lookup_)
             if lookup_ == "startTime":
                 date_time_obj = datetime.datetime.strptime(item_, ' %Y-%m-%dT%H:%M:%S.%fZ')
-                self.startTimeEph = ConvertTime2Second(timeIn=date_time_obj, yearOrigin=2000)
+                self.startTimeEph = misc.time_to_second(date_time_obj, 2000)
             if lookup_ == lookupList[1]:
                 self.dtEph = float(item_)
             if lookup_ == lookupList[2]:
@@ -899,7 +922,7 @@ class cGetDGMetadata():
             line, num, item_ = self.__LookupInfile(file=self.attFilePath, lookup=lookup_)
             if lookup_ == "startTime":
                 date_time_obj = datetime.datetime.strptime(item_, ' %Y-%m-%dT%H:%M:%S.%fZ')
-                self.startTimeAtt = ConvertTime2Second(timeIn=date_time_obj, yearOrigin=2000)
+                self.startTimeAtt = misc.time_to_second(date_time_obj, 2000)
             if lookup_ == lookupList[1]:
                 self.dtAtt = float(item_)
             if lookup_ == lookupList[2]:

@@ -3,16 +3,16 @@
 # Contact: SAIF AATI  <saif@caltech.edu> <saifaati@gmail.com>
 # Copyright (C) 2022
 """
+
 import logging
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Optional
 
+import geoCosiCorr3D.geoCore.constants as C
 import numpy as np
 import pandas
-
-from geoCosiCorr3D.geoCore.constants import ASIFT_TP_PARAMS
 from geoCosiCorr3D.georoutines.file_cmd_routines import FilesInDirectory
 
 
@@ -53,7 +53,6 @@ class RawGeoTP(ABC):
     def plot_matches_v2(img_i, img_j, matches_file):  # , plot_matches: Optional[bool] = True):
         import matplotlib.pyplot as plt
         import numpy as np
-
         from geoCosiCorr3D.georoutines.geo_utils import cRasterInfo
         from geoCosiCorr3D.georoutines.utils.plt_utils import plot_matches
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -77,7 +76,7 @@ class RawGeoTP(ABC):
 
 
 class RawMMTP(RawGeoTP):
-    MM_LIB_PATH = ASIFT_TP_PARAMS.MM_LIB
+    MM_LIB_PATH =  C.ASIFT_TP_PARAMS.MM_LIB
 
     def __init__(self, config: Dict):
         super().__init__()
@@ -85,22 +84,22 @@ class RawMMTP(RawGeoTP):
         self._ingest()
 
     def _ingest(self):
-        self.scale_factor = float(ASIFT_TP_PARAMS.SCALE_FACTOR \
-                                      if self.in_config.get("scale_factor", ASIFT_TP_PARAMS.SCALE_FACTOR) is None \
-                                      else self.in_config.get("scale_factor", ASIFT_TP_PARAMS.SCALE_FACTOR))
+        self.scale_factor = float( C.ASIFT_TP_PARAMS.SCALE_FACTOR \
+                                      if self.in_config.get("scale_factor",  C.ASIFT_TP_PARAMS.SCALE_FACTOR) is None \
+                                      else self.in_config.get("scale_factor",  C.ASIFT_TP_PARAMS.SCALE_FACTOR))
 
-        self.mode = self.in_config.get("mode", ASIFT_TP_PARAMS.MODE)  ## mode : MulScale,All, Line,Georef
+        self.mode = self.in_config.get("mode",  C.ASIFT_TP_PARAMS.MODE)  ## mode : MulScale,All, Line,Georef
         self.tp_format = self.in_config.get("tp_format", "COSI-Corr")
         self.tmp_dir = self.in_config.get("mm_temp_folder", None)
         self.max_pts = 60 if self.in_config.get('max_pts', None) is None else self.in_config.get('max_pts')
 
     @staticmethod
-    def run_mm_tapioca(mm_lib_path, mode, in_imgs_folder, img_size=ASIFT_TP_PARAMS.IMG_SIZE):
+    def run_mm_tapioca(mm_lib_path, mode, in_imgs_folder, img_size= C.ASIFT_TP_PARAMS.IMG_SIZE):
 
         cmd = [mm_lib_path + " Tapioca"]
         cmd.extend([mode])
         cmd.extend([os.path.join(in_imgs_folder, ".*tif")])
-        if mode == ASIFT_TP_PARAMS.MODE:
+        if mode ==  C.ASIFT_TP_PARAMS.MODE:
             cmd.extend([str(img_size)])
         cmd.extend(["ExpTxt=true"])
         logging.info(cmd)
@@ -137,7 +136,7 @@ class RawMMTP(RawGeoTP):
 
                 if format_cosi_corr:
                     header = "; COSI-Corr tie points file (from Micmac)\n; base file:" + ref_img_name + "\n; warp file:" + \
-                             ref_img_name + "\n; Base Image (x,y), Warp Image (x,y)\n;\n"
+                              raw_img_name+ "\n; Base Image (x,y), Warp Image (x,y)\n;\n"
                     with open(filePath_, 'w') as file:
                         file.write(header)
                         data_df.to_csv(file, header=False, index=False, sep='\t', float_format='%.6f')
@@ -152,7 +151,7 @@ class RawMMTP(RawGeoTP):
                 return
 
         else:
-            logging.warning("No tie points file !!!! ")
+            logging.warning("No tie points file !! ")
             return None
 
     @abstractmethod
