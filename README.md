@@ -173,9 +173,9 @@ python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test
 
 ### Batch Correlation
 
-The batch correlation feature allows you to perform correlation on multiple images in a batch mode. You can specify lists of base and target images, and the script will handle the correlation accordingly.
+The batch correlation feature allows performing correlation on multiple images in batch mode. It supports specifying lists of base and target images, with the script handling the correlation accordingly.
 
-You can use the batch_correlate command to perform batch correlation. The command accepts comma-separated lists of base and target images. You can also pass wildcard patterns to include all matching files in a directory.
+Comma-separated lists of base and target images can be passed, or wildcard patterns may be used to include all matching files in a directory.
 
 <details>
 <summary>Batch Correlate Module Usage</summary>
@@ -183,6 +183,7 @@ You can use the batch_correlate command to perform batch correlation. The comman
 1- Serial Correlation:  
 ```bash
 python3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --serialpython3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --all
+
 ```
 2- All Combinations Correlation:
 ```bash
