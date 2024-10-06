@@ -117,7 +117,8 @@ modules:
     transform  Transformation
     correlate  Correlation
 ```
-### Correlation
+
+### <span style="color:blue"> Correlation</span>
 
 For detailed usage of the `correlate` module, execute the following command:
 
@@ -171,7 +172,8 @@ python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test
 ![Alt text](Figs/BASE_IMG_VS_TARGET_IMG_frequency_wz_64_step_8.png?raw=true "Title")
 </details>
 
-### Batch Correlation
+
+### <span style="color:blue">Batch Correlation</span>
 
 The batch correlation feature allows performing correlation on multiple images in batch mode. It supports specifying lists of base and target images, with the script handling the correlation accordingly.
 
@@ -196,8 +198,8 @@ In these examples, the `--serial` option correlates images with the same index, 
 **Note:** You can pass a comma-separated list of image paths or use a wildcard pattern like "folder/*.tif" to include all matching files in a directory.
 </details>
 
-### Transform
 
+### <span style="color:blue">Transform</span>
 For detailed usage of the `transfrom` module, execute the following command:
 
 ```bash
@@ -261,7 +263,8 @@ python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.168
 
 </details>
 
-### Orthorectification and model refinement
+### <span style="color:blue">Orthorectification and model refinement</span>
+
 For detailed usage of the `ortho` module, execute the following command:
 
 ```bash
