@@ -324,11 +324,6 @@ positional arguments:
 
 ##### Upcoming Release Information
 
-- **Scheduled Release Date**: May 2024
-- **Features to be Included**:
-  - **`ortho` Module**
-  - **RSM Transformation module**
-
 # geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
 # License
