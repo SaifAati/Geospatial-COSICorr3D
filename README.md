@@ -171,6 +171,28 @@ python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test
 ![Alt text](Figs/BASE_IMG_VS_TARGET_IMG_frequency_wz_64_step_8.png?raw=true "Title")
 </details>
 
+### Batch Correlation
+
+The batch correlation feature allows you to perform correlation on multiple images in a batch mode. You can specify lists of base and target images, and the script will handle the correlation accordingly.
+
+You can use the batch_correlate command to perform batch correlation. The command accepts comma-separated lists of base and target images. You can also pass wildcard patterns to include all matching files in a directory.
+
+<details>
+<summary>Batch Correlate Module Usage</summary>
+
+1- Serial Correlation:  
+```bash
+python3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --serialpython3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --all
+```
+2- All Combinations Correlation:
+```bash
+python3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --all
+```
+In these examples, the `--serial` option correlates images with the same index, while the `--all` option correlates all possible combinations of base and target images. If neither --serial nor --all is specified, the script defaults to --all.
+
+**Note:** You can pass a comma-separated list of image paths or use a wildcard pattern like "folder/*.tif" to include all matching files in a directory.
+</details>
+
 ### Transform
 
 For detailed usage of the `transfrom` module, execute the following command:
