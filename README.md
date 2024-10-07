@@ -175,9 +175,14 @@ python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test
 
 ### <span style="color:blue">Batch Correlation</span>
 
+
 The batch correlation feature allows performing correlation on multiple images in batch mode. It supports specifying lists of base and target images, with the script handling the correlation accordingly.
 
 Comma-separated lists of base and target images can be passed, or wildcard patterns may be used to include all matching files in a directory.
+
+### Options:
+1. **Batch Correlation**
+2. **Multiband Correlation** 
 
 <details>
 <summary>Batch Correlate Module Usage</summary>
@@ -197,6 +202,18 @@ In these examples, the `--serial` option correlates images with the same index, 
 
 **Note:** You can pass a comma-separated list of image paths or use a wildcard pattern like "folder/*.tif" to include all matching files in a directory.
 </details>
+
+
+<details>
+<summary>Multiband Correlate Module Usage</summary>
+
+The multiband correlation feature allows performing correlation between all possible bands in a given raster.
+If the --band_combination option is specified, the correlation will be done between the specified bands.
+```bash
+python3 scripts/cosicorr.py multi_band_correlation input_img.TIF --band_combination "1,2;3,4" --output_path output/ --show
+```   
+</details>
+
 
 
 ### <span style="color:blue">Transform</span>
