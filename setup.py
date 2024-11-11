@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(
         name='geoCosiCorr3D',
-        version='2.5.0',
+        version='2.5.1',
         author='Saif Aati',
         author_email='saif@caltech.edu, saifaati@gmail.com',
         description='Geospatial COSI-Corr 3D',
