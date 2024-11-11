@@ -117,7 +117,8 @@ modules:
     transform  Transformation
     correlate  Correlation
 ```
-### Correlation
+
+### <span style="color:blue"> Correlation</span>
 
 For detailed usage of the `correlate` module, execute the following command:
 
@@ -171,8 +172,51 @@ python3 scripts/cosicorr.py correlate tests/test_dataset/BASE_IMG.TIF tests/test
 ![Alt text](Figs/BASE_IMG_VS_TARGET_IMG_frequency_wz_64_step_8.png?raw=true "Title")
 </details>
 
-### Transform
 
+### <span style="color:blue">Batch Correlation</span>
+
+
+The batch correlation feature allows performing correlation on multiple images in batch mode. It supports specifying lists of base and target images, with the script handling the correlation accordingly.
+
+Comma-separated lists of base and target images can be passed, or wildcard patterns may be used to include all matching files in a directory.
+
+### Options:
+1. **Batch Correlation**
+2. **Multiband Correlation** 
+
+<details>
+<summary>Batch Correlate Module Usage</summary>
+
+
+**1- Serial Correlation:** 
+
+```bash
+python3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF TARGET_IMG_1.TIF,TARGET_IMG_2.TIF --output_path output/ --show --serialpython3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --all
+
+```
+**2- All Combinations Correlation:**
+```bash
+python3 scripts/batch_correlation.py batch_correlate BASE_IMG_1.TIF,BASE_IMG_2.TIF "Target/*.TIF" --output_path output/ --show --all
+```
+In these examples, the `--serial` option correlates images with the same index, while the `--all` option correlates all possible combinations of base and target images. If neither --serial nor --all is specified, the script defaults to --all.
+
+**Note:** You can pass a comma-separated list of image paths or use a wildcard pattern like "folder/*.tif" to include all matching files in a directory.
+</details>
+
+
+<details>
+<summary>Multiband Correlate Module Usage</summary>
+
+The multiband correlation feature allows performing correlation between all possible bands in a given raster.
+If the --band_combination option is specified, the correlation will be done between the specified bands.
+```bash
+python3 scripts/cosicorr.py multi_band_correlation input_img.TIF --band_combination "1,2;3,4" --output_path output/ --show
+```   
+</details>
+
+
+
+### <span style="color:blue">Transform</span>
 For detailed usage of the `transfrom` module, execute the following command:
 
 ```bash
@@ -236,7 +280,8 @@ python3 scripts/cosicorr.py transform 30.52895296,30.65688292 41.24090926,41.168
 
 </details>
 
-### Orthorectification and model refinement
+### <span style="color:blue">Orthorectification and model refinement</span>
+
 For detailed usage of the `ortho` module, execute the following command:
 
 ```bash
@@ -295,11 +340,6 @@ positional arguments:
 </details>
 
 ##### Upcoming Release Information
-
-- **Scheduled Release Date**: May 2024
-- **Features to be Included**:
-  - **`ortho` Module**
-  - **RSM Transformation module**
 
 # geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
 
