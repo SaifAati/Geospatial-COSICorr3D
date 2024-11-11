@@ -3,6 +3,7 @@
 INSTALL_CONDA=false
 INSTALL_DOCKER=false
 OVERWRITE=false
+UPDATE_ENV=false
 
 DOCKERFILE_PATH="Dockerfile"
 BASE_IMAGE_NAME="ghcr.io/saifaati/geospatial-cosicorr3d/base_cosicorr3d_image"
@@ -15,9 +16,11 @@ show_help() {
     echo "  --conda       Install Miniconda and set up the geoCosiCorr3D environment."
     echo "  --docker      Install Docker."
     echo "  --overwrite   Overwrite the existing geoCosiCorr3D environment if it exists (only valid with --conda)."
+    echo "  --update      Update the existing geoCosiCorr3D environment if it exists (only valid with --conda)."
     echo "  -h, --help    Show this help message and exit."
     exit 0
 }
+
 
 
 while (( "$#" )); do
@@ -32,6 +35,10 @@ while (( "$#" )); do
             ;;
         --overwrite)
             OVERWRITE=true
+            shift
+            ;;
+        --update)
+            UPDATE_ENV=true
             shift
             ;;
         -h|--help)
@@ -69,20 +76,23 @@ install_conda() {
           . ~/miniconda3/etc/profile.d/conda.sh
       fi
 
-      # Check if the geoCosiCorr3D environment already exists
-      if conda env list | grep -q 'geoCosiCorr3D'; then
-          if [ "$OVERWRITE" = true ]; then
-              echo "The geoCosiCorr3D environment exists but will be deleted and recreated as per --overwrite option."
-              conda remove --name geoCosiCorr3D --all
-              conda env update --file geoCosiCorr3D.yml --prune
-          else
-              echo "The geoCosiCorr3D environment is already installed. To activate it, enter the cmd: conda activate geoCosiCorr3D"
-          fi
-      else
-          echo "The geoCosiCorr3D environment does not exist. Creating it..."
-          conda env update --file geoCosiCorr3D.yml --prune
-          . ~/miniconda3/etc/profile.d/conda.sh
-      fi
+  # Check if the geoCosiCorr3D environment already exists
+    if conda env list | grep -q 'geoCosiCorr3D'; then
+        if [ "$OVERWRITE" = true ]; then
+            echo "The geoCosiCorr3D environment exists but will be deleted and recreated as per --overwrite option."
+            conda remove --name geoCosiCorr3D --all
+            conda env update --file geoCosiCorr3D.yml --prune
+        elif [ "$UPDATE_ENV" = true ]; then
+            echo "Updating the existing geoCosiCorr3D environment as per --update option."
+            conda env update --file geoCosiCorr3D.yml --prune
+        else
+            echo "The geoCosiCorr3D environment is already installed. To activate it, enter the cmd: conda activate geoCosiCorr3D"
+        fi
+    else
+        echo "The geoCosiCorr3D environment does not exist. Creating it..."
+        conda env update --file geoCosiCorr3D.yml --prune
+        . ~/miniconda3/etc/profile.d/conda.sh
+    fi
 }
 
 
