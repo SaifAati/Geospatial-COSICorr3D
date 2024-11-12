@@ -356,24 +356,29 @@ class cRasterInfo(BaseRasterInfo):
         return raster_pix_dims, raster_map_dims
 
     def __repr__(self):
-
-        return f"RasterInfo: {self.get_raster_path} \n" \
-               f"Raster Width: {self.raster_width} \n" \
-               f"Raster Height: {self.raster_height} \n" \
-               f"Number of Bands: {self.band_number} \n" \
-               f"Raster Type: {self.raster_type} \n" \
-               f"EPSG Code: {self.epsg_code} \n" \
-               f"Projection: {self.proj} \n" \
-               f"Pixel Width: {self.pixel_width} \n" \
-               f"Pixel Height: {self.pixel_height} \n" \
-               f"Map Origin: {self.x_map_origin, self.y_map_origin} \n" \
-               f"Geo Transform: {self.geo_transform} \n" \
-               f"RPCs: {self.rpcs} \n" \
-               f"Valid Map Info: {self.valid_map_info} \n" \
-               f"No Data: {self.no_data} \n" \
-               f"Bands Description: {self.bands_description} \n" \
-               f"BBOX Map: {self.bbox_map} \n" \
-               f"Raster Array: {self.raster_array} \n"
+        info = (f"Raster path: {self.get_raster_path}\n"
+                f"Raster Width: {self.raster_width}\n"
+                f"Raster Height: {self.raster_height}\n"
+                f"Number of Bands: {self.band_number}\n"
+                f"Raster Type: {self.raster_type}\n"
+                f"EPSG Code: {self.epsg_code}\n"
+                f"Projection: {self.proj}\n"
+                f"Pixel Width: {self.pixel_width}\n"
+                f"Pixel Height: {self.pixel_height}\n"
+                f"Map Origin: {self.x_map_origin, self.y_map_origin}\n"
+                f"Geo Transform: {self.geo_transform}\n"
+                f"RPCs: {self.rpcs}\n"
+                f"Valid Map Info: {self.valid_map_info}\n"
+                f"No Data: {self.no_data}\n"
+                f"Bands Description: {self.bands_description}\n"
+                f"BBOX Map: {self.bbox_map}\n"
+                )
+        box_width = max(len(line) for line in info.split('\n')) + 4
+        box = '*' * box_width + '\n'
+        for line in info.split('\n'):
+            box += f"* {line.ljust(box_width - 3)}*\n"
+        box += '*' * box_width
+        return box
 
 
 class cRasterInfoGDAL:
