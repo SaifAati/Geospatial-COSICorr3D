@@ -352,7 +352,7 @@ for the surface deformation signal and several other artifacts such as decorrela
 topography-related residuals, and stripe artifacts. 
 Therefore, the main objective of this tool is to separate the deformation signal from the artifacts.
 This approach can be considered as unsupervised learning,
-for a **detailed description of this tool please read our research paper** [2]
+for a **detailed description of this tool please read our research paper [2]**
 
 It should be noted that this approach does not imply smoothing the temporal variations of ground 
 surface displacement. Instead, only local variations that do not correlate in space are filtered out.
