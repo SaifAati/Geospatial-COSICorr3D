@@ -339,6 +339,51 @@ positional arguments:
 
 </details>
 
+# geoCosiCorr3D: Time Series Analysis
+
+## geoPCAIM [2]
+Geospatial Principal Component Analysis-bases Inversion Method (geoPCAIM) is a statistically based approach
+applied to a redundant surface displacement measurement
+in order to filter out the measurement noise and extract the signal with the maximum spatio-temporal
+coherence. 
+
+Horizontal displacement measurements obtained using the image correlation technique typically account 
+for the surface deformation signal and several other artifacts such as decorrelation,
+topography-related residuals, and stripe artifacts. 
+Therefore, the main objective of this tool is to separate the deformation signal from the artifacts.
+This approach can be considered as unsupervised learning,
+for a detailed description of this tool please read our research paper [2]
+
+It should be noted that this approach does not imply smoothing the temporal variations of ground 
+surface displacement. Instead, only local variations that do not correlate in space are filtered out.
+In essence geoPCAIM approach could be used to reduce image geometry related artifacts (example Ridgecrest)
+and to filter out the outliers over a time series of displacement (example Shisper).
+
+
+
+## geoICA [1]
+geoICA is a statistically based approach
+applied to a redundant surface displacement measurement
+in order to filter out the measurement noise and extract the signal with the maximum
+spatio-temporal coherence. 
+ICA decomposition is used rather than gepPCAIM in some cases because the sources of 
+artifacts can be a major contribution to the data variance and could be filtered 
+out by selecting only the first component of a geoPCAIM. 
+The basis for the decomposition is that the deformation signal and the various sources
+of artifacts can be assumed to be statistically independent sources. 
+In particular, the artifacts are assumed to be statistically independent with 
+the deformation signal. The deformation signal is presumed to be the same in all 
+the 3-D measurements maps independent of the choice of a particular set of images. 
+As a result, we expect the deformation signal to show in only one component. 
+The hypothesis that the displacement signal is independent of the artifacts is
+most likely to be verified in real applications. 
+This assumption would be incorrect only in the unlikely case of a displacement 
+signal similar with the pattern resulting from the geometric artifacts like
+jitter or CCD artifacts.
+
+![Alt text](Figs/geoICA_expl.png?raw=true "Title")
+
+
 ##### Upcoming Release Information
 
 # geoCosiCorr3D: [GUI](Doc/GUI_DOC.md)
@@ -355,13 +400,20 @@ If you are using this software for academic research or publications we ask that
 ground deformation from optimized registration and correlation of optical images and ICA-based filtering of image
 geometry artifacts. Remote Sensing of Environment 277, 113038. https://doi.org/10.1016/j.rse.2022.113038
 
+
+<a id="2">[2]</a> Aati, S., Avouac, J.-P., Rupnik, E., Deseilligny, M.-P., 2022.
+Potential and Limitation of PlanetScope Images for 2-D and 3-D Earth Surface Monitoring with 
+Example of Applications to Glaciers and Earthquakes. IEEE Transactions on Geoscience and Remote Sensing 1–1. 
+https://doi.org/10.1109/TGRS.2022.3215821
+
+
 # References
 
-<a id="1">[2]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification,
+<a id="1">[3]</a> S. Leprince, S. Barbot, F. Ayoub and J. Avouac, "Automatic and Precise Orthorectification,
 Coregistration, and Subpixel Correlation of Satellite Images, Application to Ground Deformation Measurements," in IEEE
 Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
 
-<a id="1">[3]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography
+<a id="1">[4]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography
 Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12,
 
 3418. https://doi.org/10.3390/rs12203418
