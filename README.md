@@ -414,9 +414,7 @@ Coregistration, and Subpixel Correlation of Satellite Images, Application to Gro
 Transactions on Geoscience and Remote Sensing, vol. 45, no. 6, pp. 1529-1558, June 2007, doi: 10.1109/TGRS.2006.888937.
 
 <a id="1">[4]</a> Aati, S.; Avouac, J.-P. Optimization of Optical Image Geometric Modeling, Application to Topography
-Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12,
-
-3418. https://doi.org/10.3390/rs12203418
+Extraction and Topographic Change Measurements Using PlanetScope and SkySat Imagery. Remote Sens. 2020, 12,3418. https://doi.org/10.3390/rs12203418
 
 
 
