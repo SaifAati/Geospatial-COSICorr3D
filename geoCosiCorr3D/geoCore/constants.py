@@ -22,9 +22,15 @@ config.read(GEOCOSICORR3D_SETUP_CFG)
 
 @dataclass(frozen=True)
 class SOFTWARE:
+    config.read(GEOCOSICORR3D_SETUP_CFG)
     AUTHOR = 'saif@caltech.edu||saifaati@gmail.com'
-    SOFTWARE_NAME = config['metadata']['name']
-    VERSION = config['metadata']['version']
+    try:
+        # This is a temporary workaround to be able to use geoCosiCorr3D with Jupyter no
+        SOFTWARE_NAME = config['metadata']['name']
+        VERSION = config['metadata']['version']
+    except:
+        SOFTWARE_NAME = 'geoCosiCorr3D'
+        VERSION = 'x.x.x'
     TILE_SIZE_MB = 64
     MEMORY_USAGE = 0.3
     PARENT_FOLDER = GEOCOSICORR3D_PACKAGE_DIR
