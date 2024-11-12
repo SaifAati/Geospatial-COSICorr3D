@@ -146,8 +146,8 @@ class geoICA:
         return array
 
     def reconstruct(self, S_):
+        self.mean_reconstructed_fns = []
         for comp_num in tqdm(range(self.nb_comp), desc="Data reconstruction"):
-
             new_S = np.zeros(S_.shape)
             new_S[:, comp_num] = S_[:, comp_num]
             array_restored = self.ica.inverse_transform(new_S)
@@ -157,12 +157,24 @@ class geoICA:
                 array = self.reverse_mask(mask=self.mask_reshaped, masked_array=tmp_arr)
                 us_reshaped = array.reshape((self.raster_info.raster_height, self.raster_info.raster_width))
                 o_rec_arr.append(np.ma.masked_invalid(us_reshaped))
+
             WriteRaster(oRasterPath=os.path.join(self.o_folder,
                                                  Path(self.raster_fn).stem + "_geoICA_Rec_IC_" + str(
                                                      comp_num) + ".tif"),
                         geoTransform=self.raster_info.geo_transform,
                         arrayList=o_rec_arr,
                         epsg=self.raster_info.epsg_code)
+
+            mean_reconstructed_fn = os.path.join(self.o_folder,
+                                                 Path(self.raster_fn).stem + "_mean_geoICA_Rec_IC_" + str(
+                                                     comp_num) + ".tif")
+            self.mean_reconstructed_fns.append(mean_reconstructed_fn)
+            WriteRaster(oRasterPath=mean_reconstructed_fn,
+                        geoTransform=self.raster_info.geo_transform,
+                        arrayList=[np.mean(o_rec_arr, axis=0)],
+                        epsg=self.raster_info.epsg_code)
+            print(f"Reconstructed component {comp_num} saved to {mean_reconstructed_fn}")
+
         return
 
     def __call__(self, *args, **kwargs):

@@ -117,7 +117,7 @@ install_package() {
         echo "Package file not found."
         exit 1
     fi
-    conda run -n geoCosiCorr3D pip install "$PACKAGE_FILE"
+    conda run -n geoCosiCorr3D pip install "$PACKAGE_FILE" --force-reinstall
     rm -rf build dist
 
     echo "geoCosiCorr3D package installed successfully."
