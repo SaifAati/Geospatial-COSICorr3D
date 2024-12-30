@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/saifaati/geospatial-cosicorr3d/base_cosicorr3d_image:base.1.1
+ARG BASE_IMAGE=ghcr.io/saifaati/geospatial-cosicorr3d/base_cosicorr3d_image:base.1.2
 FROM $BASE_IMAGE as builder
 
 
