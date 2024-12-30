@@ -50,7 +50,7 @@ def test_ortho_rsm(o_gsd, resampling_method):
     return
 
 
-#
+
 @pytest.mark.parametrize('o_gsd', [30])
 @pytest.mark.parametrize('resampling_method', [const.GEOCOSICORR3D_RESAMLING_METHODS[0]])
 def test_ortho_rfm(o_gsd, resampling_method):
