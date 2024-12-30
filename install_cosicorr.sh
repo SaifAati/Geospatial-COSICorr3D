@@ -126,10 +126,10 @@ install_package() {
 init_docker() {
     echo "Installing Docker..."
     sudo apt-get update
-    sudo apt-get install -y docker.io
+    sudo apt-get install -y docker.io docker-compose
     sudo systemctl start docker
     sudo systemctl enable docker
-    echo "Docker installed and started successfully."
+    echo "Docker and Docker compose  installed and started successfully."
 }
 
 start_docker() {
@@ -184,6 +184,7 @@ install_docker() {
     echo 'Building cosicorr3D base image '
     check_dockerfile_exists
     pulling_base_image
+
     docker-compose -f docker-compose.yml build geocosicorr3d
 }
 
