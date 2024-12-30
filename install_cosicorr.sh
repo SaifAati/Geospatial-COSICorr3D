@@ -189,9 +189,9 @@ install_docker() {
 
 if [ "$INSTALL_CONDA" = true ]; then
     install_conda
-    get_version
-    build_package
-    install_package
+#    get_version
+#    build_package
+#    install_package
 fi
 
 if [ "$INSTALL_DOCKER" = true ]; then
