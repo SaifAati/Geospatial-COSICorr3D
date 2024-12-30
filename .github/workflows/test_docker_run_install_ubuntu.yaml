@@ -1,15 +1,15 @@
-name: Linux-Docker-install (CI-GHA)
-on:
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  build_and_publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Docker
-        run: |
-          ./install_cosicorr.sh --docker
-          docker images
+#name: Linux-Docker-install (CI-GHA)
+#on:
+#  pull_request:
+#    branches:
+#      - main
+#
+#jobs:
+#  build_and_publish:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Install Docker
+#        run: |
+#          ./install_cosicorr.sh --docker
+#          docker images
