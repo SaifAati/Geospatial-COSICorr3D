@@ -1,3 +1,35 @@
+# [December 30, 2024] geoCosiCorr 3D v2.5.3 Release Notes
+We’re excited to end the year with another release: geoCosiCorr 3D v2.5.3!
+
+This latest version introduces the Time Series Subpackage, along with improvements to enhance user experience. 
+Here’s what’s new:
+- geoPCAIM :Geospatial Principal Component Analysis-based Inversion Method (geoPCAIM) is a statistically
+based approach applied to redundant surface displacement measurements. 
+This method filters out measurement noise and extracts signals with maximum spatio-temporal coherence.
+- geoICA :Independent Component Analysis (geoICA) is another statistically based approach for processing
+redundant surface displacement measurements. It effectively filters out noise and highlights signals with high 
+spatio-temporal coherence.
+
+
+---
+
+
+
+# [July 09, 2024] geoCosiCorr 3D v2.5.0 Release Notes
+
+- Dynamic memory management, during orthorectification, to avoid memory overflow.
+- Support state extrapolation.
+- Code cleanup and refactoring.
+
+---
+
+# [April 15, 2024] geoCosiCorr 3D v2.4.1 Release Notes
+
+- **Cosicorr Command Line Interface (CLI) Improvement**: cosicorr cli support GCP generation,
+  RSM model refinement and orthorectification.
+
+---
+
 # [March 3, 2024] geoCosiCorr 3D v2.4.0 Release Notes
 
 We're excited to announce the release of geoCosiCorr 3D v2.4.0! This latest version introduces significant updates and
@@ -31,18 +63,6 @@ Here's what's new:
 
 ---
 
-# [April 15, 2024] geoCosiCorr 3D v2.4.1 Release Notes
-
-- **Cosicorr Command Line Interface (CLI) Improvement**: cosicorr cli support GCP generation,
-  RSM model refinement and orthorectification.
-
----
 
 
-# [July 09, 2024] geoCosiCorr 3D v2.5.0 Release Notes
 
-- Dynamic memory management, during orthorectification, to avoid memory overflow.
-- Support state extrapolation.
-- Code cleanup and refactoring.
-
----
