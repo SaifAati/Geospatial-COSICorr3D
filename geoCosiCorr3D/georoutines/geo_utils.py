@@ -356,11 +356,21 @@ class cRasterInfo(BaseRasterInfo):
         return raster_pix_dims, raster_map_dims
 
     def __repr__(self):
-        # TODO
-        pass
+        return f"Raster Path: {self.get_raster_path} \n" \
+                f"Raster Dimensions: {self.raster_width} x {self.raster_height} \n" \
+                f"Raster Bands: {self.band_number} \n" \
+                f"Raster Type: {self.raster_type} \n" \
+                f"Raster Projection: {self.proj} \n" \
+                f"Raster EPSG: {self.epsg_code} \n" \
+                f"Raster Pixel Size: {self.pixel_width} x {self.pixel_height} \n" \
+                f"Raster Origin: {self.x_map_origin} x {self.y_map_origin} \n" \
+                f"Raster GeoTransform: {self.geo_transform} \n" \
+                f"Raster RPCs: {self.rpcs} \n" \
+                f"Raster Bounding Box: {self.bbox_map} \n" \
+                f"Raster NoData: {self.no_data} \n" \
+                f"Raster Bands Description: {self.bands_description} \n"\
+                "***********************************************************\n"
 
-    def __str__(self):
-        pass
 
 
 class cRasterInfoGDAL:
@@ -769,8 +779,8 @@ class geoStat:
         self.std = '%.3f' % (np.nanstd(sample))
         self.mean = '%.3f' % (np.nanmean(sample))
         self.median = '%.3f' % (np.nanmedian(sample))
-        self.mad = '%.3f' % (stats.median_absolute_deviation(sample))
-        self.nmad = '%.3f' % (1.4826 * stats.median_absolute_deviation(sample))
+        self.mad = '%.3f' % (stats.median_abs_deviation(sample))
+        self.nmad = '%.3f' % (1.4826 * stats.median_abs_deviation(sample))
         self.ce68 = stats.norm.interval(0.68, loc=self.mu, scale=self.sigma)
         self.ce90 = stats.norm.interval(0.9, loc=self.mu, scale=self.sigma)
         self.ce95 = stats.norm.interval(0.95, loc=self.mu, scale=self.sigma)

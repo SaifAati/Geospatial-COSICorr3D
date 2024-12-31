@@ -1,4 +1,4 @@
-name: Linux-Conda-Install (CI-GHA)
+name: Linux-Conda-Installation
 on:
   pull_request:
     branches:

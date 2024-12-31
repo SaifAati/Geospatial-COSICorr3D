@@ -1,4 +1,4 @@
-name: Linux-Docker-install (CI-GHA)
+name: Linux-Docker-installation
 on:
   pull_request:
     branches:
@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Conda env
+      - name: Install Docker Compose
+        run: sudo apt-get install -y docker-compose
+      - name: Install geoCosiCorr3D Docker
         run: |
           ./install_cosicorr.sh --docker
           docker images

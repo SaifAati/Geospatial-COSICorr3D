@@ -1,4 +1,4 @@
-name: Correlation-conda (CI-GHA)
+name: Correlation-conda
 
 on:
   push:

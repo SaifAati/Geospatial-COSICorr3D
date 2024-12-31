@@ -1,4 +1,4 @@
-name: Linux-conda-tests (CI-GHA)
+name: conda-tests-rsm-satmodels
 on:
   push:
   pull_request:
@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:

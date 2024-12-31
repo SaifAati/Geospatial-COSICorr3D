@@ -31,5 +31,3 @@ class BaseRasterInfo(ABC):
     # @property
     # def get_raster_height(self) -> int:
     #     return self.get_raster.height
-    def __repr__(self):
-        pass
