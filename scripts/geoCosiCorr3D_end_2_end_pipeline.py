@@ -4,7 +4,7 @@
 # Copyright (C) 2023
 """
 import logging
-import os.path
+import os
 import shutil
 import warnings
 from pathlib import Path
@@ -685,3 +685,46 @@ class GeoCosiCorr3DPipeline:
     #             # sys.exit()
     #
     #     return
+
+
+
+if __name__ == '__main__':
+    from geoCosiCorr3D.georoutines.file_cmd_routines import ExtractSubfiles
+
+
+    wd = '/home/saif/PycharmProjects/GEO_COSI_CORR_3D_WD/3DDA_testing/'
+
+    dataset_dir = '/home/saif/PycharmProjects/GEO_COSI_CORR_3D_WD/3DDA_testing/DG_3DDA_WV_SAMPLE_light/'
+
+    raw_img_list = ExtractSubfiles(os.path.join(dataset_dir, "RAW_IMGS"), fileExtension=[".tif"])
+    config_file = os.path.join(dataset_dir,'geo_3DDA_config.yaml')
+
+    dem_path = os.path.join(dataset_dir, "REF_DATA/DEM_USGS_3DEP.TIF")
+    ref_ortho = os.path.join(dataset_dir, "REF_DATA/NAIP_2020_GRN_UTM_2m_.TIF")
+    # roiPath = os.path.join(dataFolder, "Rupture_ROI.geojson")
+    workspace_dir = '/home/saif/PycharmProjects/GEO_COSI_CORR_3D_WD/3DDA_testing/'
+    sensor = "DG"
+    event_date = "2019-07-04"  # YYYY-MM-DD""
+    ortho_gsd = 1
+
+    ridgecrest = GeoCosiCorr3DPipeline(img_list=raw_img_list,
+                                       sensor=sensor,
+                                       event_date=event_date,
+                                       dem_file=dem_path,
+                                       ref_ortho=ref_ortho,
+                                       config_file=config_file)
+    # data_file = ridgecrest.data_file
+    data_file = ridgecrest.build_rsm_data_file()
+    ridgecrest.compute_footprint(data_file)
+    ridgecrest.feature_detection(data_file=data_file)
+    ridgecrest.gcp_generation(data_file=data_file)
+    ridgecrest.rsm_refinement(data_file)
+    ridgecrest.orthorectify(data_file, ortho_gsd=ortho_gsd)
+
+    prePostFile = ridgecrest.compute_pre_post_pairs(data_file, pre_post_overlap_th=80)
+    ridgecrest.correlate()  # optional
+
+    ridgecrest.generate_3DDA_sets(data_file)
+    ridgecrest.correlate(corr_mode='set')
+
+    ridgecrest.compute_3DD(data_file)
