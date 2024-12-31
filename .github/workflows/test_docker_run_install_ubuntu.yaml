@@ -1,4 +1,4 @@
-name: Linux-Docker-install (CI-GHA)
+name: Linux-Docker-installation
 on:
   pull_request:
     branches:

@@ -1,4 +1,4 @@
-name: Linux-conda-tests (CI-GHA)
+name: conda-tests-rsm-satmodels
 on:
   push:
   pull_request:

@@ -1,4 +1,4 @@
-name: Ortho-conda-tests (CI-GHA)
+name: Ortho-conda-tests
 
 on:
   push:
