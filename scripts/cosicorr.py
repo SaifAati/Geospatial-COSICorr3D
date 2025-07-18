@@ -42,7 +42,7 @@ def ortho_func(args):
 
         else:
             o_ortho_path = args.o_ortho
-        geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+        geoCosiCorr3DLog(f'{args.input_img}_Orthorectification', os.path.dirname(o_ortho_path))
 
         orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.debug)
 
@@ -63,7 +63,7 @@ def ortho_func(args):
 
             else:
                 o_ortho_path = args.o_ortho
-            geoCosiCorr3DLog('Orthorectification', os.path.dirname(o_ortho_path))
+            geoCosiCorr3DLog(f'{args.input_img}_Orthorectification', os.path.dirname(o_ortho_path))
 
             orthorectify(args.input_img, o_ortho_path, ortho_params, None, args.dem, args.refine,
                          args.gcps, args.ref_img, args.debug, args.show)
