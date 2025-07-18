@@ -9,7 +9,7 @@ import numpy as np
 import pandas
 
 
-def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
+def opt_report(reportPath, image_path, snrTh=0.9, debug=False, plotError=True):
     df = pandas.read_csv(reportPath)
 
     totalNbLoop = list(df["nbLoop"])[-1]
@@ -80,7 +80,7 @@ def opt_report(reportPath, snrTh=0.9, debug=False, plotError=True):
         ax.set_xlabel('#iterations')
         ax.set_ylabel("Error [pix]")
         # plt.show()
-        fig.savefig(os.path.join(os.path.dirname(reportPath), "CoregistrationError.png"), dpi=400)
+        fig.savefig(os.path.join(os.path.dirname(reportPath), f'{image_path}_CoregistrationError.png'), dpi=400)
 
     return loopList[indexMin], totalNbLoop, np.min(avgErrorList)
 
