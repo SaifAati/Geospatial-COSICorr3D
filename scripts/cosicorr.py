@@ -23,6 +23,9 @@ from geoCosiCorr3D.geoImageCorrelation.correlate import Correlate
 def parse_list(value):
     return [float(item) for item in value.split(',')]
 
+# ----------------------------------------------------------------
+# ---------------------- ORTHORECTIFICATION ------------------------
+# ----------------------------------------------------------------
 
 def ortho_func(args):
     from geoCosiCorr3D.geoOrthoResampling.geoOrtho import orthorectify
@@ -69,6 +72,10 @@ def ortho_func(args):
                          args.gcps, args.ref_img, args.debug, args.show)
 
 
+# ----------------------------------------------------------------
+# -------------------------- TRANSFORMATION ----------------------
+# ----------------------------------------------------------------
+
 def transform_func(args):
     print("Transform function for model:", args)
 
@@ -87,6 +94,10 @@ def transform_func(args):
     if args.model_name == C.SATELLITE_MODELS.RSM:
         raise NotImplementedError
 
+
+# ----------------------------------------------------------------
+# -------------------------- CORRELATION -------------------------
+# ----------------------------------------------------------------
 
 def correlate_func(args):
     print(f'Executing correlation module :{args}')
@@ -127,71 +138,172 @@ def correlate_func(args):
               )
 
 
+# ----------------------------------------------------------------
+# ------------ BATCH FUNCTION FOR CORRELATION --------------------
+# ----------------------------------------------------------------
+
 def batch_correlate_func(args):
     geoCosiCorr3DLog('Batch Correlation', os.getcwd())
     logging.info(f'Executing batch correlation module :{args}')
 
-    base_images = []
-    for pattern in args.base_images.split(','):
-        base_images.extend(glob.glob(pattern))
-    target_images = []
-    for pattern in args.target_images.split(','):
-        target_images.extend(glob.glob(pattern))
+    #### INPUT IS A STRING #####
+    if args.base_images.startswith('"'):
+        print("Input is a string")
 
-    base_bands = args.base_bands if args.base_bands else [1] * len(base_images)
-    target_bands = args.target_bands if args.target_bands else [1] * len(target_images)
+        base_images = []
+        for pattern in args.base_images.split(','):
+            base_images.extend(glob.glob(pattern))
+        target_images = []
+        for pattern in args.target_images.split(','):
+            target_images.extend(glob.glob(pattern))
 
-    if not args.serial and not args.all:
-        args.all = True
+        base_bands = args.base_bands if args.base_bands else [1] * len(base_images)
+        target_bands = args.target_bands if args.target_bands else [1] * len(target_images)
 
-    if args.serial:
-        if len(base_images) != len(target_images):
-            raise ValueError(f"Input_base_images:{len(base_images)} and target_images:{len(target_images)} -- "
-                             f"The number of base images and target images must be equal when using the --serial option.")
+        if not args.serial and not args.all:
+            args.all = True
 
-        num_correlations = len(base_images)
-        logging.info(f'Number of possible correlations (serial): {num_correlations}')
-        for base_image, target_image, base_band, target_band in zip(base_images, target_images, base_bands,
-                                                                    target_bands):
-            correlate_func(argparse.Namespace(base_image=base_image,
-                                              target_image=target_image,
-                                              base_band=base_band,
-                                              target_band=target_band,
-                                              output_path=args.output_path,
-                                              method=args.method,
-                                              window_size=args.window_size,
-                                              step=args.step,
-                                              grid=args.grid,
-                                              show=args.show,
-                                              pixel_based=args.pixel_based,
-                                              vmin=args.vmin,
-                                              vmax=args.vmax,
-                                              mask_th=args.mask_th,
-                                              nb_iters=args.nb_iters,
-                                              search_range=args.search_range
-                                              ))
-    elif args.all:
-        num_correlations = len(base_images) * len(target_images)
-        logging.info(f'Number of possible correlations (all): {num_correlations}')
-        for (base_image, base_band), (target_image, target_band) in itertools.product(zip(base_images, base_bands),
-                                                                                      zip(target_images, target_bands)):
-            correlate_func(argparse.Namespace(base_image=base_image,
-                                              target_image=target_image,
-                                              base_band=base_band,
-                                              target_band=target_band,
-                                              output_path=args.output_path,
-                                              method=args.method,
-                                              window_size=args.window_size,
-                                              step=args.step,
-                                              grid=args.grid,
-                                              show=args.show,
-                                              pixel_based=args.pixel_based,
-                                              vmin=args.vmin,
-                                              vmax=args.vmax,
-                                              mask_th=args.mask_th,
-                                              nb_iters=args.nb_iters,
-                                              search_range=args.search_range))
+        # CORRELATE FILES WITH SIMILAR INDEX IN THE DATASET
+        if args.serial:
+            if len(base_images) != len(target_images):
+                raise ValueError(f"Input_base_images:{len(base_images)} and target_images:{len(target_images)} -- "
+                                 f"The number of base images and target images must be equal when using the --serial option.")
 
+            num_correlations = len(base_images)
+            logging.info(f'Number of possible correlations (serial): {num_correlations}')
+            for base_image, target_image, base_band, target_band in zip(base_images, target_images, base_bands,
+                                                                        target_bands):
+                try:
+                    correlate_func(argparse.Namespace(base_image=base_image,
+                                                  target_image=target_image,
+                                                  base_band=base_band,
+                                                  target_band=target_band,
+                                                  output_path=args.output_path,
+                                                  method=args.method,
+                                                  window_size=args.window_size,
+                                                  step=args.step,
+                                                  grid=args.grid,
+                                                  show=args.show,
+                                                  pixel_based=args.pixel_based,
+                                                  vmin=args.vmin,
+                                                  vmax=args.vmax,
+                                                  mask_th=args.mask_th,
+                                                  nb_iters=args.nb_iters,
+                                                  search_range=args.search_range
+                                                  ))
+                except Exception as e:
+                    print(f'Correlation of {base_image} and {target_image} failed')
+
+        # CORRELATE ALL FILES
+        elif args.all:
+            num_correlations = len(base_images) * len(target_images)
+            logging.info(f'Number of possible correlations (all): {num_correlations}')
+            for (base_image, base_band), (target_image, target_band) in itertools.product(zip(base_images, base_bands),
+                                                                                          zip(target_images, target_bands)):
+                try:
+                    correlate_func(argparse.Namespace(base_image=base_image,
+                                                  target_image=target_image,
+                                                  base_band=base_band,
+                                                  target_band=target_band,
+                                                  output_path=args.output_path,
+                                                  method=args.method,
+                                                  window_size=args.window_size,
+                                                  step=args.step,
+                                                  grid=args.grid,
+                                                  show=args.show,
+                                                  pixel_based=args.pixel_based,
+                                                  vmin=args.vmin,
+                                                  vmax=args.vmax,
+                                                  mask_th=args.mask_th,
+                                                  nb_iters=args.nb_iters,
+                                                  search_range=args.search_range))
+                except Exception as e:
+                    print(f'Correlation of {base_image} and {target_image} failed')
+
+
+    ##### INPUT IS A FILE LIST #####
+    elif args.base_images.endswith('.txt'): # for a list of input data
+        print("Input is a text file")
+        base_images = []
+        with open(args.base_images, 'r') as f:
+            for line in f:
+                pattern = line.strip()  # Remove leading/trailing whitespace/newlines
+                if pattern:  # Skip empty lines
+                    base_images.extend(glob.glob(pattern))
+        target_images = []
+        with open(args.target_images, 'r') as f:
+            for line in f:
+                pattern = line.strip()  # Remove leading/trailing whitespace/newlines
+                if pattern:  # Skip empty lines
+                    target_images.extend(glob.glob(pattern))
+        base_bands = args.base_bands if args.base_bands else [1] * len(base_images)
+        target_bands = args.target_bands if args.target_bands else [1] * len(target_images)
+
+        if not args.serial and not args.all:
+            args.all = True
+
+        # CORRELATE FILES WITH SIMILAR INDEX IN THE DATASET
+        if args.serial:
+            if len(base_images) != len(target_images):
+                raise ValueError(f"Input_base_images:{len(base_images)} and target_images:{len(target_images)} -- "
+                                 f"The number of base images and target images must be equal when using the --serial option.")
+
+            num_correlations = len(base_images)
+            logging.info(f'Number of possible correlations (serial): {num_correlations}')
+            for base_image, target_image, base_band, target_band in zip(base_images, target_images, base_bands,
+                                                                        target_bands):
+                try:
+                    correlate_func(argparse.Namespace(base_image=base_image,
+                                                  target_image=target_image,
+                                                  base_band=base_band,
+                                                  target_band=target_band,
+                                                  output_path=args.output_path,
+                                                  method=args.method,
+                                                  window_size=args.window_size,
+                                                  step=args.step,
+                                                  grid=args.grid,
+                                                  show=args.show,
+                                                  pixel_based=args.pixel_based,
+                                                  vmin=args.vmin,
+                                                  vmax=args.vmax,
+                                                  mask_th=args.mask_th,
+                                                  nb_iters=args.nb_iters,
+                                                  search_range=args.search_range
+                                                  ))
+                except Exception as e:
+                    print(f'Correlation of {base_image} and {target_image} failed')
+
+        # CORRELATE ALL FILES
+        elif args.all:
+            num_correlations = len(base_images) * len(target_images)
+            logging.info(f'Number of possible correlations (all): {num_correlations}')
+            for (base_image, base_band), (target_image, target_band) in itertools.product(zip(base_images, base_bands),
+                                                                                          zip(target_images, target_bands)):
+                try:
+                    correlate_func(argparse.Namespace(base_image=base_image,
+                                                  target_image=target_image,
+                                                  base_band=base_band,
+                                                  target_band=target_band,
+                                                  output_path=args.output_path,
+                                                  method=args.method,
+                                                  window_size=args.window_size,
+                                                  step=args.step,
+                                                  grid=args.grid,
+                                                  show=args.show,
+                                                  pixel_based=args.pixel_based,
+                                                  vmin=args.vmin,
+                                                  vmax=args.vmax,
+                                                  mask_th=args.mask_th,
+                                                  nb_iters=args.nb_iters,
+                                                  search_range=args.search_range))
+                except Exception as e:
+                    print(f'Correlation of {base_image} and {target_image} failed')
+
+
+
+# ----------------------------------------------------------------
+# ------------------- MULTIBAND CORRELATION ----------------------
+# ----------------------------------------------------------------
 
 def multiband_correlate_func(args):
     geoCosiCorr3DLog('Multiband Correlation', os.getcwd())
