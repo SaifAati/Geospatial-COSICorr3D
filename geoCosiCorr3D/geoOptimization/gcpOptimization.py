@@ -129,7 +129,7 @@ class cGCPOptimization:
 
         if self.svg_patches:
             self.patches_folder = fileRT.CreateDirectory(directoryPath=os.path.dirname(self.opt_gcp_file),
-                                                         folderName=f"{self.sat_model_name}_gcp_patches", cal="y")
+                                                         folderName=f"{self.raw_image_path}_gcp_patches", cal="y")
         else:
             self.patches_folder = None
 
