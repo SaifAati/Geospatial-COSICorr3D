@@ -113,7 +113,7 @@ def batch_ortho_func(args):
                     log.write(f"Error with {f}: {e}\n")
                     log.write(traceback.format_exc() + "\n")
 
- elif args.base_images.endswith('.txt'): # for a list of input data
+    elif args.base_images.endswith('.txt'): # for a list of input data
         print("Input is a text file")
         base_images = []
         with open(args.base_images, 'r') as f:
