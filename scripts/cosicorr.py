@@ -113,7 +113,7 @@ def batch_ortho_func(args):
                     log.write(f"Error with {f}: {e}\n")
                     log.write(traceback.format_exc() + "\n")
 
- elif args.base_images.endswith('.txt'): # for a list of input data
+    elif args.base_images.endswith('.txt'): # for a list of input data
         print("Input is a text file")
         base_images = []
         with open(args.base_images, 'r') as f:
@@ -144,7 +144,7 @@ def batch_ortho_func(args):
             for base_image, base_rpc, sensor in zip(base_images, base_rpcs, sensors):
                 try:
                     print(f"Processing {base_image} {base_rpc} {sensor}")
-                        ortho_func(argparse.Namespace(input_img=base_image,
+                    ortho_func(argparse.Namespace(input_img=base_image,
                                         o_ortho=args.o_ortho,
                                         dem=args.dem,
                                         refine=args.refine,
