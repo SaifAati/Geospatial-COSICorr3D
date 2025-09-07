@@ -47,6 +47,7 @@ class cGCPOptimization:
         self.debug = debug
         self.opt_gcp_file = opt_gcp_file_path
         self.svg_patches = True  # svg_patches
+        self.raw_image_path = raw_img_path             
         if opt_params is None:
             self.opt_params = {}
         else:
