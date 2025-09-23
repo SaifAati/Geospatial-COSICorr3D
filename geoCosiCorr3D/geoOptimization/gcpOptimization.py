@@ -527,7 +527,7 @@ class cGCPOptimization:
         df_report.to_csv(self.opt_report_path, index=False)
         self.opt_report_df = df_report
 
-        opt_report(reportPath=self.opt_report_path, snrTh=self.snr_th)
+        opt_report(reportPath=self.opt_report_path, image_path= self.raw_img_path, snrTh=self.snr_th)
         return
 
     @staticmethod
