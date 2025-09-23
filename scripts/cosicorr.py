@@ -75,8 +75,8 @@ def batch_ortho_func(args):
     geoCosiCorr3DLog('Batch Orthorectification', os.getcwd())
     logging.info(f'Executing batch orthorectification module :{args}')
 
-    if args.base_images.startswith('"'): # for a string pattern including multiple images
-        print("Input is a string")
+    if not args.base_images.endswith('.txt'):
+        print("Input is a pattern list")
         base_images = []
         for pattern in args.base_images.split(','):
             base_images.extend(glob.glob(pattern))
@@ -110,7 +110,7 @@ def batch_ortho_func(args):
                                         resampling_method=args.resampling_method,
                                         ))
                 except Exception as e:
-                    log.write(f"Error with {f}: {e}\n")
+                    log.write(f"Error processing base_image={base_image} base_rpc={base_rpc}: {e}\n")
                     log.write(traceback.format_exc() + "\n")
 
     elif args.base_images.endswith('.txt'): # for a list of input data
@@ -160,7 +160,7 @@ def batch_ortho_func(args):
                                         resampling_method=args.resampling_method,
                                         ))
                 except Exception as e:
-                    log.write(f"Error with {f}: {e}\n")
+                    log.write(f"Error processing base_image={base_image} base_rpc={base_rpc} sensor={sensor}: {e}\n")
                     log.write(traceback.format_exc() + "\n")
 
 
@@ -239,8 +239,8 @@ def batch_correlate_func(args):
     logging.info(f'Executing batch correlation module :{args}')
 
     #### INPUT IS A STRING #####
-    if args.base_images.startswith('"'):
-        print("Input is a string")
+    if not args.base_images.endswith('.txt'):
+        print("Input is a pattern list")
 
         base_images = []
         for pattern in args.base_images.split(','):
