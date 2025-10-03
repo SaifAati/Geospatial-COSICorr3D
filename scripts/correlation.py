@@ -4,7 +4,7 @@
 # Copyright (C) 2022
 """
 
-import os
+import os 
 
 from geoCosiCorr3D.geoCore.constants import SOFTWARE
 from geoCosiCorr3D.geoCosiCorr3dLogger import geoCosiCorr3DLog
